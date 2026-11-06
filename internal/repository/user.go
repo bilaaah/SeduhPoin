@@ -49,3 +49,4 @@ func (r *UserRepo) HashByEmail(ctx context.Context, email string) (int64, string
 
 	return id, hash, err
 }
+

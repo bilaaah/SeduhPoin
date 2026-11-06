@@ -51,3 +51,4 @@ func UserDari(ctx context.Context) (model.User, bool) {
 	u, ok := ctx.Value(ctxKey{}).(model.User)
 	return u, ok
 }
+

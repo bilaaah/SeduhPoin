@@ -1,9 +1,9 @@
 {{define "content"}}
 <div class="dashboard-hero">
     <div class="hero-text">
-        <span class="hero-badge">👑 Ruang Kerja Ketua Kelompok (Nabila)</span>
-        <h1>Halo, {{if .User.Nama}}{{.User.Nama}}{{else}}Nabila (Ketua){{end}}! 👋</h1>
-        <p>Sistem operasional dan program loyalitas multi-cabang Kedai Kopi Seduh. Kelola data produk, 3 cabang operasional, program member Silver & Gold, serta promo dan voucher terintegrasi.</p>
+        <span class="hero-badge">👑 Pusat Kendali Operasional Kedai</span>
+        <h1>Halo, {{if .User.Nama}}{{.User.Nama}}{{else}}Administrator{{end}}! 👋</h1>
+        <p>Sistem terintegrasi operasional dan program keanggotaan multi-cabang Kedai Kopi Seduh. Kelola data produk, 3 cabang aktif, program member Silver & Gold, serta pengaturan promo dan voucher.</p>
     </div>
 </div>
 
@@ -35,20 +35,20 @@
 </div>
 
 <div style="display: grid; grid-template-columns: 1.6fr 1fr; gap: 24px; margin-bottom: 30px;">
-    <!-- Kolom Kiri: Akses Cepat Tugas Nabila -->
+    <!-- Kolom Kiri: Akses Cepat Master Data & Promo -->
     <div style="background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 26px; box-shadow: var(--shadow);">
         <h3 style="margin-top: 0; display: flex; align-items: center; gap: 10px;">
-            <span>📌</span> Menu Operasional Lingkup Nabila
+            <span>📌</span> Menu Master Data & Promosi
         </h3>
-        <p style="margin-bottom: 20px;">Akses langsung untuk mengelola master data dan aturan promo sesuai Lingkup 1 & Lingkup 2:</p>
+        <p style="margin-bottom: 20px;">Kelola data master menu, lokasi cabang, member keanggotaan, dan ketentuan promosi kedai:</p>
         
         <div style="display: flex; flex-direction: column; gap: 12px;">
             <a href="/produk" style="display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border: 1px solid var(--line); border-radius: 12px; transition: all 0.2s; background: #fdfcfb;">
                 <div style="display: flex; align-items: center; gap: 14px;">
                     <span style="font-size: 22px;">☕</span>
                     <div>
-                        <strong style="display: block; font-size: 14px; color: var(--espresso);">Kelola Menu Produk</strong>
-                        <small style="color: var(--muted);">Tambah menu, ubah harga, update stok, dan filter kategori</small>
+                        <strong style="display: block; font-size: 14px; color: var(--espresso);">Katalog & Stok Produk</strong>
+                        <small style="color: var(--muted);">Tambah menu, penetapan harga jual, update stok, dan kategori</small>
                     </div>
                 </div>
                 <span style="font-weight: 700; color: var(--caramel);">Buka &rarr;</span>
@@ -58,8 +58,8 @@
                 <div style="display: flex; align-items: center; gap: 14px;">
                     <span style="font-size: 22px;">🏢</span>
                     <div>
-                        <strong style="display: block; font-size: 14px; color: var(--espresso);">3 Cabang Kedai Seduh</strong>
-                        <small style="color: var(--muted);">Pantau lokasi cabang Pusat, Timur, dan Barat</small>
+                        <strong style="display: block; font-size: 14px; color: var(--espresso);">Cabang Kedai Kopi Seduh</strong>
+                        <small style="color: var(--muted);">Data 3 cabang resmi: Seduh Pusat, Seduh Timur, dan Seduh Barat</small>
                     </div>
                 </div>
                 <span style="font-weight: 700; color: var(--caramel);">Buka &rarr;</span>
@@ -69,8 +69,8 @@
                 <div style="display: flex; align-items: center; gap: 14px;">
                     <span style="font-size: 22px;">👥</span>
                     <div>
-                        <strong style="display: block; font-size: 14px; color: var(--espresso);">Data Member & Loyalitas</strong>
-                        <small style="color: var(--muted);">Pendaftaran member baru dan riwayat total belanja 3 bulan</small>
+                        <strong style="display: block; font-size: 14px; color: var(--espresso);">Keanggotaan Member</strong>
+                        <small style="color: var(--muted);">Registrasi member, pemantauan tier Silver & Gold, serta akumulasi belanja</small>
                     </div>
                 </div>
                 <span style="font-weight: 700; color: var(--caramel);">Buka &rarr;</span>
@@ -81,7 +81,7 @@
                     <span style="font-size: 22px;">🏷️</span>
                     <div>
                         <strong style="display: block; font-size: 14px; color: var(--espresso);">Pengaturan Aturan Promo</strong>
-                        <small style="color: var(--muted);">Diskon produk, potongan min. belanja, beli 2 gratis 1, dan voucher</small>
+                        <small style="color: var(--muted);">Diskon persentase, potongan min. belanja, beli 2 gratis 1, dan voucher</small>
                     </div>
                 </div>
                 <span style="font-weight: 700; color: var(--caramel);">Buka &rarr;</span>
@@ -92,7 +92,7 @@
                     <span style="font-size: 22px;">🎟️</span>
                     <div>
                         <strong style="display: block; font-size: 14px; color: var(--espresso);">Voucher Berkode Unik</strong>
-                        <small style="color: var(--muted);">Kelola kuota klaim voucher berkode eksklusif</small>
+                        <small style="color: var(--muted);">Penerbitan kupon voucher dengan kuota klaim terbatas</small>
                     </div>
                 </div>
                 <span style="font-weight: 700; color: var(--caramel);">Buka &rarr;</span>
@@ -100,7 +100,7 @@
         </div>
     </div>
 
-    <!-- Kolom Kanan: Panduan 3 Peran Pengguna (Admin, Kasir, Member) -->
+    <!-- Kolom Kanan: Panduan Peran Pengguna (Admin, Kasir, Member) -->
     <div style="background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 26px; box-shadow: var(--shadow);">
         <h3 style="margin-top: 0; display: flex; align-items: center; gap: 10px;">
             <span>💡</span> Panduan Peran Sistem

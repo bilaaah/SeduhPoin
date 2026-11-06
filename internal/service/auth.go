@@ -84,3 +84,4 @@ func (s *AuthService) UserDariToken(ctx context.Context, token string) (model.Us
 func (s *AuthService) Logout(ctx context.Context, token string) error {
 	return s.Sessions.Hapus(ctx, token)
 }
+

@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS sessions (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- AKUN DEMO UNTUK SIMULASI SISTEM (Password: admin123, kasir123, member123)
+-- AKUN SISTEM UNTUK SIMULASI (Password: admin123, kasir123, member123)
 INSERT INTO users (id, nama, email, password_hash, role) VALUES
 (1, 'Nabila (Pemilik)', 'nabila@seduhkopi.com', '$2a$10$KPQoj7P.EAmlSLoSAAfFtuMF42IOayaW2jtlLMMGacBwFja/xk6Me', 'ADMIN'),
 (2, 'Kasir Kedai Seduh', 'kasir@seduhkopi.com', '$2a$10$sPRcFmGKAwipGlTTJ/62UO7NRWEfB108zfbB34wKqfQ61hDEre6N6', 'KASIR'),
