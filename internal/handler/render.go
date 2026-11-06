@@ -35,7 +35,7 @@ type Renderer struct {
 }
 
 func NewRenderer() *Renderer {
-	halaman := []string{"home.html", "profil.html", "produk.html", "cabang.html", "member.html", "promo.html", "voucher.html"}
+	halaman := []string{"home.html", "produk.html", "cabang.html", "member.html", "promo.html", "voucher.html"}
 	base := "templates"
 	for _, candidate := range []string{"templates", filepath.Join("..", "templates"), filepath.Join("..", "..", "templates")} {
 		if _, err := os.Stat(filepath.Join(candidate, "layout.html")); err == nil { base = candidate; break }

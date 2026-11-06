@@ -34,7 +34,6 @@ func main() {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /{$}", halaman.Home)
-	mux.HandleFunc("GET /profil", halaman.Profil)
 
 	mux.HandleFunc("/cabang", admin.Cabang)
 	mux.HandleFunc("GET /produk", admin.Produk)
