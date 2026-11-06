@@ -257,7 +257,7 @@ erDiagram
   - **👤 Member**: Memiliki nomor anggota, cek reward poin, tiering, dan riwayat belanja.
 
 **Kredensial Akun untuk Simulasi:**
-- **Admin/Pemilik**: `nabila@seduhkopi.com` | Password: `admin123`
+- **Admin/Pemilik**: `admin@seduhkopi.com` | Password: `admin123`
 - **Kasir**: `kasir@seduhkopi.com` | Password: `kasir123`
 - **Member**: `member@seduhkopi.com` | Password: `member123`
 
@@ -396,7 +396,7 @@ Berikut panduan langkah pengerjaan yang terstruktur untuk rekan-rekan tim:
 5. **Akses Aplikasi**:
    Buka peramban di `http://localhost:8080`.
    Gunakan akun demo:
-   - Email: `nabila@seduhkopi.com`
+   - Email: `admin@seduhkopi.com`
    - Password: `admin123`
 
 ---

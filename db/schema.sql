@@ -228,6 +228,6 @@ INSERT INTO voucher (promo_id, kode, kuota, terpakai) VALUES
 
 -- DATA SEED USER SIMULASI (Password: admin123, kasir123, member123)
 INSERT INTO users (id, nama, email, password_hash, role) VALUES
-(1, 'Nabila (Pemilik)', 'nabila@seduhkopi.com', '$2a$10$KPQoj7P.EAmlSLoSAAfFtuMF42IOayaW2jtlLMMGacBwFja/xk6Me', 'ADMIN'),
+(1, 'Pemilik Kedai (Admin)', 'admin@seduhkopi.com', '$2a$10$KPQoj7P.EAmlSLoSAAfFtuMF42IOayaW2jtlLMMGacBwFja/xk6Me', 'ADMIN'),
 (2, 'Kasir Kedai Seduh', 'kasir@seduhkopi.com', '$2a$10$sPRcFmGKAwipGlTTJ/62UO7NRWEfB108zfbB34wKqfQ61hDEre6N6', 'KASIR'),
 (3, 'Budi (Member Loyal)', 'member@seduhkopi.com', '$2a$10$qIbJFbrmTU.sRWp7JC5RiO6bOvntjkPlUf9Iswa/PtiKKl.RUMox6', 'MEMBER');
