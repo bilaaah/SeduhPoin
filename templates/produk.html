@@ -1,0 +1,13 @@
+{{define "content"}}
+<div class="page-head clearfix"><h3 class="float-left">Produk Kedai</h3></div>
+<form class="form" method="post">
+    <input type="hidden" name="id" value="{{.Edit.ID}}">
+    <div class="form-group"><label>Nama Produk</label><input class="form-control" name="nama" value="{{.Edit.Nama}}" placeholder="Contoh: Kopi Susu Gula Aren" required></div>
+    <div class="form-group"><label>Kategori</label><select class="form-control" name="kategori_id" required><option value="">Pilih kategori</option>{{range .Kategori}}<option value="{{.ID}}" {{if eq .ID $.Edit.KategoriID}}selected{{end}}>{{.Nama}}</option>{{end}}</select></div>
+    <div class="form-group"><label>Harga</label><input class="form-control" type="number" name="harga" min="0" value="{{.Edit.Harga}}" required></div>
+    <div class="form-group"><label>Stok</label><input class="form-control" type="number" name="stok" min="0" value="{{.Edit.Stok}}" required></div>
+    <div class="form-group"><label>Keterangan</label><textarea class="form-control" name="keterangan" rows="3">{{.Edit.Keterangan}}</textarea></div>
+    <button class="btn">{{.Mode}}</button>{{if .Edit.ID}} <a class="btn btn-light" href="/produk">Batal</a>{{end}}
+</form>
+<table class="table"><thead><tr><th>Nama</th><th>Kategori</th><th class="num">Harga</th><th>Stok</th><th>Keterangan</th><th>Aksi</th></tr></thead><tbody>{{range .Produk}}<tr><td>{{.Nama}}</td><td>{{.Kategori}}</td><td class="num">{{rupiah .Harga}}</td><td>{{.Stok}}</td><td>{{.Keterangan}}</td><td><div class="actions"><a class="btn btn-light btn-sm" href="/produk?edit={{.ID}}">Edit</a><form method="post" action="/produk/{{.ID}}/hapus" onsubmit="return confirm('Hapus produk ini?')"><button class="btn btn-danger btn-sm">Hapus</button></form></div></td></tr>{{end}}</tbody></table>
+{{end}}
