@@ -28,9 +28,14 @@ func addOne(n int) int {
 	return n + 1
 }
 
+func mul(a, b int) int {
+	return a * b
+}
+
 var funcs = template.FuncMap{
 	"rupiah":  rupiah,
 	"add_one": addOne,
+	"mul":     mul,
 }
 
 type Renderer struct {
@@ -45,6 +50,7 @@ func NewRenderer() *Renderer {
 		"member.html",
 		"promo.html",
 		"voucher.html",
+		"laporan.html",
 		"auth/login.html",
 		"auth/register.html",
 	}

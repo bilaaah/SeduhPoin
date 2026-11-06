@@ -1,11 +1,13 @@
 package handler
 
 import (
-	"github.com/bilaaah/SeduhPoin/internal/model"
-	"github.com/bilaaah/SeduhPoin/internal/repository"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/bilaaah/SeduhPoin/internal/middleware"
+	"github.com/bilaaah/SeduhPoin/internal/model"
+	"github.com/bilaaah/SeduhPoin/internal/repository"
 )
 
 type AdminHandler struct {
@@ -31,8 +33,13 @@ func (h *AdminHandler) Cabang(w http.ResponseWriter, r *http.Request) {
 		gagal(w, e)
 		return
 	}
-	h.View.Tampil(w, "cabang.html", x)
+	u, _ := middleware.UserDari(r.Context())
+	h.View.Tampil(w, "cabang.html", struct {
+		User   model.User
+		Cabang []model.Cabang
+	}{u, x})
 }
+
 func (h *AdminHandler) Member(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		if r.FormValue("nomor") == "" || r.FormValue("nama") == "" || r.FormValue("no_hp") == "" {
@@ -51,8 +58,13 @@ func (h *AdminHandler) Member(w http.ResponseWriter, r *http.Request) {
 		gagal(w, e)
 		return
 	}
-	h.View.Tampil(w, "member.html", x)
+	u, _ := middleware.UserDari(r.Context())
+	h.View.Tampil(w, "member.html", struct {
+		User   model.User
+		Member []model.Member
+	}{u, x})
 }
+
 func (h *AdminHandler) Promo(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		a, _ := time.Parse("2006-01-02T15:04", r.FormValue("mulai"))
@@ -89,13 +101,16 @@ func (h *AdminHandler) Promo(w http.ResponseWriter, r *http.Request) {
 		gagal(w, e)
 		return
 	}
+	u, _ := middleware.UserDari(r.Context())
 	h.View.Tampil(w, "promo.html", struct {
+		User     model.User
 		Promo    []model.Promo
 		Produk   []model.Produk
 		Kategori []model.Kategori
 		Cabang   []model.Cabang
-	}{x, p, k, c})
+	}{u, x, p, k, c})
 }
+
 func (h *AdminHandler) Voucher(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		if angka(r.FormValue("promo_id")) <= 0 || r.FormValue("kode") == "" || angka(r.FormValue("kuota")) <= 0 {
@@ -115,9 +130,12 @@ func (h *AdminHandler) Voucher(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	p, _ := h.Repo.Promo(r.Context())
+	u, _ := middleware.UserDari(r.Context())
 	h.View.Tampil(w, "voucher.html", struct {
+		User    model.User
 		Voucher []model.Voucher
 		Promo   []model.Promo
-	}{x, p})
+	}{u, x, p})
 }
+
 func angka(s string) int { n, _ := strconv.Atoi(s); return n }

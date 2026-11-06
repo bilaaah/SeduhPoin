@@ -1,9 +1,371 @@
 {{define "content"}}
+
+{{if eq .User.Role "KASIR"}}
+<!-- ========================================== -->
+<!-- 1. TAMPILAN DASHBOARD KHUSUS KASIR         -->
+<!-- ========================================== -->
+<div class="dashboard-hero" style="background: linear-gradient(135deg, #eef4f8, #d8e6f1); border-color: rgba(41,128,185,0.3);">
+    <div class="hero-text">
+        <span class="hero-badge" style="background: #2980b9; color: #fff;">☕ Terminal Kasir POS Kedai Seduh</span>
+        <h1>Halo, {{.User.Nama}}!</h1>
+        <p>Proses transaksi kasir penjualan, terapkan diskon promosi, klaim penukaran poin member (maks. 50%), akumulasi poin reward baru, serta pembatalan transaksi.</p>
+    </div>
+</div>
+
+<div id="pos-transaksi" style="display: grid; grid-template-columns: 480px 1fr; gap: 28px; align-items: start; margin-bottom: 36px;">
+    <!-- Form Kasir POS Transaksi Baru -->
+    <div class="form" style="margin-bottom: 0;">
+        <h3 style="margin-top: 0; font-size: 19px; border-bottom: 1px solid var(--line); padding-bottom: 12px; margin-bottom: 18px; display: flex; align-items: center; gap: 8px;">
+            <span>🛒</span> Form Transaksi Penjualan Baru
+        </h3>
+        <form method="post" action="/transaksi" id="formKasir">
+            <div class="form-group">
+                <label>Pilih Cabang Transaksi</label>
+                <select class="form-control" name="cabang_id" required>
+                    {{range .KasirData.Cabang}}
+                    <option value="{{.ID}}">{{.Nama}} (Kode: {{.Kode}})</option>
+                    {{end}}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Pilih Pelanggan / Member</label>
+                <select class="form-control" name="member_id" id="posMember" onchange="hitungPOS()">
+                    <option value="0" data-tingkat="NON" data-total="0">-- Pelanggan Umum (Tanpa Member) --</option>
+                    {{range .KasirData.Member}}
+                    <option value="{{.ID}}" data-tingkat="{{.Tingkat}}" data-total="{{.Total}}">
+                        {{.Nomor}} - {{.Nama}} ({{.Tingkat}} Member)
+                    </option>
+                    {{end}}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Subtotal Belanja Produk (Rp)</label>
+                <input class="form-control" type="number" id="posSubtotal" name="subtotal" min="1000" placeholder="Contoh: 60000" oninput="hitungPOS()" required>
+            </div>
+
+            <div class="form-group">
+                <label>Potongan Diskon Promo / Voucher (Rp)</label>
+                <input class="form-control" type="number" id="posDiskon" name="total_diskon" min="0" value="0" placeholder="0" oninput="hitungPOS()">
+                <small style="color:var(--muted); font-size:11px;">* Potongan minimal belanja tidak dapat digabung voucher.</small>
+            </div>
+
+            <div class="form-group" style="background: #fdfaf4; border: 1px solid #fae6cb; border-radius: 10px; padding: 14px;">
+                <label style="color:#856404; margin-bottom: 4px;">🪙 Tukar Poin Member (1 Poin = Rp1.000)</label>
+                <input class="form-control" type="number" id="posPoinTukar" name="poin_ditukar" min="0" value="0" oninput="hitungPOS()">
+                <small style="color:#856404; display:block; margin-top:4px; font-size:11.5px;">
+                    Maksimal tukar poin: <strong id="posMaxPoinTukar">0 Poin (Maks 50% belanja)</strong>
+                </small>
+            </div>
+
+            <!-- Kalkulasi Ringkasan Bayar -->
+            <div style="background: #f4f6f8; border-radius: 10px; padding: 16px; margin-bottom: 18px;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:13px;">
+                    <span>Total Tagihan Akhir:</span>
+                    <strong style="font-size:16px; color:var(--espresso);" id="lblTotalBayar">Rp0</strong>
+                </div>
+                <div style="display:flex; justify-content:space-between; font-size:12px; color:var(--green);">
+                    <span>Poin Diperoleh Member:</span>
+                    <strong id="lblPoinDapat">+0 Poin</strong>
+                </div>
+            </div>
+
+            <input type="hidden" id="posTotalBayar" name="total_bayar" value="0">
+            <input type="hidden" id="posPoinDapat" name="poin_diperoleh" value="0">
+
+            <button type="submit" class="btn btn-block" style="background:#2980b9;">
+                💾 Proses & Simpan Transaksi
+            </button>
+        </form>
+    </div>
+
+    <!-- Informasi Promo Aktif & Bantuan POS -->
+    <div>
+        <div style="background:#fff; border:1px solid var(--line); border-radius:var(--radius); padding:22px; box-shadow:var(--shadow); margin-bottom:24px;">
+            <h4 style="margin-top:0; font-size:16px;">🏷️ Referensi Promo Aktif di Kasir</h4>
+            <div style="display:flex; flex-direction:column; gap:10px;">
+                {{range .KasirData.Promo}}
+                <div style="padding:10px 14px; border:1px solid var(--line); border-radius:8px; font-size:12.5px;">
+                    <div style="display:flex; justify-content:space-between;">
+                        <strong>{{.Kode}} &mdash; {{.Nama}}</strong>
+                        <span class="badge" style="background:#fbeee3; color:var(--coffee);">{{.Jenis}}</span>
+                    </div>
+                    <small style="color:var(--muted); display:block; margin-top:3px;">
+                        Nilai: {{if eq .Jenis "PERSENTASE_PRODUK"}}{{.Nilai}}%{{else if eq .Jenis "BUY2_GET1"}}Beli 2 Gratis 1{{else}}{{rupiah .Nilai}}{{end}}
+                        {{if gt .Minimal 0}} | Min. Belanja: {{rupiah .Minimal}}{{end}}
+                    </small>
+                </div>
+                {{end}}
+            </div>
+        </div>
+
+        <div style="background:#fff; border:1px solid var(--line); border-radius:var(--radius); padding:22px; box-shadow:var(--shadow);">
+            <h4 style="margin-top:0; font-size:16px;">🎟️ Kuota Voucher Tersedia</h4>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                {{range .KasirData.Voucher}}
+                <div style="padding:10px; border:1px solid var(--line); border-radius:8px; font-size:12px;">
+                    <strong style="color:var(--coffee); font-family:monospace; font-size:13px;">{{.Kode}}</strong>
+                    <small style="display:block; color:var(--muted);">Sisa: {{.Kuota}} kuota</small>
+                </div>
+                {{end}}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabel Riwayat & Pembatalan Transaksi -->
+<div id="riwayat-transaksi" style="background:#fff; border:1px solid var(--line); border-radius:var(--radius); padding:26px; box-shadow:var(--shadow);">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;">
+        <div>
+            <h3 style="margin:0 0 4px;">↩️ Riwayat & Pembatalan Transaksi Penjualan</h3>
+            <p style="margin:0; font-size:13px;">Jika terjadi kesalahan pesanan, kasir dapat membatalkan transaksi untuk menarik kembali poin yang diperoleh dan mengembalikan poin yang ditukarkan.</p>
+        </div>
+    </div>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>No. Trx</th>
+                <th>Cabang</th>
+                <th>Pelanggan</th>
+                <th class="num">Subtotal</th>
+                <th class="num">Diskon</th>
+                <th class="num">Total Bayar</th>
+                <th>Status</th>
+                <th>Waktu</th>
+                <th style="text-align:center;">Aksi</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{range .KasirData.Transaksi}}
+            <tr>
+                <td><strong>#TRX-{{.ID}}</strong></td>
+                <td>{{.CabangNama}}</td>
+                <td>
+                    <strong>{{.MemberNama}}</strong>
+                    {{if .MemberNomor}}<small style="display:block; color:var(--muted);">{{.MemberNomor}}</small>{{end}}
+                </td>
+                <td class="num">{{rupiah .Subtotal}}</td>
+                <td class="num">{{rupiah .TotalDiskon}}</td>
+                <td class="num" style="font-weight:700; color:var(--espresso);">{{rupiah .TotalBayar}}</td>
+                <td>
+                    {{if eq .Status "SELESAI"}}
+                        <span class="badge badge-aktif">SELESAI</span>
+                    {{else}}
+                        <span class="badge" style="background:var(--red-bg); color:var(--red);">DIBATALKAN</span>
+                    {{end}}
+                </td>
+                <td style="font-size:12px; color:var(--muted);">{{.CreatedAt.Format "02/01/2006 15:04"}}</td>
+                <td style="text-align:center;">
+                    {{if eq .Status "SELESAI"}}
+                    <form method="post" action="/transaksi/{{.ID}}/batal" onsubmit="return confirm('Yakin ingin membatalkan transaksi #TRX-{{.ID}}? Poin yang diperoleh akan ditarik kembali.')" style="margin:0;">
+                        <button type="submit" class="btn btn-danger btn-sm">Batalkan</button>
+                    </form>
+                    {{else}}
+                        <small style="color:var(--muted);">-</small>
+                    {{end}}
+                </td>
+            </tr>
+            {{else}}
+            <tr>
+                <td colspan="9" style="text-align:center; color:var(--muted); padding:24px;">Belum ada transaksi penjualan yang tercatat.</td>
+            </tr>
+            {{end}}
+        </tbody>
+    </table>
+</div>
+
+<script>
+function hitungPOS() {
+    var subtotal = parseInt(document.getElementById('posSubtotal').value) || 0;
+    var diskon = parseInt(document.getElementById('posDiskon').value) || 0;
+    var stlhDiskon = subtotal - diskon;
+    if (stlhDiskon < 0) stlhDiskon = 0;
+
+    var maxPoin = Math.floor((stlhDiskon * 0.5) / 1000);
+    document.getElementById('posMaxPoinTukar').innerText = maxPoin + " Poin (Maks. Rp" + (maxPoin * 1000).toLocaleString('id-ID') + ")";
+
+    var poinTukar = parseInt(document.getElementById('posPoinTukar').value) || 0;
+    if (poinTukar > maxPoin) {
+        poinTukar = maxPoin;
+        document.getElementById('posPoinTukar').value = maxPoin;
+    }
+
+    var potPoin = poinTukar * 1000;
+    var bayar = stlhDiskon - potPoin;
+    if (bayar < 0) bayar = 0;
+
+    document.getElementById('lblTotalBayar').innerText = "Rp" + bayar.toLocaleString('id-ID');
+    document.getElementById('posTotalBayar').value = bayar;
+
+    // Perolehan poin: 1 poin per Rp10.000, 1.5x jika Gold
+    var mbrSelect = document.getElementById('posMember');
+    var opt = mbrSelect.options[mbrSelect.selectedIndex];
+    var tingkat = opt.getAttribute('data-tingkat');
+
+    var poinDapat = 0;
+    if (opt.value !== "0") {
+        poinDapat = Math.floor(bayar / 10000);
+        if (tingkat === "GOLD") {
+            poinDapat = Math.floor(poinDapat * 1.5);
+        }
+    }
+    document.getElementById('lblPoinDapat').innerText = "+" + poinDapat + " Poin (" + (tingkat === "GOLD" ? "Gold 1.5x" : "Standar 1x") + ")";
+    document.getElementById('posPoinDapat').value = poinDapat;
+}
+</script>
+
+{{else if eq .User.Role "MEMBER"}}
+<!-- ========================================== -->
+<!-- 2. TAMPILAN DASHBOARD KHUSUS MEMBER        -->
+<!-- ========================================== -->
+<div class="dashboard-hero" style="background: linear-gradient(135deg, #fbf2e6, #f7dfc6); border-color: rgba(196,120,60,0.3);">
+    <div class="hero-text">
+        <span class="hero-badge" style="background: var(--caramel); color: #fff;">🪪 Area Pelanggan Setia Kedai Seduh</span>
+        <h1>Selamat Datang, {{.User.Nama}}!</h1>
+        <p>Pantau saldo poin reward, masa berlaku poin (6 bulan), status keanggotaan Silver & Gold (multiplier 1.5x), serta riwayat belanja Anda di seluruh cabang Kedai Kopi Seduh.</p>
+    </div>
+</div>
+
+<!-- Kartu Member & Poin Grid -->
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 30px;">
+    <!-- Kartu Member Digital -->
+    <div id="kartu-member" style="background: linear-gradient(135deg, #2d1c15, #442a20); border-radius: 20px; padding: 28px; color: #fff; box-shadow: 0 16px 36px rgba(45,28,21,0.25); position: relative; overflow: hidden;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+            <span style="font-size:24px;">☕ SeduhPoin</span>
+            {{if eq .MemberData.Member.Tingkat "GOLD"}}
+                <span class="badge" style="background:#f39c12; color:#fff; font-size:12px; padding:6px 14px;">🥇 GOLD MEMBER</span>
+            {{else}}
+                <span class="badge" style="background:#95a5a6; color:#fff; font-size:12px; padding:6px 14px;">🥈 SILVER MEMBER</span>
+            {{end}}
+        </div>
+
+        <div style="margin-bottom: 24px;">
+            <small style="color: #c9b4a8; font-size: 11px; letter-spacing: 1.2px; text-transform: uppercase;">Nomor Keanggotaan</small>
+            <div style="font-family: monospace; font-size: 22px; font-weight: 700; letter-spacing: 2px; color: #f7d6be; margin-top: 4px;">
+                {{if .MemberData.Member.Nomor}}{{.MemberData.Member.Nomor}}{{else}}MBR-001{{end}}
+            </div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:flex-end;">
+            <div>
+                <small style="color: #c9b4a8; font-size: 11px; text-transform: uppercase;">Nama Pelanggan</small>
+                <strong style="display:block; font-size:16px;">{{.MemberData.Member.Nama}}</strong>
+            </div>
+            <div style="text-align:right;">
+                <small style="color: #c9b4a8; font-size: 11px; text-transform: uppercase;">Belanja 3 Bulan</small>
+                <strong style="display:block; font-size:15px; color:#f7d6be;">{{rupiah .MemberData.Member.Total}}</strong>
+            </div>
+        </div>
+    </div>
+
+    <!-- Papan Saldo Poin -->
+    <div id="saldo-poin" style="background: #fff; border: 1px solid var(--line); border-radius: 20px; padding: 28px; box-shadow: var(--shadow); display: flex; flex-direction: column; justify-content: space-between;">
+        <div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <span style="font-size:12px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:1px;">Saldo Poin Aktif Anda</span>
+                <span class="badge badge-aktif">1 Poin = Rp1.000</span>
+            </div>
+            <div style="font-size: 44px; font-weight: 800; color: var(--espresso); line-height: 1; margin-bottom: 6px;">
+                {{.MemberData.PoinAktif}} <span style="font-size:20px; font-weight:600; color:var(--muted);">Poin</span>
+            </div>
+            <p style="font-size:15px; font-weight:700; color:var(--green); margin-bottom:16px;">
+                Setara potongan senilai: {{rupiah .MemberData.NilaiRupiah}}
+            </p>
+        </div>
+
+        <!-- Ketentuan Tiering Progress -->
+        <div style="background: #fdfaf4; border: 1px solid #fae6cb; border-radius: 12px; padding: 14px; font-size: 12.5px;">
+            {{if eq .MemberData.Member.Tingkat "GOLD"}}
+                <strong style="color:#856404; display:block; margin-bottom:2px;">🎉 Anda adalah Member GOLD!</strong>
+                <span style="color:#6b4c37;">Anda menikmati keuntungan bonus perolehan reward <strong>1,5x lipat</strong> pada setiap transaksi belanja di seluruh cabang.</span>
+            {{else}}
+                <strong style="color:var(--espresso); display:block; margin-bottom:2px;">Target Menuju GOLD:</strong>
+                <span style="color:var(--muted);">Belanja minimal Rp1.500.000 dalam 3 bulan terakhir. Sisa belanja yang dibutuhkan: <strong>{{rupiah .MemberData.SisaMenujuGold}}</strong> lagi.</span>
+            {{end}}
+        </div>
+    </div>
+</div>
+
+<!-- Rincian Masa Berlaku Poin & Riwayat Belanja -->
+<div style="display: grid; grid-template-columns: 1fr 1.4fr; gap: 24px;">
+    <!-- Batch Poin FEFO (Masa Berlaku 6 Bulan) -->
+    <div style="background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow);">
+        <h4 style="margin-top: 0; font-size: 16px;">⏳ Masa Berlaku Poin (FEFO 6 Bulan)</h4>
+        <p style="font-size: 12.5px; margin-bottom: 14px;">Poin berlaku 6 bulan sejak transaksi. Saat penukaran, poin terdekat kedaluwarsa digunakan lebih dahulu:</p>
+
+        <div style="display:flex; flex-direction:column; gap:10px;">
+            {{range .MemberData.BatchPoin}}
+            <div style="padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <strong style="display:block; font-size:14px; color:var(--espresso);">{{.Sisa}} Poin</strong>
+                    <small style="color:var(--muted);">Diperoleh: {{.DiperolehAt.Format "02/01/2006"}}</small>
+                </div>
+                <div style="text-align:right;">
+                    <span class="badge" style="background:#fbeee3; color:var(--coffee); font-size:11px;">
+                        Exp: {{.KadaluarsaAt.Format "02/01/2006"}}
+                    </span>
+                    <small style="display:block; color:var(--green); font-size:10.5px; margin-top:2px;">
+                        {{rupiah (mul .Sisa 1000)}}
+                    </small>
+                </div>
+            </div>
+            {{else}}
+            <p style="text-align:center; color:var(--muted); padding:16px;">Belum ada histori poin.</p>
+            {{end}}
+        </div>
+    </div>
+
+    <!-- Riwayat Transaksi Belanja Member -->
+    <div id="riwayat-belanja" style="background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow);">
+        <h4 style="margin-top: 0; font-size: 16px;">📜 Riwayat Transaksi Belanja Saya</h4>
+        <p style="font-size: 12.5px; margin-bottom: 14px;">Daftar transaksi pembelian Anda di seluruh cabang Kedai Kopi Seduh:</p>
+
+        <table class="table" style="font-size: 12.5px;">
+            <thead>
+                <tr>
+                    <th>No. Trx</th>
+                    <th>Cabang</th>
+                    <th class="num">Subtotal</th>
+                    <th class="num">Total Bayar</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .MemberData.Riwayat}}
+                <tr>
+                    <td><strong>#TRX-{{.ID}}</strong></td>
+                    <td>{{.CabangNama}}</td>
+                    <td class="num">{{rupiah .Subtotal}}</td>
+                    <td class="num" style="font-weight:700;">{{rupiah .TotalBayar}}</td>
+                    <td>
+                        {{if eq .Status "SELESAI"}}
+                            <span class="badge badge-aktif">SELESAI</span>
+                        {{else}}
+                            <span class="badge" style="background:var(--red-bg); color:var(--red);">BATAL</span>
+                        {{end}}
+                    </td>
+                </tr>
+                {{else}}
+                <tr>
+                    <td colspan="5" style="text-align:center; color:var(--muted); padding:20px;">Belum ada transaksi pembelian.</td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{{else}}
+<!-- ========================================== -->
+<!-- 3. TAMPILAN DASHBOARD KHUSUS ADMIN/PEMILIK -->
+<!-- ========================================== -->
 <div class="dashboard-hero">
     <div class="hero-text">
         <span class="hero-badge">👑 Pusat Kendali Operasional Kedai</span>
         <h1>Halo, {{if .User.Nama}}{{.User.Nama}}{{else}}Administrator{{end}}! 👋</h1>
-        <p>Sistem terintegrasi operasional dan program keanggotaan multi-cabang Kedai Kopi Seduh. Kelola data produk, 3 cabang aktif, program member Silver & Gold, serta pengaturan promo dan voucher.</p>
+        <p>Sistem operasional dan program keanggotaan multi-cabang Kedai Kopi Seduh. Kelola data produk, 3 cabang aktif, program member Silver & Gold, serta pengaturan promo dan voucher.</p>
     </div>
 </div>
 
@@ -35,7 +397,7 @@
 </div>
 
 <div style="display: grid; grid-template-columns: 1.6fr 1fr; gap: 24px; margin-bottom: 30px;">
-    <!-- Kolom Kiri: Akses Cepat Master Data & Promo -->
+    <!-- Akses Cepat Master Data & Promo -->
     <div style="background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 26px; box-shadow: var(--shadow);">
         <h3 style="margin-top: 0; display: flex; align-items: center; gap: 10px;">
             <span>📌</span> Menu Master Data & Promosi
@@ -97,30 +459,43 @@
                 </div>
                 <span style="font-weight: 700; color: var(--caramel);">Buka &rarr;</span>
             </a>
+
+            <a href="/laporan" style="display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border: 1px solid #ebdcd0; border-radius: 12px; transition: all 0.2s; background: #fffcf8;">
+                <div style="display: flex; align-items: center; gap: 14px;">
+                    <span style="font-size: 22px;">📊</span>
+                    <div>
+                        <strong style="display: block; font-size: 14px; color: var(--coffee);">Laporan Analitik Bisnis</strong>
+                        <small style="color: var(--muted);">Biaya promosi, saldo liabilitas poin, dan rasio member</small>
+                    </div>
+                </div>
+                <span style="font-weight: 700; color: var(--caramel);">Lihat Laporan &rarr;</span>
+            </a>
         </div>
     </div>
 
-    <!-- Kolom Kanan: Panduan Peran Pengguna (Admin, Kasir, Member) -->
+    <!-- Ringkasan Hak Akses Sistem -->
     <div style="background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 26px; box-shadow: var(--shadow);">
         <h3 style="margin-top: 0; display: flex; align-items: center; gap: 10px;">
-            <span>💡</span> Panduan Peran Sistem
+            <span>💡</span> Panduan Hak Akses Sistem
         </h3>
         <p style="margin-bottom: 18px;">Arsitektur pembagian hak akses pengguna di Kedai Kopi Seduh:</p>
 
         <div style="margin-bottom: 16px; padding: 14px; border-radius: 10px; background: #fffbf2; border-left: 4px solid var(--caramel);">
             <strong style="display: block; font-size: 13.5px; color: var(--espresso); margin-bottom: 4px;">👑 Admin / Pemilik</strong>
-            <p style="margin: 0; font-size: 12.5px; color: var(--muted);">Mengelola data produk, cabang, promo, voucher, pendaftaran member, dan memantau laporan bisnis.</p>
+            <p style="margin: 0; font-size: 12.5px; color: var(--muted);">Mengelola data produk, cabang, promo, voucher, pendaftaran member, dan memantau laporan biaya serta liabilitas poin.</p>
         </div>
 
         <div style="margin-bottom: 16px; padding: 14px; border-radius: 10px; background: #f4f8fb; border-left: 4px solid #2980b9;">
             <strong style="display: block; font-size: 13.5px; color: var(--espresso); margin-bottom: 4px;">☕ Kasir (POS)</strong>
-            <p style="margin: 0; font-size: 12.5px; color: var(--muted);">Memproses transaksi penjualan, menerapkan promo, menggunakan poin member, dan membatalkan pesanan.</p>
+            <p style="margin: 0; font-size: 12.5px; color: var(--muted);">Memproses transaksi penjualan, menerapkan promo, menggunakan poin member (maks 50%), dan membatalkan pesanan.</p>
         </div>
 
         <div style="padding: 14px; border-radius: 10px; background: #f4f9f4; border-left: 4px solid var(--green);">
             <strong style="display: block; font-size: 13.5px; color: var(--espresso); margin-bottom: 4px;">👤 Member / Pelanggan</strong>
-            <p style="margin: 0; font-size: 12.5px; color: var(--muted);">Memiliki nomor member, cek poin reward, tier Silver & Gold (multiplier 1.5x), dan riwayat belanja.</p>
+            <p style="margin: 0; font-size: 12.5px; color: var(--muted);">Melihat nomor kartu member, memantau saldo poin aktif, masa berlaku (6 bulan FEFO), tier Silver/Gold, dan riwayat belanja.</p>
         </div>
     </div>
 </div>
+{{end}}
+
 {{end}}

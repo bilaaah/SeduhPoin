@@ -5,10 +5,12 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/bilaaah/SeduhPoin/internal/middleware"
 	"github.com/bilaaah/SeduhPoin/internal/model"
 )
 
 type ProdukPage struct {
+	User     model.User
 	Produk   []model.Produk
 	Kategori []model.Kategori
 	Edit     model.Produk
@@ -45,7 +47,8 @@ func (h *AdminHandler) Produk(w http.ResponseWriter, r *http.Request) {
 		gagal(w, err)
 		return
 	}
-	data := ProdukPage{Produk: items, Kategori: kategori, Mode: "Tambah Produk"}
+	u, _ := middleware.UserDari(r.Context())
+	data := ProdukPage{User: u, Produk: items, Kategori: kategori, Mode: "Tambah Produk"}
 	if id, _ := strconv.Atoi(r.URL.Query().Get("edit")); id > 0 {
 		for _, x := range items {
 			if x.ID == id {

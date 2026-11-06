@@ -1,0 +1,108 @@
+{{define "content"}}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+        <h2 style="margin: 0 0 6px;">📊 Laporan Analitik Bisnis & Loyalitas</h2>
+        <p style="margin: 0;">Rekapitulasi biaya promosi, liabilitas poin beredar, dan perkembangan anggota kedai.</p>
+    </div>
+</div>
+
+<!-- Kartu Ringkasan Atas -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon icon-green">🪙</div>
+        <div class="stat-num">{{.TotalPoinAktif}}</div>
+        <div class="stat-label">Total Poin Aktif Beredar</div>
+        <div class="stat-desc">Belum kedaluwarsa (&le; 6 bulan)</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon icon-gold">💰</div>
+        <div class="stat-num">{{rupiah .NilaiRupiah}}</div>
+        <div class="stat-label">Nilai Rupiah Liabilitas Poin</div>
+        <div class="stat-desc">1 Poin = Rp1.000 potongan</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon icon-brown">🥇</div>
+        <div class="stat-num">{{.MemberGold}}</div>
+        <div class="stat-label">Member Tingkat Gold</div>
+        <div class="stat-desc">Belanja &ge; Rp1.500.000 (3 bln)</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon icon-blue">🥈</div>
+        <div class="stat-num">{{.MemberSilver}}</div>
+        <div class="stat-label">Member Tingkat Silver</div>
+        <div class="stat-desc">Total member: {{.TotalMember}} orang</div>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 28px; align-items: start;">
+    <!-- Laporan 1: Biaya Setiap Promo -->
+    <div style="background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow);">
+        <h3 style="margin-top: 0; display: flex; align-items: center; gap: 10px;">
+            <span>🏷️</span> Laporan Biaya Realisasi Setiap Promo
+        </h3>
+        <p style="margin-bottom: 18px;">Rekapitulasi total rupiah potongan diskon yang diserap oleh promosi:</p>
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Kode / Promo</th>
+                    <th>Jenis</th>
+                    <th class="num">Dipakai</th>
+                    <th class="num">Total Biaya Diskon</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .ListPromo}}
+                <tr>
+                    <td>
+                        <strong>{{.Kode}}</strong>
+                        <small style="display:block; color:var(--muted);">{{.Nama}}</small>
+                    </td>
+                    <td>
+                        <span class="badge" style="background:#f5eee8; color:var(--coffee);">{{.Jenis}}</span>
+                    </td>
+                    <td class="num">{{.Terpakai}} kali</td>
+                    <td class="num" style="font-weight: 700; color: var(--espresso);">{{rupiah .TotalBiaya}}</td>
+                </tr>
+                {{else}}
+                <tr>
+                    <td colspan="4" style="text-align: center; color: var(--muted); padding: 20px;">Belum ada data pemakaian promo</td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Laporan 2: Statistik Tingkat Member -->
+    <div style="background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow);">
+        <h3 style="margin-top: 0; display: flex; align-items: center; gap: 10px;">
+            <span>👥</span> Perkembangan Member per Tingkat
+        </h3>
+        <p style="margin-bottom: 18px;">Distribusi tingkat keanggotaan pelanggan setia Kedai Kopi Seduh:</p>
+
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+            <div style="padding: 16px; border-radius: 12px; background: #fdfaf4; border: 1px solid #fae7cf;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <strong style="color: #856404; font-size: 15px;">🥇 Member GOLD</strong>
+                    <span style="font-weight: 800; font-size: 18px; color: #856404;">{{.MemberGold}} Orang</span>
+                </div>
+                <small style="color: var(--muted); display: block;">Syarat: Akumulasi belanja &ge; Rp1.500.000 dalam 3 bulan terakhir. Reward: Perolehan poin 1,5x lipat.</small>
+            </div>
+
+            <div style="padding: 16px; border-radius: 12px; background: #f8f9fa; border: 1px solid #e2e6ea;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <strong style="color: #383d41; font-size: 15px;">🥈 Member SILVER</strong>
+                    <span style="font-weight: 800; font-size: 18px; color: #383d41;">{{.MemberSilver}} Orang</span>
+                </div>
+                <small style="color: var(--muted); display: block;">Tingkat awal saat pelanggan pertama kali mendaftar. Reward: Perolehan poin 1x standar.</small>
+            </div>
+
+            <div style="padding: 14px; border-radius: 10px; background: #eaf6ef; border: 1px solid #cbe9d8; margin-top: 6px;">
+                <strong style="display: block; font-size: 13px; color: var(--green); margin-bottom: 3px;">💡 Kebijakan Masa Berlaku Poin</strong>
+                <p style="margin: 0; font-size: 12px; color: #356749;">Setiap poin yang diperoleh member aktif selama <strong>6 bulan</strong> sejak tanggal transaksi. Saat penukaran, sistem mengonsumsi poin terdekat kedaluwarsa secara otomatis (FEFO).</p>
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}
+

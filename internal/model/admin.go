@@ -23,6 +23,7 @@ type Cabang struct {
 	Kode, Nama, Alamat, Telepon string
 	Aktif                       bool
 }
+
 type Member struct {
 	ID                                        int
 	Nomor, Nama, NoHP, Email, Alamat, Tingkat string
@@ -30,6 +31,7 @@ type Member struct {
 	Aktif                                     bool
 	CreatedAt                                 time.Time
 }
+
 type Promo struct {
 	ID                                         int
 	Kode, Nama, Jenis                          string
@@ -39,6 +41,7 @@ type Promo struct {
 	Mulai, Berakhir                            time.Time
 	Aktif                                      bool
 }
+
 type Voucher struct {
 	ID, PromoID, Kuota, Terpakai int
 	Kode, PromoNama              string
@@ -53,4 +56,78 @@ type RingkasanData struct {
 	MemberSilver int
 	TotalPromo   int
 	TotalVoucher int
+
+	// Untuk Kasir
+	KasirData KasirData
+
+	// Untuk Member
+	MemberData MemberPortalData
+
+	// Untuk Laporan
+	LaporanData LaporanData
+}
+
+type Transaksi struct {
+	ID            int
+	CabangID      int
+	CabangNama    string
+	MemberID      int
+	MemberNama    string
+	MemberNomor   string
+	Subtotal      int
+	TotalDiskon   int
+	TotalBayar    int
+	PoinDitukar   int
+	PoinDiperoleh int
+	Status        string
+	CreatedAt     time.Time
+}
+
+type PoinDetail struct {
+	ID           int
+	MemberID     int
+	Jumlah       int
+	Sisa         int
+	DiperolehAt  time.Time
+	KadaluarsaAt time.Time
+	Status       string
+}
+
+type LaporanPromo struct {
+	Kode       string
+	Nama       string
+	Jenis      string
+	Terpakai   int
+	Nilai      int
+	TotalBiaya int
+}
+
+type LaporanData struct {
+	User           User
+	ListPromo      []LaporanPromo
+	TotalPoinAktif int
+	NilaiRupiah    int
+	TotalMember    int
+	MemberGold     int
+	MemberSilver   int
+}
+
+type KasirData struct {
+	User      User
+	Cabang    []Cabang
+	Produk    []Produk
+	Member    []Member
+	Promo     []Promo
+	Voucher   []Voucher
+	Transaksi []Transaksi
+}
+
+type MemberPortalData struct {
+	User           User
+	Member         Member
+	PoinAktif      int
+	NilaiRupiah    int
+	SisaMenujuGold int
+	BatchPoin      []PoinDetail
+	Riwayat        []Transaksi
 }

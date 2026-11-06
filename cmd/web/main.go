@@ -61,6 +61,13 @@ func main() {
 	privat.HandleFunc("/promo", admin.Promo)
 	privat.HandleFunc("/voucher", admin.Voucher)
 
+	// Laporan (Admin/Pemilik)
+	privat.HandleFunc("GET /laporan", halaman.Laporan)
+
+	// Transaksi & Batal (Kasir)
+	privat.HandleFunc("POST /transaksi", halaman.SimpanTransaksi)
+	privat.HandleFunc("POST /transaksi/{id}/batal", halaman.BatalTransaksi)
+
 	// Logout
 	privat.HandleFunc("POST /logout", authH.Logout)
 

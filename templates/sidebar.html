@@ -1,84 +1,148 @@
 {{define "sidebar"}}
 <div class="sidebar-top">
     <div class="side-intro">
-        <span class="eyebrow">WORKSPACE</span>
+        <span class="eyebrow">
+            {{if eq .User.Role "ADMIN"}}
+                ADMINISTRATOR / PEMILIK
+            {{else if eq .User.Role "KASIR"}}
+                KASIR OPERASIONAL
+            {{else if eq .User.Role "MEMBER"}}
+                MEMBER LOYALITAS
+            {{else}}
+                KEDAI KOPI SEDUH
+            {{end}}
+        </span>
         <strong>Kedai Kopi Seduh</strong>
     </div>
 
-    <span class="nav-section-label">Pusat Kendali</span>
-    <ul>
-        <li>
-            <a href="/">
-                <span class="nav-icon">🏠</span>
-                <span>Beranda Dashboard</span>
-            </a>
-        </li>
-    </ul>
+    {{if eq .User.Role "ADMIN"}}
+        <!-- NAVIGASI KHUSUS ADMIN / PEMILIK -->
+        <span class="nav-section-label">Pusat Kendali</span>
+        <ul>
+            <li>
+                <a href="/">
+                    <span class="nav-icon">🏠</span>
+                    <span>Beranda Dashboard</span>
+                </a>
+            </li>
+        </ul>
 
-    <span class="nav-section-label">Master Data & Promosi</span>
-    <ul>
-        <li>
-            <a href="/produk">
-                <span class="nav-icon">☕</span>
-                <span>Menu & Stok Produk</span>
-            </a>
-        </li>
-        <li>
-            <a href="/cabang">
-                <span class="nav-icon">🏢</span>
-                <span>Cabang Kedai (3)</span>
-            </a>
-        </li>
-        <li>
-            <a href="/member">
-                <span class="nav-icon">👥</span>
-                <span>Member Loyalitas</span>
-            </a>
-        </li>
-        <li>
-            <a href="/promo">
-                <span class="nav-icon">🏷️</span>
-                <span>Pengaturan Promo</span>
-            </a>
-        </li>
-        <li>
-            <a href="/voucher">
-                <span class="nav-icon">🎟️</span>
-                <span>Voucher Berkode</span>
-            </a>
-        </li>
-    </ul>
+        <span class="nav-section-label">Master Data</span>
+        <ul>
+            <li>
+                <a href="/produk">
+                    <span class="nav-icon">☕</span>
+                    <span>Menu & Stok Produk</span>
+                </a>
+            </li>
+            <li>
+                <a href="/cabang">
+                    <span class="nav-icon">🏢</span>
+                    <span>Cabang Kedai (3)</span>
+                </a>
+            </li>
+            <li>
+                <a href="/member">
+                    <span class="nav-icon">👥</span>
+                    <span>Data Member Loyalitas</span>
+                </a>
+            </li>
+        </ul>
 
-    <span class="nav-section-label">Transaksi & Layanan</span>
-    <ul>
-        <li class="disabled">
-            <a href="#">
-                <span class="nav-icon">🛒</span>
-                <span>Kasir & Transaksi</span>
-            </a>
-        </li>
-        <li class="disabled">
-            <a href="#">
-                <span class="nav-icon">↩️</span>
-                <span>Pembatalan Transaksi</span>
-            </a>
-        </li>
-        <li class="disabled">
-            <a href="#">
-                <span class="nav-icon">⏳</span>
-                <span>Masa Aktif Poin & Tier</span>
-            </a>
-        </li>
-        <li class="disabled">
-            <a href="#">
-                <span class="nav-icon">📊</span>
-                <span>Laporan & Analitik</span>
-            </a>
-        </li>
-    </ul>
+        <span class="nav-section-label">Promosi & Diskon</span>
+        <ul>
+            <li>
+                <a href="/promo">
+                    <span class="nav-icon">🏷️</span>
+                    <span>Pengaturan Promo</span>
+                </a>
+            </li>
+            <li>
+                <a href="/voucher">
+                    <span class="nav-icon">🎟️</span>
+                    <span>Voucher Berkode</span>
+                </a>
+            </li>
+        </ul>
+
+        <span class="nav-section-label">Laporan Bisnis</span>
+        <ul>
+            <li>
+                <a href="/laporan">
+                    <span class="nav-icon">📊</span>
+                    <span>Laporan Promo & Poin</span>
+                </a>
+            </li>
+        </ul>
+
+    {{else if eq .User.Role "KASIR"}}
+        <!-- NAVIGASI KHUSUS KASIR -->
+        <span class="nav-section-label">Operasional Kasir POS</span>
+        <ul>
+            <li>
+                <a href="/">
+                    <span class="nav-icon">🏠</span>
+                    <span>Beranda Kasir</span>
+                </a>
+            </li>
+            <li>
+                <a href="/#pos-transaksi">
+                    <span class="nav-icon">🛒</span>
+                    <span>Proses Transaksi Penjualan</span>
+                </a>
+            </li>
+            <li>
+                <a href="/#riwayat-transaksi">
+                    <span class="nav-icon">↩️</span>
+                    <span>Pembatalan Transaksi</span>
+                </a>
+            </li>
+        </ul>
+
+    {{else if eq .User.Role "MEMBER"}}
+        <!-- NAVIGASI KHUSUS MEMBER / PELANGGAN -->
+        <span class="nav-section-label">Area Keanggotaan</span>
+        <ul>
+            <li>
+                <a href="/">
+                    <span class="nav-icon">🏠</span>
+                    <span>Beranda Member</span>
+                </a>
+            </li>
+            <li>
+                <a href="/#kartu-member">
+                    <span class="nav-icon">🪪</span>
+                    <span>Kartu Keanggotaan</span>
+                </a>
+            </li>
+            <li>
+                <a href="/#saldo-poin">
+                    <span class="nav-icon">🪙</span>
+                    <span>Poin & Masa Berlaku</span>
+                </a>
+            </li>
+            <li>
+                <a href="/#riwayat-belanja">
+                    <span class="nav-icon">📜</span>
+                    <span>Riwayat Belanja</span>
+                </a>
+            </li>
+        </ul>
+
+    {{else}}
+        <!-- Fallback Menu Umum -->
+        <span class="nav-section-label">Menu</span>
+        <ul>
+            <li><a href="/"><span class="nav-icon">🏠</span><span>Beranda</span></a></li>
+        </ul>
+    {{end}}
 </div>
 
 <div class="sidebar-bottom">
+    <div style="margin-bottom: 12px; padding: 4px 6px; font-size: 11.5px; color: var(--muted); border-bottom: 1px dashed var(--line);">
+        Login sebagai: <strong style="color: var(--espresso); display: block;">{{if .User.Nama}}{{.User.Nama}}{{else}}Tamu{{end}}</strong>
+        <span class="badge" style="margin-top: 4px; font-size: 10px; background: #fbeee3; color: var(--coffee);">{{.User.Role}}</span>
+    </div>
     <form method="post" action="/logout">
         <button type="submit" class="btn btn-sm btn-light btn-block" style="justify-content: center;">
             🚪 Keluar Akun
