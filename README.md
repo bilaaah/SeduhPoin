@@ -132,6 +132,8 @@ erDiagram
     PROMO ||--o{ PROMO_PRODUK : "filter produk"
     PROMO ||--o{ PROMO_KATEGORI : "filter kategori"
     PROMO ||--o{ VOUCHER : "diterbitkan sebagai"
+    TRANSAKSI ||--o{ TRANSAKSI_ITEM : "berisi item"
+    TRANSAKSI_ITEM ||--|| PRODUK : "merujuk produk"
     TRANSAKSI ||--o{ POIN_MEMBER : "menghasilkan / memakai"
 
     USERS {
@@ -213,11 +215,23 @@ erDiagram
         bigint id PK
         bigint cabang_id FK
         bigint member_id FK
+        bigint voucher_id FK
+        int poin_digunakan
         int subtotal
         int total_diskon
         int total_bayar
         enum status "SELESAI, DIBATALKAN"
         timestamp created_at
+    }
+
+    TRANSAKSI_ITEM {
+        bigint id PK
+        bigint transaksi_id FK
+        bigint produk_id FK
+        int qty
+        int harga_satuan
+        int diskon_satuan
+        int subtotal_item
     }
 
     POIN_MEMBER {
@@ -276,25 +290,25 @@ Berikut panduan langkah pengerjaan yang terstruktur untuk rekan-rekan tim:
   - `internal/repository/transaksi.go`
   - `templates/transaksi.html`
   - Daftarkan route di `cmd/web/main.go` dan tambahkan link di `templates/sidebar.html`.
+- **Tabel Database yang Dipakai**: `transaksi`, `transaksi_item`, `produk`, `promo`, `promo_produk`, `promo_kategori`, `promo_cabang`, `voucher`, `poin_member`, `member`.
 - **Langkah Logika Bisnis**:
-  1. **Hitung Subtotal**: Total dari $\sum (\text{harga} \times \text{qty})$.
-  2. **Evaluasi Diskon Promo**:
-     - *Diskon Persentase Produk*: Cek produk yang ada di `promo_produk`. Potong harga sebesar $X\%$.
-     - *Buy 2 Get 1*: Untuk setiap 3 item dalam kategori target `promo_kategori`, berikan 1 item gratis.
-     - *Potongan Min. Belanja vs Voucher*: **Aturan mutlak:** Jika pelanggan memasukkan voucher, promo potongan min. belanja tidak boleh diaplikasikan. Validasi juga cabang transaksi dan rentang jam transaksi (*happy hour*).
-  3. **Penukaran Poin Member**:
-     - Cek apakah transaksi memilih member terdaftar.
-     - Ambil saldo poin aktif member yang belum kedaluwarsa (`sisa > 0 AND status = 'AKTIF' AND kadaluarsa_at > NOW()`).
-     - **Batas maksimal penukaran poin:** Paling banyak **50% dari total belanja** setelah potongan promo.
-     - **Nilai tukar:** 1 poin = Rp1.000.
-     - **Urutan konsumsi poin (FEFO/FIFO):** Ambil baris poin dengan urutan `kadaluarsa_at ASC`. Kurangi kolom `sisa` pada tabel `poin_member`.
-  4. **Perolehan Poin Baru**:
-     - Poin baru dihitung dari `total_bayar` akhir.
-     - Aturan: `floor(total_bayar / 10000) * 1 poin`.
-     - **Multiplier Tier Gold:** Jika member berstatus `GOLD`, kalikan perolehan poin dengan **1,5x** (contoh: belanja Rp100.000 $\rightarrow$ Silver dapat 10 poin, Gold dapat 15 poin).
-     - Masukkan baris baru ke tabel `poin_member` dengan masa kedaluwarsa 6 bulan:
-       `INSERT INTO poin_member (member_id, transaksi_id, jumlah, sisa, diperoleh_at, kadaluarsa_at, status) VALUES (?, ?, ?, ?, NOW(), NOW() + INTERVAL 6 MONTH, 'AKTIF')`.
-  5. **Kurangi Stok**: Potong stok produk di tabel `produk`.
+  1. **Form Input**: Pilih cabang, cari member (opsional), pilih produk + qty, kode voucher (opsional), centang tukarkan poin.
+  2. **Hitung Subtotal**: Total dari $\sum (\text{harga} \times \text{qty})$.
+  3. **Evaluasi Diskon Promo** (cek aktif, dalam rentang tanggal & jam, berlaku untuk cabang ini):
+     - *Diskon Persentase Produk (`PERSENTASE_PRODUK`)*: Cek tabel `promo_produk`. Potong `harga_satuan` sebesar `nilai`%. Simpan ke `diskon_satuan` di `transaksi_item`.
+     - *Beli 2 Gratis 1 (`BUY2_GET1`)*: Cek `promo_kategori`. Untuk setiap 3 item dalam kategori target, 1 item dihitung gratis. `diskon_satuan = harga_satuan` untuk item gratis.
+     - *Potongan Min. Belanja (`POTONGAN_MIN_BELANJA`)*: Jika subtotal ≥ `minimal_belanja` **DAN** tidak ada voucher digunakan.
+     - *Voucher (`VOUCHER`)*: Validasi kode, kuota, cabang. Kurangi `voucher.terpakai += 1`. **Aturan mutlak**: jika voucher dipakai, promo `POTONGAN_MIN_BELANJA` tidak boleh aktif.
+  4. **Penukaran Poin Member** (jika member dipilih dan meminta tukar poin):
+     - Ambil poin valid: `WHERE member_id=? AND status='AKTIF' AND sisa>0 AND kadaluarsa_at > NOW() ORDER BY kadaluarsa_at ASC` (FEFO).
+     - **Batas maksimal**: poin yang ditukar ≤ `floor(total_setelah_diskon * 0.5 / 1000)` poin.
+     - Kurangi `sisa` per baris poin dari yang paling dekat kedaluwarsa. Catat `poin_digunakan` di tabel `transaksi`.
+  5. **Perolehan Poin Baru**:
+     - `poin_baru = floor(total_bayar / 10000)`.
+     - Jika member `GOLD`: `poin_baru = floor(poin_baru * 1.5)`.
+     - `INSERT INTO poin_member (member_id, transaksi_id, jumlah, sisa, diperoleh_at, kadaluarsa_at, status) VALUES (?, ?, ?, ?, NOW(), NOW() + INTERVAL 6 MONTH, 'AKTIF')`.
+  6. **Simpan Detail Item**: Insert baris ke `transaksi_item` per produk (untuk kebutuhan restock Hilal).
+  7. **Kurangi Stok**: `UPDATE produk SET stok = stok - ? WHERE id = ?`.
 
 ---
 
@@ -304,18 +318,21 @@ Berikut panduan langkah pengerjaan yang terstruktur untuk rekan-rekan tim:
   - `internal/handler/batal.go` (routing `POST /transaksi/{id}/batal`)
   - `internal/repository/batal.go`
   - Tampilkan tombol "Batalkan Transaksi" pada riwayat transaksi.
+- **Tabel Database yang Dipakai**: `transaksi`, `transaksi_item`, `produk`, `poin_member`, `voucher`.
 - **Langkah Logika Bisnis (Harus dalam 1 Database Transaction / `db.BeginTx`)**:
   1. Validasi transaksi yang akan dibatalkan (pastikan status saat ini adalah `SELESAI`).
   2. Ubah status transaksi menjadi `DIBATALKAN`:
      `UPDATE transaksi SET status = 'DIBATALKAN' WHERE id = ?`.
   3. **Tarik Kembali Poin Diperoleh**:
-     - Poin yang diterbitkan dari transaksi tersebut di-void agar tidak bisa dipakai di kemudian hari:
+     - Poin yang diterbitkan dari transaksi tersebut di-void:
        `UPDATE poin_member SET status = 'DIBATALKAN', sisa = 0 WHERE transaksi_id = ? AND status = 'AKTIF'`.
   4. **Kembalikan Poin yang Ditukarkan**:
-     - Jika transaksi tersebut menggunakan penukaran poin, pulihkan kembali poin tersebut ke saldo member.
-  5. **Restock Produk & Kuota Voucher**:
-     - Tambahkan kembali kuantitas stok produk yang dibatalkan.
-     - Jika transaksi menggunakan voucher, kurangi pemakaian voucher (`UPDATE voucher SET terpakai = terpakai - 1`).
+     - Ambil nilai `poin_digunakan` dari tabel `transaksi`. Jika > 0, tambahkan kembali ke saldo poin member (insert baris baru `poin_member` tanpa `transaksi_id` atau pulihkan baris lama).
+  5. **Restock Produk**:
+     - Query detail item dari `transaksi_item` lalu:
+       `UPDATE produk SET stok = stok + ? WHERE id = ?` per baris item.
+  6. **Kembalikan Kuota Voucher** (jika transaksi menggunakan voucher):
+     - `UPDATE voucher SET terpakai = terpakai - 1 WHERE id = (SELECT voucher_id FROM transaksi WHERE id = ?)`.
 
 ---
 
@@ -403,20 +420,40 @@ Berikut panduan langkah pengerjaan yang terstruktur untuk rekan-rekan tim:
 
 ## 🌿 Panduan Kolaborasi Git Tim
 
-1. **Buat Branch Kerja Khusus**:
+> **Alur wajib**: semua anggota push ke branch `dev` terlebih dahulu. Branch `main` hanya diupdate oleh Nabila (ketua) setelah semua lingkup di `dev` sudah berjalan & direview.
+
+```
+origin/main   ← versi stabil final (hanya Nabila yang merge ke sini)
+      ↑
+origin/dev    ← branch integrasi tim (semua push & pull request ke sini)
+      ↑
+feat/lingkup-3-transaksi  ← branch kerja masing-masing anggota
+feat/lingkup-4-batal
+feat/lingkup-5-poin-tier
+feat/lingkup-6-laporan
+```
+
+1. **Clone Repo & Pindah ke `dev`**:
+   ```bash
+   git clone https://github.com/bilaaah/SeduhPoin.git
+   cd SeduhPoin
+   git checkout dev
+   ```
+2. **Buat Branch Kerja Khusus dari `dev`**:
    ```bash
    git checkout -b fitur/lingkup-3-transaksi    # Rahma
    git checkout -b fitur/lingkup-4-batal        # Hilal
    git checkout -b fitur/lingkup-5-poin-tier    # Dinda
    git checkout -b fitur/lingkup-6-laporan      # Luhur
    ```
-2. **Commit dengan Pesan Deskriptif**:
+3. **Commit dengan Pesan Deskriptif**:
    ```bash
    git add .
    git commit -m "feat(lingkup-3): kalkulasi diskon promo dan penukaran poin FEFO"
    ```
-3. **Sinkronisasi dengan `main` Sebelum Push**:
+4. **Sinkronisasi dengan `dev` Sebelum Push** (hindari konflik):
    ```bash
-   git pull origin main
-   git push origin <nama-branch-kamu>
+   git pull origin dev --rebase
+   git push origin fitur/lingkup-3-transaksi
    ```
+5. **Buat Pull Request ke `dev`** (bukan ke `main`) melalui GitHub, lalu minta Nabila untuk mereview.

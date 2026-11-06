@@ -132,14 +132,35 @@ CREATE TABLE transaksi (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
     cabang_id BIGINT UNSIGNED NOT NULL,
     member_id BIGINT UNSIGNED NULL,
+    voucher_id BIGINT UNSIGNED NULL,         -- voucher yang dipakai (jika ada), untuk restock oleh Hilal
+    poin_digunakan INT UNSIGNED NOT NULL DEFAULT 0, -- total poin yang ditukarkan di transaksi ini
     subtotal INT UNSIGNED NOT NULL DEFAULT 0,
     total_diskon INT UNSIGNED NOT NULL DEFAULT 0,
     total_bayar INT UNSIGNED NOT NULL DEFAULT 0,
     status ENUM('SELESAI','DIBATALKAN') NOT NULL DEFAULT 'SELESAI',
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (id), KEY idx_transaksi_cabang (cabang_id), KEY idx_transaksi_member (member_id),
+    PRIMARY KEY (id),
+    KEY idx_transaksi_cabang (cabang_id),
+    KEY idx_transaksi_member (member_id),
     CONSTRAINT fk_transaksi_cabang FOREIGN KEY (cabang_id) REFERENCES cabang(id),
-    CONSTRAINT fk_transaksi_member FOREIGN KEY (member_id) REFERENCES member(id) ON DELETE SET NULL
+    CONSTRAINT fk_transaksi_member FOREIGN KEY (member_id) REFERENCES member(id) ON DELETE SET NULL,
+    CONSTRAINT fk_transaksi_voucher FOREIGN KEY (voucher_id) REFERENCES voucher(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Detail item per transaksi (untuk kalkulasi promo per produk & restock saat batal)
+CREATE TABLE transaksi_item (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    transaksi_id BIGINT UNSIGNED NOT NULL,
+    produk_id BIGINT UNSIGNED NOT NULL,
+    qty INT UNSIGNED NOT NULL DEFAULT 1,
+    harga_satuan INT UNSIGNED NOT NULL,       -- harga saat transaksi (snapshot)
+    diskon_satuan INT UNSIGNED NOT NULL DEFAULT 0, -- diskon per unit dari promo produk/B2G1
+    subtotal_item INT UNSIGNED NOT NULL,      -- (harga_satuan - diskon_satuan) * qty
+    PRIMARY KEY (id),
+    KEY idx_item_transaksi (transaksi_id),
+    KEY idx_item_produk (produk_id),
+    CONSTRAINT fk_item_transaksi FOREIGN KEY (transaksi_id) REFERENCES transaksi(id) ON DELETE CASCADE,
+    CONSTRAINT fk_item_produk FOREIGN KEY (produk_id) REFERENCES produk(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE poin_member (
