@@ -9,6 +9,7 @@ import (
 )
 
 type AuthForm struct {
+	User  model.User
 	Nama  string
 	Email string
 	Role  string

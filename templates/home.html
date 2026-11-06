@@ -1,6 +1,7 @@
 {{define "content"}}
+{{$role := userRole .}}
 
-{{if eq .User.Role "KASIR"}}
+{{if eq $role "KASIR"}}
 <!-- ========================================== -->
 <!-- 1. TAMPILAN DASHBOARD KHUSUS KASIR         -->
 <!-- ========================================== -->
@@ -216,7 +217,7 @@ function hitungPOS() {
 }
 </script>
 
-{{else if eq .User.Role "MEMBER"}}
+{{else if eq $role "MEMBER"}}
 <!-- ========================================== -->
 <!-- 2. TAMPILAN DASHBOARD KHUSUS MEMBER        -->
 <!-- ========================================== -->

@@ -7,7 +7,10 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strconv"
+
+	"github.com/bilaaah/SeduhPoin/internal/model"
 )
 
 // rupiah memformat angka jadi "Rp39.000.000"
@@ -32,10 +35,56 @@ func mul(a, b int) int {
 	return a * b
 }
 
+func userRole(data any) string {
+	if data == nil {
+		return ""
+	}
+	val := reflect.ValueOf(data)
+	if val.Kind() == reflect.Pointer {
+		val = val.Elem()
+	}
+	if val.Kind() == reflect.Struct {
+		field := val.FieldByName("User")
+		if field.IsValid() {
+			if u, ok := field.Interface().(model.User); ok {
+				return u.Role
+			}
+		}
+		if val.Type() == reflect.TypeOf(model.User{}) {
+			return val.Interface().(model.User).Role
+		}
+	}
+	return ""
+}
+
+func userNama(data any) string {
+	if data == nil {
+		return ""
+	}
+	val := reflect.ValueOf(data)
+	if val.Kind() == reflect.Pointer {
+		val = val.Elem()
+	}
+	if val.Kind() == reflect.Struct {
+		field := val.FieldByName("User")
+		if field.IsValid() {
+			if u, ok := field.Interface().(model.User); ok {
+				return u.Nama
+			}
+		}
+		if val.Type() == reflect.TypeOf(model.User{}) {
+			return val.Interface().(model.User).Nama
+		}
+	}
+	return ""
+}
+
 var funcs = template.FuncMap{
-	"rupiah":  rupiah,
-	"add_one": addOne,
-	"mul":     mul,
+	"rupiah":   rupiah,
+	"add_one":  addOne,
+	"mul":      mul,
+	"userRole": userRole,
+	"userNama": userNama,
 }
 
 type Renderer struct {
