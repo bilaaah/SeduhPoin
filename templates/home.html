@@ -1,5 +1,126 @@
 {{define "content"}}
-    <div class="welcome"><div><p class="eyebrow">KAMIS, 05 NOVEMBER 2026</p><h1>Selamat datang di<br><em>SeduhPoin.</em></h1><p class="lead">Satu ruang untuk mengatur menu, pelanggan setia, dan promo di seluruh Kedai Kopi Seduh.</p></div><div class="coffee-art">☕</div></div>
-    <div class="section-head"><div><p class="eyebrow">PUSAT KENDALI</p><h2>Mulai dari sini</h2></div></div>
-    <div class="quick-grid"><a class="quick-card" href="/produk"><span class="quick-icon brown">☕</span><strong>Menu Produk</strong><small>Atur menu dan harga</small><b>→</b></a><a class="quick-card" href="/member"><span class="quick-icon orange">♙</span><strong>Member</strong><small>Kelola pelanggan loyal</small><b>→</b></a><a class="quick-card" href="/promo"><span class="quick-icon green">✦</span><strong>Promo Aktif</strong><small>Buat penawaran menarik</small><b>→</b></a><a class="quick-card" href="/cabang"><span class="quick-icon blue">⌖</span><strong>Cabang Kedai</strong><small>Kelola lokasi usaha</small><b>→</b></a></div>
+<div class="dashboard-hero">
+    <div class="hero-text">
+        <span class="hero-badge">👑 Ruang Kerja Ketua Kelompok (Nabila)</span>
+        <h1>Halo, {{if .User.Nama}}{{.User.Nama}}{{else}}Nabila (Ketua){{end}}! 👋</h1>
+        <p>Sistem operasional dan program loyalitas multi-cabang Kedai Kopi Seduh. Kelola data produk, 3 cabang operasional, program member Silver & Gold, serta promo dan voucher terintegrasi.</p>
+    </div>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon icon-brown">☕</div>
+        <div class="stat-num">{{.TotalProduk}}</div>
+        <div class="stat-label">Menu Produk</div>
+        <div class="stat-desc">Kopi, non-kopi & pastry siap jual</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon icon-blue">🏢</div>
+        <div class="stat-num">{{.TotalCabang}}</div>
+        <div class="stat-label">Cabang Kedai</div>
+        <div class="stat-desc">Pusat, Timur, dan Barat terhubung</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon icon-gold">👥</div>
+        <div class="stat-num">{{.TotalMember}}</div>
+        <div class="stat-label">Member Terdaftar</div>
+        <div class="stat-desc">🥇 {{.MemberGold}} Gold &middot; 🥈 {{.MemberSilver}} Silver</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon icon-green">🏷️</div>
+        <div class="stat-num">{{.TotalPromo}}</div>
+        <div class="stat-label">Promo Aktif</div>
+        <div class="stat-desc">{{.TotalVoucher}} Voucher berkode terpasang</div>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 1.6fr 1fr; gap: 24px; margin-bottom: 30px;">
+    <!-- Kolom Kiri: Akses Cepat Tugas Nabila -->
+    <div style="background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 26px; box-shadow: var(--shadow);">
+        <h3 style="margin-top: 0; display: flex; align-items: center; gap: 10px;">
+            <span>📌</span> Menu Operasional Lingkup Nabila
+        </h3>
+        <p style="margin-bottom: 20px;">Akses langsung untuk mengelola master data dan aturan promo sesuai Lingkup 1 & Lingkup 2:</p>
+        
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+            <a href="/produk" style="display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border: 1px solid var(--line); border-radius: 12px; transition: all 0.2s; background: #fdfcfb;">
+                <div style="display: flex; align-items: center; gap: 14px;">
+                    <span style="font-size: 22px;">☕</span>
+                    <div>
+                        <strong style="display: block; font-size: 14px; color: var(--espresso);">Kelola Menu Produk</strong>
+                        <small style="color: var(--muted);">Tambah menu, ubah harga, update stok, dan filter kategori</small>
+                    </div>
+                </div>
+                <span style="font-weight: 700; color: var(--caramel);">Buka &rarr;</span>
+            </a>
+
+            <a href="/cabang" style="display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border: 1px solid var(--line); border-radius: 12px; transition: all 0.2s; background: #fdfcfb;">
+                <div style="display: flex; align-items: center; gap: 14px;">
+                    <span style="font-size: 22px;">🏢</span>
+                    <div>
+                        <strong style="display: block; font-size: 14px; color: var(--espresso);">3 Cabang Kedai Seduh</strong>
+                        <small style="color: var(--muted);">Pantau lokasi cabang Pusat, Timur, dan Barat</small>
+                    </div>
+                </div>
+                <span style="font-weight: 700; color: var(--caramel);">Buka &rarr;</span>
+            </a>
+
+            <a href="/member" style="display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border: 1px solid var(--line); border-radius: 12px; transition: all 0.2s; background: #fdfcfb;">
+                <div style="display: flex; align-items: center; gap: 14px;">
+                    <span style="font-size: 22px;">👥</span>
+                    <div>
+                        <strong style="display: block; font-size: 14px; color: var(--espresso);">Data Member & Loyalitas</strong>
+                        <small style="color: var(--muted);">Pendaftaran member baru dan riwayat total belanja 3 bulan</small>
+                    </div>
+                </div>
+                <span style="font-weight: 700; color: var(--caramel);">Buka &rarr;</span>
+            </a>
+
+            <a href="/promo" style="display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border: 1px solid var(--line); border-radius: 12px; transition: all 0.2s; background: #fdfcfb;">
+                <div style="display: flex; align-items: center; gap: 14px;">
+                    <span style="font-size: 22px;">🏷️</span>
+                    <div>
+                        <strong style="display: block; font-size: 14px; color: var(--espresso);">Pengaturan Aturan Promo</strong>
+                        <small style="color: var(--muted);">Diskon produk, potongan min. belanja, beli 2 gratis 1, dan voucher</small>
+                    </div>
+                </div>
+                <span style="font-weight: 700; color: var(--caramel);">Buka &rarr;</span>
+            </a>
+
+            <a href="/voucher" style="display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border: 1px solid var(--line); border-radius: 12px; transition: all 0.2s; background: #fdfcfb;">
+                <div style="display: flex; align-items: center; gap: 14px;">
+                    <span style="font-size: 22px;">🎟️</span>
+                    <div>
+                        <strong style="display: block; font-size: 14px; color: var(--espresso);">Voucher Berkode Unik</strong>
+                        <small style="color: var(--muted);">Kelola kuota klaim voucher berkode eksklusif</small>
+                    </div>
+                </div>
+                <span style="font-weight: 700; color: var(--caramel);">Buka &rarr;</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Kolom Kanan: Panduan 3 Peran Pengguna (Admin, Kasir, Member) -->
+    <div style="background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 26px; box-shadow: var(--shadow);">
+        <h3 style="margin-top: 0; display: flex; align-items: center; gap: 10px;">
+            <span>💡</span> Panduan Peran Sistem
+        </h3>
+        <p style="margin-bottom: 18px;">Arsitektur pembagian hak akses pengguna di Kedai Kopi Seduh:</p>
+
+        <div style="margin-bottom: 16px; padding: 14px; border-radius: 10px; background: #fffbf2; border-left: 4px solid var(--caramel);">
+            <strong style="display: block; font-size: 13.5px; color: var(--espresso); margin-bottom: 4px;">👑 Admin / Pemilik</strong>
+            <p style="margin: 0; font-size: 12.5px; color: var(--muted);">Mengelola data produk, cabang, promo, voucher, pendaftaran member, dan memantau laporan bisnis.</p>
+        </div>
+
+        <div style="margin-bottom: 16px; padding: 14px; border-radius: 10px; background: #f4f8fb; border-left: 4px solid #2980b9;">
+            <strong style="display: block; font-size: 13.5px; color: var(--espresso); margin-bottom: 4px;">☕ Kasir (POS)</strong>
+            <p style="margin: 0; font-size: 12.5px; color: var(--muted);">Memproses transaksi penjualan, menerapkan promo, menggunakan poin member, dan membatalkan pesanan.</p>
+        </div>
+
+        <div style="padding: 14px; border-radius: 10px; background: #f4f9f4; border-left: 4px solid var(--green);">
+            <strong style="display: block; font-size: 13.5px; color: var(--espresso); margin-bottom: 4px;">👤 Member / Pelanggan</strong>
+            <p style="margin: 0; font-size: 12.5px; color: var(--muted);">Memiliki nomor member, cek poin reward, tier Silver & Gold (multiplier 1.5x), dan riwayat belanja.</p>
+        </div>
+    </div>
+</div>
 {{end}}

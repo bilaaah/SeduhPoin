@@ -28,27 +28,44 @@ func addOne(n int) int {
 	return n + 1
 }
 
-var funcs = template.FuncMap{"rupiah": rupiah, "add_one": addOne}
+var funcs = template.FuncMap{
+	"rupiah":  rupiah,
+	"add_one": addOne,
+}
 
 type Renderer struct {
 	tpl map[string]*template.Template
 }
 
 func NewRenderer() *Renderer {
-	halaman := []string{"home.html", "produk.html", "cabang.html", "member.html", "promo.html", "voucher.html"}
+	halaman := []string{
+		"home.html",
+		"produk.html",
+		"cabang.html",
+		"member.html",
+		"promo.html",
+		"voucher.html",
+		"auth/login.html",
+		"auth/register.html",
+	}
+
 	base := "templates"
 	for _, candidate := range []string{"templates", filepath.Join("..", "templates"), filepath.Join("..", "..", "templates")} {
-		if _, err := os.Stat(filepath.Join(candidate, "layout.html")); err == nil { base = candidate; break }
+		if _, err := os.Stat(filepath.Join(candidate, "layout.html")); err == nil {
+			base = candidate
+			break
+		}
 	}
 
 	rd := &Renderer{tpl: make(map[string]*template.Template)}
 	for _, file := range halaman {
+		targetPath := filepath.Join(base, filepath.FromSlash(file))
 		rd.tpl[file] = template.Must(template.New("layout").Funcs(funcs).ParseFiles(
 			filepath.Join(base, "layout.html"),
 			filepath.Join(base, "header.html"),
 			filepath.Join(base, "sidebar.html"),
 			filepath.Join(base, "footer.html"),
-			filepath.Join(base, file),
+			targetPath,
 		))
 	}
 	return rd
@@ -57,7 +74,13 @@ func NewRenderer() *Renderer {
 // Tampil me-render ke buffer dulu supaya error template tidak menghasilkan halaman setengah jadi.
 func (rd *Renderer) Tampil(w http.ResponseWriter, file string, data any) {
 	var buf bytes.Buffer
-	if err := rd.tpl[file].ExecuteTemplate(&buf, "layout", data); err != nil {
+	t, ok := rd.tpl[file]
+	if !ok {
+		log.Printf("template tidak terdaftar: %s", file)
+		http.Error(w, "Halaman tidak ditemukan", http.StatusNotFound)
+		return
+	}
+	if err := t.ExecuteTemplate(&buf, "layout", data); err != nil {
 		log.Printf("render %s: %v", file, err)
 		http.Error(w, "Template SeduhPoin bermasalah: "+err.Error(), http.StatusInternalServerError)
 		return

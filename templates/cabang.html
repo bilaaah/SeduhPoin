@@ -1,3 +1,72 @@
-{{define "content"}}<div class="page-head clearfix"><h3 class="float-left">Data Cabang</h3></div>
-<form class="form" method="post"><div class="form-group"><label>Kode</label><input class="form-control" name="kode" required></div><div class="form-group"><label>Nama Cabang</label><input class="form-control" name="nama" required></div><div class="form-group"><label>Alamat</label><input class="form-control" name="alamat" required></div><div class="form-group"><label>Telepon</label><input class="form-control" name="telepon"></div><button class="btn">Tambah Cabang</button></form>
-<table class="table"><thead><tr><th>Kode</th><th>Nama</th><th>Alamat</th><th>Telepon</th><th>Status</th></tr></thead><tbody>{{range .}}<tr><td>{{.Kode}}</td><td>{{.Nama}}</td><td>{{.Alamat}}</td><td>{{.Telepon}}</td><td>{{if .Aktif}}Aktif{{else}}Nonaktif{{end}}</td></tr>{{end}}</tbody></table>{{end}}
+{{define "content"}}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+        <h2 style="margin: 0 0 6px;">🏢 Cabang Kedai Kopi Seduh</h2>
+        <p style="margin: 0;">Pengelolaan lokasi cabang resmi: Pusat, Timur, dan Barat.</p>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 380px 1fr; gap: 28px; align-items: start;">
+    <!-- Form Tambah Cabang -->
+    <div class="form" style="margin-bottom: 0;">
+        <h3 style="margin-top: 0; font-size: 18px; border-bottom: 1px solid var(--line); padding-bottom: 12px; margin-bottom: 18px;">
+            Tambah Lokasi Cabang
+        </h3>
+        <form method="post">
+            <div class="form-group">
+                <label>Kode Cabang (Unik)</label>
+                <input class="form-control" name="kode" placeholder="Contoh: SELATAN" required>
+            </div>
+            <div class="form-group">
+                <label>Nama Cabang</label>
+                <input class="form-control" name="nama" placeholder="Contoh: Seduh Selatan" required>
+            </div>
+            <div class="form-group">
+                <label>Alamat Lengkap</label>
+                <input class="form-control" name="alamat" placeholder="Jl. Contoh No. 10" required>
+            </div>
+            <div class="form-group">
+                <label>Nomor Telepon</label>
+                <input class="form-control" name="telepon" placeholder="021-xxxxxx">
+            </div>
+            <button type="submit" class="btn btn-block">Tambah Cabang</button>
+        </form>
+    </div>
+
+    <!-- Tabel Daftar Cabang -->
+    <div>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Kode</th>
+                    <th>Nama Cabang</th>
+                    <th>Alamat</th>
+                    <th>Telepon</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .}}
+                <tr>
+                    <td><strong>{{.Kode}}</strong></td>
+                    <td>{{.Nama}}</td>
+                    <td>{{.Alamat}}</td>
+                    <td>{{if .Telepon}}{{.Telepon}}{{else}}-{{end}}</td>
+                    <td>
+                        {{if .Aktif}}
+                            <span class="badge badge-aktif">Aktif</span>
+                        {{else}}
+                            <span class="badge">Nonaktif</span>
+                        {{end}}
+                    </td>
+                </tr>
+                {{else}}
+                <tr>
+                    <td colspan="5" style="text-align: center; color: var(--muted); padding: 24px;">Belum ada cabang terdaftar</td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+</div>
+{{end}}

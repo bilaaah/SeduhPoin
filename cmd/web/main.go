@@ -13,6 +13,7 @@ import (
 	"github.com/bilaaah/SeduhPoin/internal/handler"
 	"github.com/bilaaah/SeduhPoin/internal/middleware"
 	"github.com/bilaaah/SeduhPoin/internal/repository"
+	"github.com/bilaaah/SeduhPoin/internal/service"
 )
 
 func main() {
@@ -28,20 +29,49 @@ func main() {
 	defer db.Close()
 
 	view := handler.NewRenderer()
-	halaman := &handler.HalamanHandler{View: view}
+	adminRepo := &repository.AdminRepo{DB: db}
+	halaman := &handler.HalamanHandler{Repo: adminRepo, View: view}
+	admin := &handler.AdminHandler{Repo: adminRepo, View: view}
 
-	admin := &handler.AdminHandler{Repo: &repository.AdminRepo{DB: db}, View: view}
+	authSvc := &service.AuthService{
+		Users:    &repository.UserRepo{DB: db},
+		Sessions: &repository.SessionRepo{DB: db},
+	}
 
+	authH := &handler.AuthHandler{
+		Svc:          authSvc,
+		View:         view,
+		CookieSecure: cfg.CookieSecure,
+	}
+
+	authMw := &middleware.Auth{Svc: authSvc}
+
+	// privat: semua route yang wajib login
+	privat := http.NewServeMux()
+	privat.HandleFunc("GET /{$}", halaman.Home)
+
+	// Lingkup 1 (Nabila)
+	privat.HandleFunc("/cabang", admin.Cabang)
+	privat.HandleFunc("GET /produk", admin.Produk)
+	privat.HandleFunc("POST /produk", admin.Produk)
+	privat.HandleFunc("POST /produk/{id}/hapus", admin.HapusProduk)
+	privat.HandleFunc("/member", admin.Member)
+
+	// Lingkup 2 (Nabila)
+	privat.HandleFunc("/promo", admin.Promo)
+	privat.HandleFunc("/voucher", admin.Voucher)
+
+	// Logout
+	privat.HandleFunc("POST /logout", authH.Logout)
+
+	// publik: boleh diakses tanpa login
 	mux := http.NewServeMux()
-	mux.HandleFunc("GET /{$}", halaman.Home)
+	mux.HandleFunc("GET /login", authH.FormLogin)
+	mux.HandleFunc("POST /login", authH.Login)
+	mux.HandleFunc("GET /register", authH.FormRegister)
+	mux.HandleFunc("POST /register", authH.Register)
 
-	mux.HandleFunc("/cabang", admin.Cabang)
-	mux.HandleFunc("GET /produk", admin.Produk)
-	mux.HandleFunc("POST /produk", admin.Produk)
-	mux.HandleFunc("POST /produk/{id}/hapus", admin.HapusProduk)
-	mux.HandleFunc("/member", admin.Member)
-	mux.HandleFunc("/promo", admin.Promo)
-	mux.HandleFunc("/voucher", admin.Voucher)
+	mux.Handle("/", authMw.RequireLogin(privat))
 
 	srv := &http.Server{
 		Addr:              cfg.Addr,

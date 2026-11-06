@@ -1,11 +1,88 @@
 {{define "sidebar"}}
-    <div class="side-intro"><span class="eyebrow">NAVIGASI</span><strong>Ruang Kerja</strong></div>
+<div class="sidebar-top">
+    <div class="side-intro">
+        <span class="eyebrow">WORKSPACE</span>
+        <strong>Kedai Kopi Seduh</strong>
+    </div>
+
+    <span class="nav-section-label">Pusat Kendali</span>
     <ul>
-        <li><a href="/"><span>⌂</span> Ringkasan</a></li>
-        <li><a href="/produk"><span>☕</span> Menu Produk</a></li>
-        <li><a href="/cabang"><span>⌖</span> Cabang Kedai</a></li>
-        <li><a href="/member"><span>♙</span> Member</a></li>
-        <li><a href="/promo"><span>✦</span> Promo</a></li>
-        <li><a href="/voucher"><span>▣</span> Voucher</a></li>
+        <li>
+            <a href="/">
+                <span class="nav-icon">🏠</span>
+                <span>Beranda Ringkasan</span>
+            </a>
+        </li>
     </ul>
+
+    <span class="nav-section-label">Tugas Nabila (Lingkup 1 & 2)</span>
+    <ul>
+        <li>
+            <a href="/produk">
+                <span class="nav-icon">☕</span>
+                <span>Menu & Stok Produk</span>
+            </a>
+        </li>
+        <li>
+            <a href="/cabang">
+                <span class="nav-icon">🏢</span>
+                <span>Cabang Kedai (3)</span>
+            </a>
+        </li>
+        <li>
+            <a href="/member">
+                <span class="nav-icon">👥</span>
+                <span>Member Loyalitas</span>
+            </a>
+        </li>
+        <li>
+            <a href="/promo">
+                <span class="nav-icon">🏷️</span>
+                <span>Pengaturan Promo</span>
+            </a>
+        </li>
+        <li>
+            <a href="/voucher">
+                <span class="nav-icon">🎟️</span>
+                <span>Voucher Berkode</span>
+            </a>
+        </li>
+    </ul>
+
+    <span class="nav-section-label">Modul Tim (Lingkup 3, 4, 5, 6)</span>
+    <ul>
+        <li class="disabled" title="Dikerjakan oleh Rahma">
+            <a href="#">
+                <span class="nav-icon">🛒</span>
+                <span>Kasir & Transaksi (Rahma)</span>
+            </a>
+        </li>
+        <li class="disabled" title="Dikerjakan oleh Hilal">
+            <a href="#">
+                <span class="nav-icon">↩️</span>
+                <span>Batal Transaksi (Hilal)</span>
+            </a>
+        </li>
+        <li class="disabled" title="Dikerjakan oleh Dinda">
+            <a href="#">
+                <span class="nav-icon">⏳</span>
+                <span>Poin & Tier Member (Dinda)</span>
+            </a>
+        </li>
+        <li class="disabled" title="Dikerjakan oleh Luhur">
+            <a href="#">
+                <span class="nav-icon">📊</span>
+                <span>Laporan Analitik (Luhur)</span>
+            </a>
+        </li>
+    </ul>
+</div>
+
+<div class="sidebar-bottom">
+    <form method="post" action="/logout">
+        <button type="submit" class="btn btn-sm btn-light btn-block" style="justify-content: center;">
+            🚪 Keluar Akun
+        </button>
+    </form>
+</div>
 {{end}}

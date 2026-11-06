@@ -44,6 +44,7 @@ Kedai Kopi Seduh memiliki tiga cabang: **Pusat**, **Timur**, dan **Barat**. Pemi
 | :--- | :--- | :--- | :--- |
 | **Lingkup 1** | **Master Data**: Pengelolaan data produk, kategori, 3 cabang, dan registrasi member | **Nabila (Ketua)** | Selesai |
 | **Lingkup 2** | **Promo & Voucher**: Pengaturan promo, pembatasan cabang/jam, dan kuota voucher | **Nabila (Ketua)** | Selesai |
+| **Auth & Session** | **Autentikasi Multi-Peran**: Register, login bcrypt, cookie session HttpOnly, dan proteksi middleware | **Nabila (Ketua)** | Selesai |
 | **Lingkup 3** | **Transaksi Penjualan**: Kalkulasi promo, diskon kombinasi, penukaran poin & akumulasi poin | **Rahma** | Siap Dikerjakan |
 | **Lingkup 4** | **Pembatalan Transaksi**: Void transaksi, rollback poin diperoleh, refund poin ditukar | **Hilal** | Siap Dikerjakan |
 | **Lingkup 5** | **Lifecycle Poin & Tier**: Masa berlaku poin (6 bulan/FIFO) & evaluasi otomatis tier Silver/Gold | **Dinda** | Siap Dikerjakan |
@@ -265,6 +266,19 @@ erDiagram
     - Penargetan item produk (`promo_produk`) atau kategori (`promo_kategori`).
 - **Voucher Khusus (`/voucher`)**:
   - Pengelolaan kode voucher berkode unik dengan limit kuota pemakaian.
+
+### 3. Autentikasi Session & 3 Peran Pengguna (Auth Module - Nabila)
+Sistem dilengkapi autentikasi berbasis session cookie (`HttpOnly`, `SameSite=Lax`) dan hashing password `bcrypt` sesuai standar materi kuliah Pemrograman Web:
+- **👑 Admin / Pemilik**: Mengelola data produk, cabang, promo, voucher, member, dan memantau ringkasan metrik kedai.
+- **☕ Kasir**: Mengoperasikan kasir POS, menerapkan diskon promo, klaim poin, dan pembatalan transaksi.
+- **👤 Member / Pelanggan**: Memiliki identitas kartu loyalitas, pantau reward poin, tingkatan Silver/Gold, dan riwayat belanja.
+
+**Akun Demo untuk Uji Coba & Simulasi:**
+| Peran | Email | Password |
+| :--- | :--- | :--- |
+| **👑 Admin / Pemilik (Nabila)** | `nabila@seduhkopi.com` | `admin123` |
+| **☕ Kasir** | `kasir@seduhkopi.com` | `kasir123` |
+| **👤 Member Loyal** | `member@seduhkopi.com` | `member123` |
 
 ---
 

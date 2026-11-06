@@ -43,3 +43,14 @@ type Voucher struct {
 	ID, PromoID, Kuota, Terpakai int
 	Kode, PromoNama              string
 }
+
+type RingkasanData struct {
+	User         User
+	TotalProduk  int
+	TotalCabang  int
+	TotalMember  int
+	MemberGold   int
+	MemberSilver int
+	TotalPromo   int
+	TotalVoucher int
+}

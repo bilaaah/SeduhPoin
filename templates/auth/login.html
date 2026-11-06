@@ -1,0 +1,61 @@
+{{define "content"}}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <div class="auth-icon">☕</div>
+            <h2>Masuk ke SeduhPoin</h2>
+            <p>Silakan masuk untuk mengakses sistem operasional kedai kopi</p>
+        </div>
+
+        {{if .Error}}
+            <div class="alert-error">
+                <span>⚠️</span> {{.Error}}
+            </div>
+        {{end}}
+
+        <form method="post" action="/login" class="auth-form">
+            <div class="form-group">
+                <label for="email">Alamat Email</label>
+                <input type="email" id="email" name="email" value="{{.Email}}" class="form-control" placeholder="contoh: nabila@seduhkopi.com" required autofocus>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" class="form-control" placeholder="Masukkan password" required>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary btn-block">Masuk ke Sistem</button>
+                <div class="auth-alt">
+                    Belum punya akun? <a href="/register">Daftar di sini</a>
+                </div>
+            </div>
+        </form>
+
+        <div class="demo-accounts">
+            <div class="demo-heading">🔑 Akun Cepat untuk Simulasi</div>
+            <div class="demo-grid">
+                <button type="button" class="demo-btn" onclick="isiAkun('nabila@seduhkopi.com', 'admin123')">
+                    <strong>👑 Admin/Pemilik</strong>
+                    <small>nabila@seduhkopi.com</small>
+                </button>
+                <button type="button" class="demo-btn" onclick="isiAkun('kasir@seduhkopi.com', 'kasir123')">
+                    <strong>☕ Kasir</strong>
+                    <small>kasir@seduhkopi.com</small>
+                </button>
+                <button type="button" class="demo-btn" onclick="isiAkun('member@seduhkopi.com', 'member123')">
+                    <strong>👤 Member</strong>
+                    <small>member@seduhkopi.com</small>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function isiAkun(email, pass) {
+    document.getElementById('email').value = email;
+    document.getElementById('password').value = pass;
+}
+</script>
+{{end}}

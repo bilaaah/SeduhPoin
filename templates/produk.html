@@ -1,13 +1,92 @@
 {{define "content"}}
-<div class="page-head clearfix"><h3 class="float-left">Produk Kedai</h3></div>
-<form class="form" method="post">
-    <input type="hidden" name="id" value="{{.Edit.ID}}">
-    <div class="form-group"><label>Nama Produk</label><input class="form-control" name="nama" value="{{.Edit.Nama}}" placeholder="Contoh: Kopi Susu Gula Aren" required></div>
-    <div class="form-group"><label>Kategori</label><select class="form-control" name="kategori_id" required><option value="">Pilih kategori</option>{{range .Kategori}}<option value="{{.ID}}" {{if eq .ID $.Edit.KategoriID}}selected{{end}}>{{.Nama}}</option>{{end}}</select></div>
-    <div class="form-group"><label>Harga</label><input class="form-control" type="number" name="harga" min="0" value="{{.Edit.Harga}}" required></div>
-    <div class="form-group"><label>Stok</label><input class="form-control" type="number" name="stok" min="0" value="{{.Edit.Stok}}" required></div>
-    <div class="form-group"><label>Keterangan</label><textarea class="form-control" name="keterangan" rows="3">{{.Edit.Keterangan}}</textarea></div>
-    <button class="btn">{{.Mode}}</button>{{if .Edit.ID}} <a class="btn btn-light" href="/produk">Batal</a>{{end}}
-</form>
-<table class="table"><thead><tr><th>Nama</th><th>Kategori</th><th class="num">Harga</th><th>Stok</th><th>Keterangan</th><th>Aksi</th></tr></thead><tbody>{{range .Produk}}<tr><td>{{.Nama}}</td><td>{{.Kategori}}</td><td class="num">{{rupiah .Harga}}</td><td>{{.Stok}}</td><td>{{.Keterangan}}</td><td><div class="actions"><a class="btn btn-light btn-sm" href="/produk?edit={{.ID}}">Edit</a><form method="post" action="/produk/{{.ID}}/hapus" onsubmit="return confirm('Hapus produk ini?')"><button class="btn btn-danger btn-sm">Hapus</button></form></div></td></tr>{{end}}</tbody></table>
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+        <h2 style="margin: 0 0 6px;">☕ Katalog & Stok Produk</h2>
+        <p style="margin: 0;">Kelola daftar menu kopi, non-kopi, dan camilan untuk seluruh cabang kedai.</p>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 380px 1fr; gap: 28px; align-items: start;">
+    <!-- Form Produk -->
+    <div class="form" style="margin-bottom: 0;">
+        <h3 style="margin-top: 0; font-size: 18px; border-bottom: 1px solid var(--line); padding-bottom: 12px; margin-bottom: 18px;">
+            {{.Mode}}
+        </h3>
+        <form method="post" action="/produk">
+            <input type="hidden" name="id" value="{{.Edit.ID}}">
+            <div class="form-group">
+                <label>Nama Produk</label>
+                <input class="form-control" name="nama" value="{{.Edit.Nama}}" placeholder="Contoh: Caramel Macchiato" required>
+            </div>
+            <div class="form-group">
+                <label>Kategori Menu</label>
+                <select class="form-control" name="kategori_id" required>
+                    <option value="">-- Pilih Kategori --</option>
+                    {{range .Kategori}}
+                    <option value="{{.ID}}" {{if eq .ID $.Edit.KategoriID}}selected{{end}}>{{.Nama}}</option>
+                    {{end}}
+                </select>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div class="form-group">
+                    <label>Harga (Rp)</label>
+                    <input class="form-control" type="number" name="harga" min="0" value="{{.Edit.Harga}}" placeholder="18000" required>
+                </div>
+                <div class="form-group">
+                    <label>Stok Tersedia</label>
+                    <input class="form-control" type="number" name="stok" min="0" value="{{.Edit.Stok}}" placeholder="100" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Keterangan / Komposisi</label>
+                <textarea class="form-control" name="keterangan" rows="3" placeholder="Deskripsi singkat produk...">{{.Edit.Keterangan}}</textarea>
+            </div>
+            <div style="display: flex; gap: 8px;">
+                <button type="submit" class="btn" style="flex: 1;">{{.Mode}}</button>
+                {{if .Edit.ID}}
+                    <a class="btn btn-light" href="/produk">Batal</a>
+                {{end}}
+            </div>
+        </form>
+    </div>
+
+    <!-- Tabel Produk -->
+    <div>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Menu Produk</th>
+                    <th>Kategori</th>
+                    <th class="num">Harga</th>
+                    <th class="num">Stok</th>
+                    <th>Keterangan</th>
+                    <th style="text-align: center;">Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .Produk}}
+                <tr>
+                    <td><strong>{{.Nama}}</strong></td>
+                    <td><span class="badge" style="background:#f5eee8; color:var(--coffee);">{{.Kategori}}</span></td>
+                    <td class="num" style="font-weight: 700; color: var(--espresso);">{{rupiah .Harga}}</td>
+                    <td class="num">{{.Stok}} cup/pcs</td>
+                    <td style="color: var(--muted); font-size: 12.5px;">{{if .Keterangan}}{{.Keterangan}}{{else}}-{{end}}</td>
+                    <td>
+                        <div class="actions" style="justify-content: center;">
+                            <a class="btn btn-light btn-sm" href="/produk?edit={{.ID}}">Ubah</a>
+                            <form method="post" action="/produk/{{.ID}}/hapus" onsubmit="return confirm('Hapus produk {{.Nama}}?')" style="margin: 0;">
+                                <button type="submit" class="btn btn-danger btn-sm">Hapus</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {{else}}
+                <tr>
+                    <td colspan="6" style="text-align: center; color: var(--muted); padding: 24px;">Belum ada produk di dalam katalog</td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+</div>
 {{end}}

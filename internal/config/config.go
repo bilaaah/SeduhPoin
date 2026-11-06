@@ -8,16 +8,18 @@ import (
 )
 
 type Config struct {
-	Addr  string
-	DBDSN string
+	Addr         string
+	DBDSN        string
+	CookieSecure bool
 }
 
 func Load() (Config, error) {
 	_ = godotenv.Load() // baca .env jika ada
 
 	cfg := Config{
-		Addr:  getEnv("ADDR", ":8080"),
-		DBDSN: os.Getenv("DB_DSN"),
+		Addr:         getEnv("ADDR", ":8080"),
+		DBDSN:        os.Getenv("DB_DSN"),
+		CookieSecure: os.Getenv("COOKIE_SECURE") == "true",
 	}
 	if cfg.DBDSN == "" {
 		return cfg, errors.New("DB_DSN belum di-set (cek file .env)")

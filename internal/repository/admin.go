@@ -126,3 +126,13 @@ func (r *AdminRepo) TambahVoucher(ctx context.Context, x model.Voucher) error {
 	_, e := r.DB.ExecContext(ctx, "INSERT INTO voucher(promo_id,kode,kuota) VALUES(?,?,?)", x.PromoID, x.Kode, x.Kuota)
 	return e
 }
+
+func (r *AdminRepo) Ringkasan(ctx context.Context) (model.RingkasanData, error) {
+	var out model.RingkasanData
+	_ = r.DB.QueryRowContext(ctx, "SELECT COUNT(*) FROM produk WHERE deleted_at IS NULL").Scan(&out.TotalProduk)
+	_ = r.DB.QueryRowContext(ctx, "SELECT COUNT(*) FROM cabang WHERE aktif = 1").Scan(&out.TotalCabang)
+	_ = r.DB.QueryRowContext(ctx, "SELECT COUNT(*), COALESCE(SUM(tingkat='GOLD'),0), COALESCE(SUM(tingkat='SILVER'),0) FROM member").Scan(&out.TotalMember, &out.MemberGold, &out.MemberSilver)
+	_ = r.DB.QueryRowContext(ctx, "SELECT COUNT(*) FROM promo WHERE aktif = 1").Scan(&out.TotalPromo)
+	_ = r.DB.QueryRowContext(ctx, "SELECT COUNT(*) FROM voucher").Scan(&out.TotalVoucher)
+	return out, nil
+}

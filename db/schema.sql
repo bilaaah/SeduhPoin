@@ -5,6 +5,23 @@ DROP DATABASE IF EXISTS seduhpoin;
 CREATE DATABASE seduhpoin CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE seduhpoin;
 
+-- PENGGUNA DAN AUTENTIKASI (Session & Multi-Role)
+CREATE TABLE users (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    nama VARCHAR(100) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    role ENUM('ADMIN', 'KASIR', 'MEMBER') NOT NULL DEFAULT 'ADMIN',
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE sessions (
+    token VARCHAR(64) PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    expires_at DATETIME NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- MASTER DATA
 CREATE TABLE cabang (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -208,3 +225,9 @@ INSERT INTO voucher (promo_id, kode, kuota, terpakai) VALUES
 (4, 'KOPIHEMAT10', 50, 10),
 (4, 'WELCOMEGIFT', 50, 0),
 (5, 'WEEKENDSEDUH', 50, 3);
+
+-- DATA SEED USER SIMULASI (Password: admin123, kasir123, member123)
+INSERT INTO users (id, nama, email, password_hash, role) VALUES
+(1, 'Nabila (Pemilik)', 'nabila@seduhkopi.com', '$2a$10$KPQoj7P.EAmlSLoSAAfFtuMF42IOayaW2jtlLMMGacBwFja/xk6Me', 'ADMIN'),
+(2, 'Kasir Kedai Seduh', 'kasir@seduhkopi.com', '$2a$10$sPRcFmGKAwipGlTTJ/62UO7NRWEfB108zfbB34wKqfQ61hDEre6N6', 'KASIR'),
+(3, 'Budi (Member Loyal)', 'member@seduhkopi.com', '$2a$10$qIbJFbrmTU.sRWp7JC5RiO6bOvntjkPlUf9Iswa/PtiKKl.RUMox6', 'MEMBER');

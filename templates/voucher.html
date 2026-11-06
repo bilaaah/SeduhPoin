@@ -1,1 +1,75 @@
-{{define "content"}}<div class="page-head clearfix"><h3 class="float-left">Voucher Berkode</h3></div><form class="form" method="post"><div class="form-group"><label>Promo</label><select class="form-control" name="promo_id" required><option value="">Pilih promo</option>{{range .Promo}}<option value="{{.ID}}">{{.Kode}} - {{.Nama}}</option>{{end}}</select></div><div class="form-group"><label>Kode Voucher</label><input class="form-control" name="kode" required></div><div class="form-group"><label>Kuota</label><input class="form-control" type="number" name="kuota" min="1" required></div><button class="btn">Tambah Voucher</button></form><table class="table"><thead><tr><th>Kode</th><th>Promo</th><th>Kuota</th><th>Terpakai</th></tr></thead><tbody>{{range .Voucher}}<tr><td>{{.Kode}}</td><td>{{.PromoNama}}</td><td>{{.Kuota}}</td><td>{{.Terpakai}}</td></tr>{{end}}</tbody></table>{{end}}
+{{define "content"}}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+        <h2 style="margin: 0 0 6px;">🎟️ Voucher Berkode (Eksklusif)</h2>
+        <p style="margin: 0;">Pengelolaan kode kupon voucher dengan batas kuota pemakaian untuk pelanggan.</p>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 380px 1fr; gap: 28px; align-items: start;">
+    <!-- Form Tambah Voucher -->
+    <div class="form" style="margin-bottom: 0;">
+        <h3 style="margin-top: 0; font-size: 18px; border-bottom: 1px solid var(--line); padding-bottom: 12px; margin-bottom: 18px;">
+            Terbitkan Kode Voucher
+        </h3>
+        <form method="post">
+            <div class="form-group">
+                <label>Pilih Promo Terkait</label>
+                <select class="form-control" name="promo_id" required>
+                    <option value="">-- Pilih Promo Voucher --</option>
+                    {{range .Promo}}
+                    <option value="{{.ID}}">{{.Kode}} &mdash; {{.Nama}}</option>
+                    {{end}}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Kode Voucher Unik</label>
+                <input class="form-control" name="kode" placeholder="Contoh: SEDUHSERU25" required>
+            </div>
+            <div class="form-group">
+                <label>Kuota Maksimal Pemakaian</label>
+                <input class="form-control" type="number" name="kuota" min="1" placeholder="50" required>
+            </div>
+            <button type="submit" class="btn btn-block">Terbitkan Voucher</button>
+        </form>
+    </div>
+
+    <!-- Tabel Voucher -->
+    <div>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Kode Voucher</th>
+                    <th>Nama Promo Terhubung</th>
+                    <th class="num">Kuota</th>
+                    <th class="num">Terpakai</th>
+                    <th class="num">Sisa Kuota</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .Voucher}}
+                <tr>
+                    <td><strong style="font-family:monospace; font-size:14px; color:var(--coffee);">{{.Kode}}</strong></td>
+                    <td>{{.PromoNama}}</td>
+                    <td class="num">{{.Kuota}}</td>
+                    <td class="num">{{.Terpakai}}</td>
+                    <td class="num" style="font-weight:700; color:var(--green);">
+                        {{/* Hitung sisa kuota */}}
+                        {{/* kuota - terpakai */}}
+                        {{if ge .Kuota .Terpakai}}
+                            Tersedia
+                        {{else}}
+                            Habis
+                        {{end}}
+                    </td>
+                </tr>
+                {{else}}
+                <tr>
+                    <td colspan="5" style="text-align: center; color: var(--muted); padding: 24px;">Belum ada voucher diterbitkan</td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+</div>
+{{end}}
