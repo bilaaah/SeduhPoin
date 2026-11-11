@@ -35,6 +35,17 @@ func mul(a, b int) int {
 	return a * b
 }
 
+// persen mengubah angka persen menjadi teks, misal 42.9 menjadi "42.9%".
+func persen(f float64) string {
+	return strconv.FormatFloat(f, 'f', 1, 64) + "%"
+}
+
+// desimal mengubah angka menjadi teks desimal satu digit, dipakai untuk
+// nilai persentase di dalam atribut style.
+func desimal(f float64) string {
+	return strconv.FormatFloat(f, 'f', 1, 64)
+}
+
 func userRole(data any) string {
 	if data == nil {
 		return ""
@@ -83,6 +94,8 @@ var funcs = template.FuncMap{
 	"rupiah":   rupiah,
 	"add_one":  addOne,
 	"mul":      mul,
+	"persen":   persen,
+	"desimal":  desimal,
 	"userRole": userRole,
 	"userNama": userNama,
 }

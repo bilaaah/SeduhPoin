@@ -1,8 +1,11 @@
 package handler
 
 import (
+	"errors"
 	"net/http"
+	"net/url"
 	"strconv"
+	"strings"
 
 	"github.com/bilaaah/SeduhPoin/internal/middleware"
 	"github.com/bilaaah/SeduhPoin/internal/model"
@@ -76,32 +79,21 @@ func (h *HalamanHandler) Home(w http.ResponseWriter, r *http.Request) {
 		h.View.Tampil(w, "home.html", ringkasan)
 		return
 	}
-	laporan, _ := h.Repo.Laporan(r.Context())
 	ringkasan.User = u
-	ringkasan.LaporanData = laporan
 	h.View.Tampil(w, "home.html", ringkasan)
-}
-
-// Laporan khusus Admin / Pemilik
-func (h *HalamanHandler) Laporan(w http.ResponseWriter, r *http.Request) {
-	u, _ := middleware.UserDari(r.Context())
-	lap, err := h.Repo.Laporan(r.Context())
-	if err != nil {
-		gagal(w, err)
-		return
-	}
-	lap.User = u
-	h.View.Tampil(w, "laporan.html", lap)
 }
 
 // TransaksiKasir menangani proses penjualan oleh Kasir
 func (h *HalamanHandler) SimpanTransaksi(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
+		if err := r.ParseForm(); err != nil {
+			http.Error(w, "Data transaksi tidak valid", http.StatusBadRequest)
+			return
+		}
+
 		cabangID, _ := strconv.Atoi(r.FormValue("cabang_id"))
 		memberID, _ := strconv.Atoi(r.FormValue("member_id"))
 		subtotal, _ := strconv.Atoi(r.FormValue("subtotal"))
-		diskon, _ := strconv.Atoi(r.FormValue("total_diskon"))
-		bayar, _ := strconv.Atoi(r.FormValue("total_bayar"))
 		poinTukar, _ := strconv.Atoi(r.FormValue("poin_ditukar"))
 		poinDapat, _ := strconv.Atoi(r.FormValue("poin_diperoleh"))
 
@@ -110,12 +102,53 @@ func (h *HalamanHandler) SimpanTransaksi(w http.ResponseWriter, r *http.Request)
 			return
 		}
 
-		if err := h.Repo.TambahTransaksiKasir(r.Context(), cabangID, memberID, subtotal, diskon, bayar, poinTukar, poinDapat); err != nil {
+		in := model.TransaksiInput{
+			CabangID:      cabangID,
+			MemberID:      memberID,
+			PoinDigunakan: poinTukar,
+			Subtotal:      subtotal,
+			PoinDiperoleh: poinDapat,
+			Promo:         bacaAlokasiPromo(r.Form),
+		}
+
+		if err := h.Repo.TambahTransaksiKasir(r.Context(), in); err != nil {
+			var validasi repository.ErrValidasi
+			if errors.As(err, &validasi) {
+				http.Error(w, validasi.Error(), http.StatusBadRequest)
+				return
+			}
 			gagal(w, err)
 			return
 		}
 	}
 	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
+// bacaAlokasiPromo membaca promo yang diterapkan kasir. Nama field memakai
+// array implisit: form["promo_id"], form["promo_diskon"], dan form["promo_voucher"]
+// berisi nilai urut sesuai baris form.
+func bacaAlokasiPromo(form url.Values) []model.AlokasiPromo {
+	ids := form["promo_id"]
+	diskons := form["promo_diskon"]
+	vouchers := form["promo_voucher"]
+
+	var out []model.AlokasiPromo
+	for i, v := range ids {
+		promoID, err := strconv.Atoi(v)
+		if err != nil || promoID <= 0 {
+			continue
+		}
+		diskon := 0
+		if i < len(diskons) {
+			diskon, _ = strconv.Atoi(diskons[i])
+		}
+		kode := ""
+		if i < len(vouchers) {
+			kode = strings.TrimSpace(vouchers[i])
+		}
+		out = append(out, model.AlokasiPromo{PromoID: promoID, VoucherKode: kode, Diskon: diskon})
+	}
+	return out
 }
 
 // BatalTransaksiKasir menangani pembatalan transaksi oleh Kasir

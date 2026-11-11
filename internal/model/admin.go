@@ -62,9 +62,6 @@ type RingkasanData struct {
 
 	// Untuk Member
 	MemberData MemberPortalData
-
-	// Untuk Laporan
-	LaporanData LaporanData
 }
 
 type Transaksi struct {
@@ -91,25 +88,6 @@ type PoinDetail struct {
 	DiperolehAt  time.Time
 	KadaluarsaAt time.Time
 	Status       string
-}
-
-type LaporanPromo struct {
-	Kode       string
-	Nama       string
-	Jenis      string
-	Terpakai   int
-	Nilai      int
-	TotalBiaya int
-}
-
-type LaporanData struct {
-	User           User
-	ListPromo      []LaporanPromo
-	TotalPoinAktif int
-	NilaiRupiah    int
-	TotalMember    int
-	MemberGold     int
-	MemberSilver   int
 }
 
 type KasirData struct {
