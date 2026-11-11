@@ -45,13 +45,37 @@ Kedai Kopi Seduh memiliki tiga cabang operasional. Sistem menghubungkan program 
 
 | Lingkup | Modul & Tanggung Jawab | Penanggung Jawab | Status |
 | :--- | :--- | :--- | :--- |
-| **Lingkup 1** | **Master Data**: Pengelolaan produk, kategori, 3 cabang, dan data member | **Nabila** | Selesai |
-| **Lingkup 2** | **Pengaturan Promo & Voucher**: Promo multi-kondisi, batasan jam/cabang, dan kuota voucher | **Nabila** | Selesai |
-| **Auth** | **Autentikasi & Session**: Register, login bcrypt, cookie session HttpOnly, dan middleware | **Nabila** | Selesai |
+| **Lingkup 1** | **Master Data**: Pengelolaan katalog produk, kategori, 3 cabang, dan data member | **Nabila** | Sedang Disempurnakan *(On Progress)* |
+| **Lingkup 2** | **Pengaturan Promo & Voucher**: Promo multi-kondisi, batasan jam/cabang, dan kuota voucher | **Nabila** | Sedang Disempurnakan *(On Progress)* |
+| **Auth & RBAC** | **Autentikasi & Otorisasi Peran**: Bcrypt, Session token 7 hari, middleware `RequireLogin` & `RequireRole` | **Nabila** | Sedang Disempurnakan *(On Progress)* |
 | **Lingkup 3** | **Transaksi Penjualan**: Perhitungan promo kombinasi, penukaran poin FEFO, dan akumulasi poin | **Rahma** | Siap Dikerjakan |
-| **Lingkup 4** | **Pembatalan Transaksi**: Rollback status, penarikan poin reward, refund poin terpakai, restock | **Hilal** | Siap Dikerjakan |
+| **Lingkup 4** | **Pembatalan Transaksi**: Rollback status, penarikan poin reward, refund poin terpakai, restock | **Hilal** | Siap Dikerjakan (Setelah L3) |
 | **Lingkup 5** | **Lifecycle Poin & Tier Member**: Validasi expired 6 bulan & evaluasi belanja 3 bulan (Silver/Gold) | **Dinda** | Siap Dikerjakan |
 | **Lingkup 6** | **Laporan Analitik**: Biaya realisasi promo, saldo poin aktif (Rp), dan statistik member | **Luhur** | Siap Dikerjakan |
+
+---
+
+## 🛡️ Matriks Akses & Otorisasi Sistem (RBAC)
+
+Sistem menerapkan **Role-Based Access Control (RBAC)** di sisi server menggunakan middleware `RequireRole` agar rute aman dari akses tidak sah:
+
+| Aksi / Modul | Admin / Pemilik | Kasir | Member | Keterangan Rute / Hak Akses |
+| :--- | :---: | :---: | :---: | :--- |
+| **Login, Register & Logout** | ✔️ | ✔️ | ✔️ | Terbuka / Public & Session |
+| **Lihat Dashboard Beranda** | ✔️ | ✔️ | ✔️* | `GET /` — Konten & widget otomatis beda per peran |
+| **Lihat Produk & Menu** | ✔️ | ✔️ | ❌ | Admin di `/produk`, Kasir pada POS transaksi |
+| **Kelola Produk & Cabang (CRUD)** | ✔️ | ❌ | ❌ | `GET/POST /produk`, `/cabang` (Khusus Admin) |
+| **Kelola Data Member** | ✔️ | ❌ | ❌ | `GET/POST /member` (Khusus Admin) |
+| **Kelola Promo & Voucher (CRUD)** | ✔️ | ❌ | ❌ | `GET/POST /promo`, `/voucher` (Khusus Admin) |
+| **Memproses Transaksi POS** | ✔️ | ✔️ | ❌ | `POST /transaksi` (Admin & Kasir) |
+| **Terapkan Promo & Poin** | ✔️ | ✔️ | ❌ | Dihitung otomatis di kasir saat input pesanan |
+| **Melihat Riwayat Transaksi** | ✔️ | ✔️ | ✔️* | Kasir/Admin semua trx, Member data sendiri |
+| **Membatalkan Transaksi** | ✔️ | ✔️ | ❌ | `POST /transaksi/{id}/batal` (Admin & Kasir) |
+| **Kelola Masa Berlaku Poin & Tier** | ✔️ | ❌ | ❌ | Audit kedaluwarsa poin & evaluasi Gold/Silver |
+| **Melihat Saldo & Tingkat Member** | ✔️ | ✔️ | ✔️* | Member melihat profil loyalitas miliknya sendiri |
+| **Melihat Laporan Analitik Bisnis** | ✔️ | ❌ | ❌ | `GET /laporan` (Khusus Admin/Pemilik) |
+
+*\*Catatan: Member hanya dapat melihat riwayat dan saldo poin miliknya sendiri.*
 
 ---
 
@@ -248,23 +272,42 @@ erDiagram
 
 ---
 
-## 📌 Status Implementasi Modul Selesai (Nabila)
+## 📌 Status Implementasi & Rencana Peningkatan (Nabila)
 
-### 1. Lingkup 1 — Pengelolaan Data Produk, Cabang, dan Member
+Fitur fondasi arsitektur, autentikasi session, serta Lingkup 1 dan 2 telah berfungsi dan saat ini berstatus **dalam progres penyempurnaan aktif** (*on progress*).
+
+### • Penyempurnaan dan peningkatan fitur yang telah dikembangkan (Nabila), meliputi:
+- **Evaluasi struktur kode, alur sistem, dan kesiapan integrasi antarmodul:**
+  Memastikan arsitektur *Layered/Modular* di Go (`handler`, `service`, `repository`, `model`, `middleware`) tetap bersih, terisolasi, dan siap diintegrasikan dengan modul transaksi, pembatalan, poin, serta laporan.
+- **Penyempurnaan validasi input serta pengujian fitur autentikasi dan session:**
+  Pengujian keamanan hash password `bcrypt`, proteksi cookie `HttpOnly` dengan expiry 7 hari, pencegahan email duplikat, dan penegakan otorisasi peran via middleware `RequireRole` (menolak akses ilegal dengan respon HTTP 403).
+- **Penyempurnaan tampilan dan konsistensi antarmuka berdasarkan peran pengguna:**
+  Menjaga standar UI/UX profesional bertema kedai kopi, perbaikan tata letak sidebar dan header dinamis agar bebas dari tumpang tindih teks, serta diferensiasi tampilan beranda khusus Admin, Kasir, dan Member.
+- **Pengujian fungsi pengelolaan produk, cabang, member, promo, dan voucher:**
+  Verifikasi alur data CRUD produk dan soft-delete (`deleted_at`), validasi identitas 3 cabang, registrasi member (Silver & Gold), mekanisme 4 jenis promo (persentase, minimal belanja, B2G1, voucher), serta batasan cabang dan jam operasional (*happy hour*).
+- **Evaluasi relasi serta integritas database agar sesuai dengan kebutuhan seluruh lingkup:**
+  Menyinkronkan skema database (`db/schema.sql`) dengan menambahkan tabel `transaksi_item`, relasi foreign key berintegritas, serta kolom `voucher_id` dan `poin_digunakan` agar seluruh kebutuhan pengerjaan anggota tim terpenuhi.
+
+---
+
+### Rincian Modul yang Telah Dibangun & Sedang Disempurnakan (Nabila)
+
+#### 1. Lingkup 1 — Pengelolaan Data Produk, Cabang, dan Member
 - **Menu & Stok Produk (`/produk`)**: CRUD produk lengkap terhubung relasi kategori, penetapan harga jual, manajemen kuantitas stok, dan mekanisme soft-delete (`deleted_at`).
 - **Cabang Kedai (`/cabang`)**: Manajemen data 3 cabang resmi (**Seduh Pusat**, **Seduh Timur**, dan **Seduh Barat**) lengkap dengan kode identifikasi, nomor kontak, dan alamat operasional.
 - **Data Member (`/member`)**: Pendaftaran kartu anggota loyalitas, format kontak unik, penanda tingkatan **Silver** (standar) dan **Gold** (belanja $\ge$ Rp1.500.000 dalam 3 bulan terakhir).
 
-### 2. Lingkup 2 — Pengaturan Promo dan Voucher
+#### 2. Lingkup 2 — Pengaturan Promo dan Voucher
 - **Pengaturan Promo Multi-Kondisi (`/promo`)**:
   - 4 jenis promo: Diskon Persentase Produk, Potongan Min. Belanja, Buy 2 Get 1 Kategori, dan Promo Berbasis Voucher.
   - Batasan fleksibel: Rentang tanggal berlaku, jam operasional tertentu (*happy hour*), dan seleksi target cabang maupun item produk/kategori.
 - **Kupon Voucher Berkode (`/voucher`)**:
   - Penerbitan kode voucher eksklusif dengan pembatasan kuota klaim maksimal.
 
-### 3. Autentikasi & Session Multi-Peran (Auth Module)
+#### 3. Autentikasi & Otorisasi Peran Server-Side (Auth & RBAC)
 - Login berbasis cookie session `HttpOnly` dengan keamanan `SameSite=Lax`.
 - Hashing password menggunakan algoritma `bcrypt`.
+- Otorisasi server-side: middleware `RequireLogin` dan `RequireRole("ADMIN")` / `RequireRole("ADMIN", "KASIR")`.
 - Mendukung 3 peran pengguna:
   - **👑 Admin / Pemilik**: Hak akses penuh kelola master data, promo, voucher, member, dan memantau analitik.
   - **☕ Kasir**: Menangani kasir POS transaksi, klaim promo, penukaran poin, dan pembatalan transaksi.
@@ -277,83 +320,118 @@ erDiagram
 
 ---
 
-## 🚀 Panduan Teknis untuk Anggota Tim (Lingkup 3, 4, 5, 6)
+## 🚀 Panduan Teknis & Langkah Pengerjaan Tim (Semua Anggota)
 
-Berikut panduan langkah pengerjaan yang terstruktur untuk rekan-rekan tim:
+Agar pengembangan sistem berjalan lancar dan terstruktur, berikut urutan ketergantungan dan langkah kerja spesifik untuk masing-masing anggota:
+
+### ⏱️ Urutan & Ketergantungan Pengerjaan Antar Anggota
+
+```
+[Nabila: Fondasi DB, Auth & L1-L2 (On Progress)]
+        │
+        ├───► [Rahma: Lingkup 3 - Transaksi POS] ────► [Hilal: Lingkup 4 - Pembatalan Transaksi]
+        │                                                     ▲ (Tunggu L3 selesai)
+        ├───► [Dinda: Lingkup 5 - Poin & Tier Member]
+        │
+        └───► [Luhur: Lingkup 6 - Laporan Analitik Bisnis]
+```
+
+- **Rahma, Dinda, dan Luhur** dapat **langsung mulai bekerja sekarang secara paralel** karena seluruh skema tabel, seed data awal, dan session login sudah siap di branch `dev`.
+- **Hilal** menunggu modul transaksi dari **Rahma** selesai dicatat di DB, agar proses pembatalan, pembalikan poin, restock barang, dan kuota voucher dapat diuji secara riil.
 
 ---
 
-### 🔹 Lingkup 3: Transaksi Penjualan (Rahma)
+### 🔹 1. Lingkup 1, Lingkup 2 & Fondasi Sistem (Nabila — On Progress)
+- **Fokus Utama**: Menjaga stabilitas arsitektur, menyempurnakan fitur yang telah dibuat, serta memastikan antarmuka dan basis data terintegrasi sempurna.
+- **Daftar Rencana Peningkatan**:
+  1. [ ] **Evaluasi struktur kode & modularitas**: Pastikan pemisahan handler, service, model, dan repository tetap rapi agar tidak terjadi bentrok saat modul Rahma/Hilal/Dinda/Luhur digabungkan.
+  2. [ ] **Penyempurnaan autentikasi & validasi**: Uji validasi input pendaftaran, login, logout, dan pengujian boundary rute dengan middleware `RequireRole` (403 Forbidden).
+  3. [ ] **Konsistensi UI/UX**: Pastikan komponen template (`layout.html`, `sidebar.html`, `header.html`) tampil rapi, responsif, dan bebas error rendering.
+  4. [ ] **Pengujian CRUD**: Uji operasi tambah, edit, soft-delete produk, kelola cabang, pendaftaran member, aturan multi-promo, dan kuota voucher.
+  5. [ ] **Integritas Database**: Mengawal skema tabel (`db/schema.sql`) agar selalu sinkron dengan kebutuhan kode seluruh tim.
+
+---
+
+### 🔹 2. Lingkup 3: Transaksi Penjualan & Kasir POS (Rahma)
 - **Tujuan**: Membangun modul kasir penjualan (POS) di cabang terpilih yang menghitung kalkulasi promo, penukaran poin, dan perolehan poin baru.
-- **Berkas yang Perlu Dibuat / Dimodifikasi**:
-  - `internal/handler/transaksi.go` (routing `GET /transaksi` & `POST /transaksi`)
-  - `internal/repository/transaksi.go`
-  - `templates/transaksi.html`
-  - Daftarkan route di `cmd/web/main.go` dan tambahkan link di `templates/sidebar.html`.
+- **Status**: **Siap Dikerjakan Sekarang**.
+- **Berkas yang Perlu Dikerjakan**:
+  - `internal/handler/transaksi.go` (routing `GET /transaksi` untuk form POS & `POST /transaksi` untuk proses simpan)
+  - `internal/repository/transaksi.go` (logika query kalkulasi promo, simpan transaksi & item, potong stok, potong poin, tambah poin baru)
+  - `templates/transaksi.html` (antarmuka kasir penjualan POS interaktif)
+  - Daftarkan route di `cmd/web/main.go` menggunakan middleware `adminKasir` dan tambahkan menu navigasi di `templates/sidebar.html`.
 - **Tabel Database yang Dipakai**: `transaksi`, `transaksi_item`, `produk`, `promo`, `promo_produk`, `promo_kategori`, `promo_cabang`, `voucher`, `poin_member`, `member`.
-- **Langkah Logika Bisnis**:
-  1. **Form Input**: Pilih cabang, cari member (opsional), pilih produk + qty, kode voucher (opsional), centang tukarkan poin.
-  2. **Hitung Subtotal**: Total dari $\sum (\text{harga} \times \text{qty})$.
-  3. **Evaluasi Diskon Promo** (cek aktif, dalam rentang tanggal & jam, berlaku untuk cabang ini):
-     - *Diskon Persentase Produk (`PERSENTASE_PRODUK`)*: Cek tabel `promo_produk`. Potong `harga_satuan` sebesar `nilai`%. Simpan ke `diskon_satuan` di `transaksi_item`.
-     - *Beli 2 Gratis 1 (`BUY2_GET1`)*: Cek `promo_kategori`. Untuk setiap 3 item dalam kategori target, 1 item dihitung gratis. `diskon_satuan = harga_satuan` untuk item gratis.
-     - *Potongan Min. Belanja (`POTONGAN_MIN_BELANJA`)*: Jika subtotal ≥ `minimal_belanja` **DAN** tidak ada voucher digunakan.
-     - *Voucher (`VOUCHER`)*: Validasi kode, kuota, cabang. Kurangi `voucher.terpakai += 1`. **Aturan mutlak**: jika voucher dipakai, promo `POTONGAN_MIN_BELANJA` tidak boleh aktif.
-  4. **Penukaran Poin Member** (jika member dipilih dan meminta tukar poin):
-     - Ambil poin valid: `WHERE member_id=? AND status='AKTIF' AND sisa>0 AND kadaluarsa_at > NOW() ORDER BY kadaluarsa_at ASC` (FEFO).
-     - **Batas maksimal**: poin yang ditukar ≤ `floor(total_setelah_diskon * 0.5 / 1000)` poin.
-     - Kurangi `sisa` per baris poin dari yang paling dekat kedaluwarsa. Catat `poin_digunakan` di tabel `transaksi`.
+- **Langkah-Langkah Logika Bisnis Wajib**:
+  1. **Form Kasir POS**: Kasir memilih cabang aktif, memilih produk serta kuantitas, mencari member berdasarkan nomor/nama (opsional), memasukkan kode voucher (opsional), dan opsi centang penukaran poin.
+  2. **Hitung Subtotal Belanja**: Total dari $\sum (\text{harga\_satuan} \times \text{qty})$.
+  3. **Evaluasi Diskon Promosi Bertumpuk**:
+     - *Diskon Persentase Produk (`PERSENTASE_PRODUK`)*: Periksa apakah produk ada di tabel `promo_produk`. Potong harga per unit sebesar $X\%$. Simpan nilai diskon ke `diskon_satuan` pada `transaksi_item`.
+     - *Beli 2 Gratis 1 (`BUY2_GET1`)*: Periksa target kategori di `promo_kategori`. Untuk setiap kelipatan 3 item sejenis, berikan 1 item gratis (`diskon_satuan = harga_satuan`).
+     - *Potongan Min. Belanja (`POTONGAN_MIN_BELANJA`)*: Jika subtotal $\ge$ `minimal_belanja` **DAN tidak ada kode voucher yang digunakan**.
+     - *Voucher Berkode (`VOUCHER`)*: Validasi masa aktif, jam operasional (*happy hour*), cabang, dan sisa kuota. Jika voucher digunakan, **promo potongan min. belanja tidak boleh aktif** (aturan bentrok Topik 5).
+  4. **Penukaran Poin Member (Redemption)**:
+     - Hanya berlaku jika transaksi terhubung dengan member terdaftar dan memiliki saldo poin aktif (`sisa > 0 AND status = 'AKTIF' AND kadaluarsa_at > NOW()`).
+     - Nilai tukar: **1 poin = Rp1.000**.
+     - **Batas maksimal penukaran:** Paling banyak **50% dari total belanja** setelah potongan promo.
+     - **Metode FEFO (First Expired First Out):** Ambil poin terdekat yang akan kedaluwarsa (`ORDER BY kadaluarsa_at ASC`). Potong kolom `sisa` pada tabel `poin_member`. Simpan jumlah poin yang ditukar pada kolom `poin_digunakan` di tabel `transaksi`.
   5. **Perolehan Poin Baru**:
-     - `poin_baru = floor(total_bayar / 10000)`.
-     - Jika member `GOLD`: `poin_baru = floor(poin_baru * 1.5)`.
-     - `INSERT INTO poin_member (member_id, transaksi_id, jumlah, sisa, diperoleh_at, kadaluarsa_at, status) VALUES (?, ?, ?, ?, NOW(), NOW() + INTERVAL 6 MONTH, 'AKTIF')`.
-  6. **Simpan Detail Item**: Insert baris ke `transaksi_item` per produk (untuk kebutuhan restock Hilal).
-  7. **Kurangi Stok**: `UPDATE produk SET stok = stok - ? WHERE id = ?`.
+     - Dihitung dari `total_bayar` akhir: `floor(total_bayar / 10000) * 1 poin`.
+     - **Multiplier Tier Gold:** Jika status member adalah `GOLD`, kalikan perolehan poin dengan **1,5x** (contoh: belanja Rp100.000 $\rightarrow$ Silver dapat 10 poin, Gold dapat 15 poin).
+     - Terbitkan baris poin baru ke `poin_member` dengan masa kedaluwarsa **6 bulan**:
+       `INSERT INTO poin_member (member_id, transaksi_id, jumlah, sisa, diperoleh_at, kadaluarsa_at, status) VALUES (?, ?, ?, ?, NOW(), NOW() + INTERVAL 6 MONTH, 'AKTIF')`.
+  6. **Catat Detail & Kurangi Stok**:
+     - Simpan setiap item yang dibeli ke tabel `transaksi_item` (snapshot harga, qty, diskon).
+     - Kurangi kuantitas stok produk di tabel `produk` (`stok = stok - qty`).
 
 ---
 
-### 🔹 Lingkup 4: Pembatalan Transaksi (Hilal)
-- **Tujuan**: Membatalkan transaksi penjualan jika terjadi kesalahan atau pembatalan pesanan oleh pelanggan.
-- **Berkas yang Perlu Dibuat / Dimodifikasi**:
+### 🔹 3. Lingkup 4: Pembatalan Transaksi (Hilal)
+- **Tujuan**: Membatalkan transaksi penjualan jika terjadi kesalahan atau pembatalan pesanan oleh pelanggan, dengan rollback data yang konsisten.
+- **Status**: **Menunggu Modul Transaksi Rahma Selesai**.
+- **Berkas yang Perlu Dikerjakan**:
   - `internal/handler/batal.go` (routing `POST /transaksi/{id}/batal`)
-  - `internal/repository/batal.go`
-  - Tampilkan tombol "Batalkan Transaksi" pada riwayat transaksi.
+  - `internal/repository/batal.go` (logika rollback database transaksi)
+  - Tampilkan tombol konfirmasi "Batalkan Transaksi" pada baris tabel riwayat transaksi kasir.
 - **Tabel Database yang Dipakai**: `transaksi`, `transaksi_item`, `produk`, `poin_member`, `voucher`.
-- **Langkah Logika Bisnis (Harus dalam 1 Database Transaction / `db.BeginTx`)**:
+- **Langkah-Langkah Logika Bisnis (Wajib Atomic Transaction / `db.BeginTx`)**:
   1. Validasi transaksi yang akan dibatalkan (pastikan status saat ini adalah `SELESAI`).
   2. Ubah status transaksi menjadi `DIBATALKAN`:
      `UPDATE transaksi SET status = 'DIBATALKAN' WHERE id = ?`.
-  3. **Tarik Kembali Poin Diperoleh**:
-     - Poin yang diterbitkan dari transaksi tersebut di-void:
+  3. **Tarik Kembali Poin yang Diperoleh**:
+     - Poin reward yang diterbitkan dari transaksi ini ditarik kembali (*void*) agar tidak bisa digunakan:
        `UPDATE poin_member SET status = 'DIBATALKAN', sisa = 0 WHERE transaksi_id = ? AND status = 'AKTIF'`.
   4. **Kembalikan Poin yang Ditukarkan**:
-     - Ambil nilai `poin_digunakan` dari tabel `transaksi`. Jika > 0, tambahkan kembali ke saldo poin member (insert baris baru `poin_member` tanpa `transaksi_id` atau pulihkan baris lama).
-  5. **Restock Produk**:
-     - Query detail item dari `transaksi_item` lalu:
-       `UPDATE produk SET stok = stok + ? WHERE id = ?` per baris item.
-  6. **Kembalikan Kuota Voucher** (jika transaksi menggunakan voucher):
-     - `UPDATE voucher SET terpakai = terpakai - 1 WHERE id = (SELECT voucher_id FROM transaksi WHERE id = ?)`.
+     - Ambil nilai `poin_digunakan` dari tabel `transaksi`. Jika lebih dari 0, kembalikan poin tersebut ke saldo aktif member (dapat di-insert sebagai baris baru pemulihan atau mengembalikan sisa batch poin sebelumnya).
+  5. **Restock Kuantitas Produk**:
+     - Baca daftar item yang dibatalkan dari tabel `transaksi_item`.
+     - Kembalikan stok setiap produk: `UPDATE produk SET stok = stok + ? WHERE id = ?`.
+  6. **Kembalikan Kuota Voucher**:
+     - Jika transaksi menggunakan voucher (`voucher_id IS NOT NULL`), kurangi angka pemakaian voucher:
+       `UPDATE voucher SET terpakai = terpakai - 1 WHERE id = ?`.
 
 ---
 
-### 🔹 Lingkup 5: Pengelolaan Masa Berlaku Poin & Tingkat Member (Dinda)
-- **Tujuan**: Menangani validasi kedaluwarsa poin (6 bulan) dan evaluasi otomatis tingkat keanggotaan (Silver vs Gold).
-- **Berkas yang Perlu Dibuat / Dimodifikasi**:
-  - `internal/handler/member_tier.go` (routing `GET /member/tier`)
-  - `internal/repository/member_tier.go`
-  - `templates/poin_tier.html` (halaman monitoring saldo poin per batch & status tier member).
-- **Langkah Logika Bisnis**:
-  1. **Masa Berlaku Poin (6 Bulan)**:
-     - Tampilkan riwayat batch poin per member: tanggal perolehan, tanggal kedaluwarsa, jumlah awal, sisa poin, dan status (Aktif/Kedaluwarsa/Dibatalkan).
-     - Query poin aktif valid:
+### 🔹 4. Lingkup 5: Pengelolaan Masa Berlaku Poin & Tingkat Member (Dinda)
+- **Tujuan**: Menangani pemantauan masa berlaku poin (6 bulan), audit poin kedaluwarsa, dan evaluasi otomatis tingkat keanggotaan (Silver vs Gold).
+- **Status**: **Siap Dikerjakan Sekarang**.
+- **Berkas yang Perlu Dikerjakan**:
+  - `internal/handler/member_tier.go` (routing `GET /member/tier` atau manajemen poin)
+  - `internal/repository/member_tier.go` (query evaluasi akumulasi belanja 3 bulan dan status kedaluwarsa poin)
+  - `templates/poin_tier.html` (halaman monitoring batch poin loyalitas dan status tingkat member)
+  - Daftarkan route di `cmd/web/main.go` dan tambahkan menu di `templates/sidebar.html`.
+- **Langkah-Langkah Logika Bisnis**:
+  1. **Pemantauan Masa Berlaku Poin (6 Bulan)**:
+     - Tampilkan riwayat batch poin per member: tanggal perolehan, tanggal kedaluwarsa, jumlah awal, sisa poin aktif, dan status (*Aktif* / *Kedaluwarsa* / *Dibatalkan*).
+     - Query poin aktif valid (belum kedaluwarsa):
        ```sql
        SELECT member_id, SUM(sisa) AS poin_aktif, (SUM(sisa) * 1000) AS nilai_rupiah
        FROM poin_member
        WHERE status = 'AKTIF' AND kadaluarsa_at > NOW()
        GROUP BY member_id;
        ```
-  2. **Evaluasi Tingkat Keanggotaan (Silver & Gold)**:
-     - Hitung akumulasi belanja riil member dalam 3 bulan terakhir:
+     - Tandai secara visual atau ubah status poin yang tanggal kedaluwarsanya telah lewat (`kadaluarsa_at <= NOW()`).
+  2. **Evaluasi Otomatis Tingkat Member (Silver & Gold)**:
+     - Hitung akumulasi belanja riil member dalam **3 bulan terakhir**:
        ```sql
        SELECT COALESCE(SUM(total_bayar), 0)
        FROM transaksi
@@ -361,24 +439,27 @@ Berikut panduan langkah pengerjaan yang terstruktur untuk rekan-rekan tim:
          AND created_at >= NOW() - INTERVAL 3 MONTH;
        ```
      - **Aturan Evaluasi:**
-       - Jika total belanja 3 bulan $\ge$ **Rp1.500.000** $\rightarrow$ Status diubah/dipertahankan menjadi **GOLD**.
-       - Jika total belanja 3 bulan $<$ **Rp1.500.000** $\rightarrow$ Status menjadi **SILVER**.
-     - Simpan hasil perhitungan ke `UPDATE member SET tingkat = ?, total_belanja_3_bulan = ? WHERE id = ?`.
+       - Jika akumulasi belanja 3 bulan $\ge$ **Rp1.500.000** $\rightarrow$ Status member diubah/dipertahankan menjadi **GOLD** (berhak multiplier poin 1,5x).
+       - Jika akumulasi belanja 3 bulan $<$ **Rp1.500.000** $\rightarrow$ Status member adalah **SILVER** (perolehan poin standar 1x).
+     - Simpan hasil perhitungan ke tabel member:
+       `UPDATE member SET tingkat = ?, total_belanja_3_bulan = ? WHERE id = ?`.
 
 ---
 
-### 🔹 Lingkup 6: Laporan Promo, Poin, dan Member (Luhur)
-- **Tujuan**: Membangun modul pelaporan analitik bisnis untuk pemilik kedai.
-- **Berkas yang Perlu Dibuat / Dimodifikasi**:
+### 🔹 5. Lingkup 6: Laporan Promo, Poin, dan Member (Luhur)
+- **Tujuan**: Membangun modul pelaporan analitik bisnis untuk pemilik kedai guna memantau efektivitas promo, nilai liabilitas poin, dan demografi member.
+- **Status**: **Siap Dikerjakan Sekarang** *(Kerangka awal query dan UI sudah tersedia di `/laporan`)*.
+- **Berkas yang Perlu Dikerjakan**:
   - `internal/handler/laporan.go` (routing `GET /laporan`)
-  - `internal/repository/laporan.go`
-  - `templates/laporan.html`
+  - `internal/repository/laporan.go` (query agregasi SQL laporan komprehensif)
+  - `templates/laporan.html` (penyempurnaan tabel analitik dan visualisasi data)
+  - Pastikan route hanya dapat diakses oleh Admin (`adminOnly`) di `cmd/web/main.go`.
 - **3 Laporan Wajib Sesuai Soal Topik 5**:
   1. **Laporan Biaya Setiap Promo**:
-     - Menghitung total realisasi rupiah potongan diskon yang diserap oleh masing-masing promo.
-     - Rekap berdasarkan kode promo, jenis promo, jumlah pemakaian, dan total nominal rupiah diskon yang dikeluarkan kedai.
-  2. **Laporan Poin yang Masih Berlaku & Nilai Rupiahnya**:
-     - Menampilkan total poin aktif yang masih berlaku di seluruh cabang:
+     - Menghitung total realisasi rupiah potongan diskon yang dikeluarkan kedai untuk masing-masing promo.
+     - Rekapitulasi per promo: kode promo, nama promo, jenis promo, jumlah kali pemakaian, dan total biaya subsidi promo (Rp).
+  2. **Laporan Jumlah Poin Masih Berlaku & Nilai Rupiahnya**:
+     - Menghitung total saldo poin aktif yang belum kedaluwarsa di seluruh cabang:
        ```sql
        SELECT 
            COUNT(DISTINCT member_id) AS total_member_berpoin,
@@ -389,7 +470,7 @@ Berikut panduan langkah pengerjaan yang terstruktur untuk rekan-rekan tim:
        ```
   3. **Laporan Perkembangan Jumlah Member per Tingkat**:
      - Rekapitulasi perbandingan total member **Silver** vs **Gold**.
-     - Grafik atau tabel distribusi keanggotaan dan pertumbuhan member baru per bulan.
+     - Menampilkan tabel persebaran member per cabang dan tren pertumbuhan registrasi member baru per bulan.
 
 ---
 
