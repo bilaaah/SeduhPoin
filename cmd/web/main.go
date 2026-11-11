@@ -46,29 +46,35 @@ func main() {
 
 	authMw := &middleware.Auth{Svc: authSvc}
 
+	// Helper shortcut pembatasan peran (harus dipanggil setelah RequireLogin)
+	adminOnly    := authMw.RequireRole("ADMIN")
+	adminKasir   := authMw.RequireRole("ADMIN", "KASIR")
+
 	// privat: semua route yang wajib login
 	privat := http.NewServeMux()
+
+	// Dashboard — terbuka untuk semua peran (isi berbeda per peran)
 	privat.HandleFunc("GET /{$}", halaman.Home)
 
-	// Lingkup 1 (Nabila)
-	privat.HandleFunc("/cabang", admin.Cabang)
-	privat.HandleFunc("GET /produk", admin.Produk)
-	privat.HandleFunc("POST /produk", admin.Produk)
-	privat.HandleFunc("POST /produk/{id}/hapus", admin.HapusProduk)
-	privat.HandleFunc("/member", admin.Member)
+	// ── Lingkup 1: Master Data ── hanya ADMIN
+	privat.Handle("GET /produk",          adminOnly(http.HandlerFunc(admin.Produk)))
+	privat.Handle("POST /produk",         adminOnly(http.HandlerFunc(admin.Produk)))
+	privat.Handle("POST /produk/{id}/hapus", adminOnly(http.HandlerFunc(admin.HapusProduk)))
+	privat.Handle("/cabang",              adminOnly(http.HandlerFunc(admin.Cabang)))
+	privat.Handle("/member",              adminOnly(http.HandlerFunc(admin.Member)))
 
-	// Lingkup 2 (Nabila)
-	privat.HandleFunc("/promo", admin.Promo)
-	privat.HandleFunc("/voucher", admin.Voucher)
+	// ── Lingkup 2: Promo & Voucher ── hanya ADMIN
+	privat.Handle("/promo",   adminOnly(http.HandlerFunc(admin.Promo)))
+	privat.Handle("/voucher", adminOnly(http.HandlerFunc(admin.Voucher)))
 
-	// Laporan (Admin/Pemilik)
-	privat.HandleFunc("GET /laporan", halaman.Laporan)
+	// ── Laporan ── hanya ADMIN
+	privat.Handle("GET /laporan", adminOnly(http.HandlerFunc(halaman.Laporan)))
 
-	// Transaksi & Batal (Kasir)
-	privat.HandleFunc("POST /transaksi", halaman.SimpanTransaksi)
-	privat.HandleFunc("POST /transaksi/{id}/batal", halaman.BatalTransaksi)
+	// ── Transaksi & Pembatalan ── ADMIN dan KASIR
+	privat.Handle("POST /transaksi",             adminKasir(http.HandlerFunc(halaman.SimpanTransaksi)))
+	privat.Handle("POST /transaksi/{id}/batal",  adminKasir(http.HandlerFunc(halaman.BatalTransaksi)))
 
-	// Logout
+	// Logout — semua peran
 	privat.HandleFunc("POST /logout", authH.Logout)
 
 	// publik: boleh diakses tanpa login
