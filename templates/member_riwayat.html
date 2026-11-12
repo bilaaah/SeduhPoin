@@ -1,0 +1,102 @@
+{{define "content"}}
+<div class="dashboard-hero" style="background: linear-gradient(135deg, #fbf2e6, #f7dfc6); border-color: rgba(196,120,60,0.3); margin-bottom: 24px;">
+    <div class="hero-text">
+        <span class="hero-badge" style="background: var(--caramel); color: #fff;">📜 Aktivitas Pelanggan</span>
+        <h1>Riwayat Transaksi Belanja Saya</h1>
+        <p>Histori lengkap transaksi pembelian Anda di seluruh cabang Kedai Kopi Seduh (Pusat, Timur, dan Barat). Pantau akumulasi belanja 3 bulan terakhir Anda untuk mempertahankan atau mencapai status Member Gold.</p>
+    </div>
+</div>
+
+<!-- Kartu Ringkasan Belanja & Tiering -->
+<div class="stats-grid" style="margin-bottom: 26px;">
+    <div class="stat-card">
+        <div class="stat-icon icon-gold">🏆</div>
+        <div class="stat-num">{{.Member.Tingkat}}</div>
+        <div class="stat-label">Tingkat Keanggotaan</div>
+        <div class="stat-desc">{{if eq .Member.Tingkat "GOLD"}}🥇 Multiplier Poin 1,5x{{else}}🥈 Standar 1,0x Poin{{end}}</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon icon-brown">🛍️</div>
+        <div class="stat-num" style="font-size: 22px;">{{rupiah .Member.Total}}</div>
+        <div class="stat-label">Total Belanja (3 Bulan)</div>
+        <div class="stat-desc">Syarat Gold: Min. Rp1.500.000</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon icon-green">🎯</div>
+        <div class="stat-num" style="font-size: 22px; color: var(--green);">
+            {{if eq .Member.Tingkat "GOLD"}}
+                Tercapai!
+            {{else}}
+                {{rupiah .SisaMenujuGold}}
+            {{end}}
+        </div>
+        <div class="stat-label">Target Menuju Gold</div>
+        <div class="stat-desc">{{if eq .Member.Tingkat "GOLD"}}Bonus 1,5x aktif di semua transaksi{{else}}Sisa belanja dalam 3 bulan terakhir{{end}}</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon icon-blue">☕</div>
+        <div class="stat-num">{{len .Riwayat}}</div>
+        <div class="stat-label">Total Kunjungan/Trx</div>
+        <div class="stat-desc">Transaksi tercatat di sistem</div>
+    </div>
+</div>
+
+<!-- Tabel Riwayat Belanja Lengkap -->
+<div style="background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 26px; box-shadow: var(--shadow);">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
+        <div>
+            <h3 style="margin: 0 0 4px; font-size: 18px;">Histori Transaksi Pembelian</h3>
+            <p style="margin: 0; font-size: 13px; color: var(--muted);">Daftar seluruh nota transaksi Anda beserta cabang dan diskon promo yang diperoleh:</p>
+        </div>
+        <a href="/member/poin" class="btn btn-light btn-sm">
+            🪙 Cek Saldo & Masa Berlaku Poin &rarr;
+        </a>
+    </div>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>No. Nota</th>
+                <th>Lokasi Cabang</th>
+                <th class="num">Subtotal</th>
+                <th class="num">Diskon Promo</th>
+                <th class="num">Total Pembayaran</th>
+                <th style="text-align: center;">Status</th>
+                <th>Waktu Transaksi</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{range .Riwayat}}
+            <tr>
+                <td><strong>#TRX-{{.ID}}</strong></td>
+                <td>{{.CabangNama}}</td>
+                <td class="num">{{rupiah .Subtotal}}</td>
+                <td class="num" style="color: var(--coffee);">
+                    {{if gt .TotalDiskon 0}}-{{rupiah .TotalDiskon}}{{else}}Rp0{{end}}
+                </td>
+                <td class="num" style="font-weight: 700; color: var(--espresso); font-size: 15px;">
+                    {{rupiah .TotalBayar}}
+                </td>
+                <td style="text-align: center;">
+                    {{if eq .Status "SELESAI"}}
+                        <span class="badge badge-aktif">SELESAI</span>
+                    {{else}}
+                        <span class="badge" style="background: var(--red-bg); color: var(--red);">DIBATALKAN</span>
+                    {{end}}
+                </td>
+                <td style="font-size: 12.5px; color: var(--muted);">{{.CreatedAt.Format "02/01/2006 15:04"}}</td>
+            </tr>
+            {{else}}
+            <tr>
+                <td colspan="7" style="text-align: center; color: var(--muted); padding: 32px;">
+                    Belum ada riwayat transaksi belanja. Kunjungi cabang Kedai Kopi Seduh terdekat untuk mulai berbelanja!
+                </td>
+            </tr>
+            {{end}}
+        </tbody>
+    </table>
+</div>
+{{end}}

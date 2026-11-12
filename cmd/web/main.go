@@ -50,6 +50,7 @@ func main() {
 	// Helper shortcut pembatasan peran (harus dipanggil setelah RequireLogin)
 	adminOnly    := authMw.RequireRole("ADMIN")
 	adminKasir   := authMw.RequireRole("ADMIN", "KASIR")
+	memberOnly   := authMw.RequireRole("ADMIN", "MEMBER")
 
 	// privat: semua route yang wajib login
 	privat := http.NewServeMux()
@@ -72,9 +73,15 @@ func main() {
 	privat.Handle("GET /laporan",             adminOnly(http.HandlerFunc(laporan.Laporan)))
 	privat.Handle("GET /laporan/export.csv",  adminOnly(http.HandlerFunc(laporan.ExportCSV)))
 
-	// ── Transaksi & Pembatalan ── ADMIN dan KASIR
+	// ── Operasional Kasir (Terminal POS & Pembatalan) ── ADMIN dan KASIR
+	privat.Handle("GET /kasir/transaksi",        adminKasir(http.HandlerFunc(halaman.KasirTransaksi)))
+	privat.Handle("GET /kasir/riwayat",          adminKasir(http.HandlerFunc(halaman.KasirRiwayat)))
 	privat.Handle("POST /transaksi",             adminKasir(http.HandlerFunc(halaman.SimpanTransaksi)))
 	privat.Handle("POST /transaksi/{id}/batal",  adminKasir(http.HandlerFunc(halaman.BatalTransaksi)))
+
+	// ── Area Member Loyalitas ── ADMIN dan MEMBER
+	privat.Handle("GET /member/poin",            memberOnly(http.HandlerFunc(halaman.MemberPoin)))
+	privat.Handle("GET /member/riwayat",         memberOnly(http.HandlerFunc(halaman.MemberRiwayat)))
 
 	// Logout — semua peran
 	privat.HandleFunc("POST /logout", authH.Logout)

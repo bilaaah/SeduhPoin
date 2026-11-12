@@ -1,0 +1,116 @@
+{{define "content"}}
+<div class="dashboard-hero" style="background: linear-gradient(135deg, #fbf2e6, #f7dfc6); border-color: rgba(196,120,60,0.3); margin-bottom: 24px;">
+    <div class="hero-text">
+        <span class="hero-badge" style="background: var(--caramel); color: #fff;">🪙 Program Loyalitas Seduh</span>
+        <h1>Saldo & Masa Berlaku Poin Reward</h1>
+        <p>Setiap belanja kelipatan Rp10.000 mendapatkan 1 poin (1,5x untuk Member Gold). Poin bernilai Rp1.000 dan berlaku 6 bulan sejak diperoleh. Saat penukaran, sistem menggunakan metode <strong>FEFO (First Expired, First Out)</strong>.</p>
+    </div>
+</div>
+
+<!-- Grid Ringkasan Poin -->
+<div class="stats-grid" style="margin-bottom: 26px;">
+    <div class="stat-card" style="border-left: 4px solid var(--caramel);">
+        <div class="stat-icon icon-gold">🪙</div>
+        <div class="stat-num">{{.PoinAktif}}</div>
+        <div class="stat-label">Total Poin Aktif</div>
+        <div class="stat-desc">Dapat ditukarkan sebagai potongan</div>
+    </div>
+
+    <div class="stat-card" style="border-left: 4px solid var(--green);">
+        <div class="stat-icon icon-green">💵</div>
+        <div class="stat-num" style="font-size: 24px; color: var(--green);">{{rupiah .NilaiRupiah}}</div>
+        <div class="stat-label">Nilai Rupiah Saldo</div>
+        <div class="stat-desc">1 Poin = Rp1.000 potongan belanja</div>
+    </div>
+
+    <div class="stat-card" style="border-left: 4px solid #2980b9;">
+        <div class="stat-icon icon-blue">⏳</div>
+        <div class="stat-num">6 Bulan</div>
+        <div class="stat-label">Masa Berlaku Poin</div>
+        <div class="stat-desc">Dihitung sejak tanggal transaksi</div>
+    </div>
+
+    <div class="stat-card" style="border-left: 4px solid var(--coffee);">
+        <div class="stat-icon icon-brown">⭐</div>
+        <div class="stat-num">{{if eq .Member.Tingkat "GOLD"}}1.5x Gold{{else}}1.0x Silver{{end}}</div>
+        <div class="stat-label">Multiplier Poin</div>
+        <div class="stat-desc">{{if eq .Member.Tingkat "GOLD"}}Bonus 50% poin per transaksi{{else}}Standar 1 poin per Rp10.000{{end}}</div>
+    </div>
+</div>
+
+<!-- Aturan & Ketentuan Penukaran Poin -->
+<div style="background: #fffbf2; border: 1px solid #f2e3cd; border-radius: var(--radius); padding: 20px 24px; margin-bottom: 26px; display: flex; align-items: flex-start; gap: 16px;">
+    <span style="font-size: 26px;">💡</span>
+    <div>
+        <strong style="color: var(--coffee); font-size: 14px; display: block; margin-bottom: 4px;">Ketentuan Penukaran Poin di Kasir:</strong>
+        <p style="margin: 0; font-size: 13px; color: #6d5445; line-height: 1.6;">
+            1. Poin dapat ditukarkan sebagai potongan pembayaran dengan nilai <strong>1 poin = Rp1.000</strong>.<br>
+            2. Maksimal potongan poin adalah <strong>50% dari total belanja</strong> setelah diskon promo.<br>
+            3. Saat poin ditukar, sistem otomatis menggunakan <strong>poin yang paling dekat masa kedaluwarsanya terlebih dahulu (FEFO)</strong> agar saldo Anda tidak hangus sia-sia.
+        </p>
+    </div>
+</div>
+
+<!-- Daftar Rincian Batch Poin FEFO -->
+<div style="background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 26px; box-shadow: var(--shadow);">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
+        <div>
+            <h3 style="margin: 0 0 4px; font-size: 18px;">Rincian Batch Poin (FEFO)</h3>
+            <p style="margin: 0; font-size: 13px; color: var(--muted);">Daftar perolehan poin yang diurutkan dari yang paling dekat masa kedaluwarsanya:</p>
+        </div>
+        <a href="/member/riwayat" class="btn btn-light btn-sm">
+            📜 Lihat Riwayat Belanja &rarr;
+        </a>
+    </div>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Batch #ID</th>
+                <th>Tanggal Diperoleh</th>
+                <th>Tanggal Kedaluwarsa</th>
+                <th class="num">Jumlah Awal</th>
+                <th class="num">Sisa Poin Aktif</th>
+                <th class="num">Nilai Rupiah</th>
+                <th style="text-align: center;">Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{range .BatchPoin}}
+            <tr>
+                <td><strong>#BATCH-{{.ID}}</strong></td>
+                <td>{{.DiperolehAt.Format "02/01/2006 15:04"}}</td>
+                <td>
+                    <strong style="color: var(--coffee);">{{.KadaluarsaAt.Format "02/01/2006"}}</strong>
+                    <small style="display: block; color: var(--muted); font-size: 11px;">(Masa 6 bulan)</small>
+                </td>
+                <td class="num">{{.Jumlah}} Poin</td>
+                <td class="num" style="font-weight: 700; color: var(--espresso); font-size: 15px;">
+                    {{.Sisa}} Poin
+                </td>
+                <td class="num" style="color: var(--green); font-weight: 700;">
+                    {{rupiah (mul .Sisa 1000)}}
+                </td>
+                <td style="text-align: center;">
+                    {{if eq .Status "AKTIF"}}
+                        {{if gt .Sisa 0}}
+                            <span class="badge badge-aktif">AKTIF</span>
+                        {{else}}
+                            <span class="badge" style="background: #f1f2f6; color: var(--muted);">HABIS TERPAKAI</span>
+                        {{end}}
+                    {{else}}
+                        <span class="badge" style="background: var(--red-bg); color: var(--red);">DIBATALKAN</span>
+                    {{end}}
+                </td>
+            </tr>
+            {{else}}
+            <tr>
+                <td colspan="7" style="text-align: center; color: var(--muted); padding: 32px;">
+                    Belum ada riwayat perolehan poin. Belanja di cabang Kedai Kopi Seduh untuk mengumpulkan poin reward!
+                </td>
+            </tr>
+            {{end}}
+        </tbody>
+    </table>
+</div>
+{{end}}

@@ -17,29 +17,55 @@ type HalamanHandler struct {
 	View *Renderer
 }
 
+func (h *HalamanHandler) ambilKasirData(r *http.Request, u model.User) model.KasirData {
+	cabang, _ := h.Repo.Cabang(r.Context())
+	produk, _ := h.Repo.Produk(r.Context())
+	member, _ := h.Repo.Member(r.Context())
+	promo, _ := h.Repo.Promo(r.Context())
+	voucher, _ := h.Repo.Voucher(r.Context())
+	trx, _ := h.Repo.SemuaTransaksi(r.Context())
+
+	return model.KasirData{
+		User:      u,
+		Cabang:    cabang,
+		Produk:    produk,
+		Member:    member,
+		Promo:     promo,
+		Voucher:   voucher,
+		Transaksi: trx,
+	}
+}
+
+func (h *HalamanHandler) ambilMemberData(r *http.Request, u model.User) model.MemberPortalData {
+	mbr, _ := h.Repo.MemberByEmail(r.Context(), u.Email)
+	poinAktif, batchPoin, _ := h.Repo.PoinByMemberID(r.Context(), mbr.ID)
+	riwayat, _ := h.Repo.TransaksiByMemberID(r.Context(), mbr.ID)
+
+	sisaGold := 1500000 - mbr.Total
+	if sisaGold < 0 {
+		sisaGold = 0
+	}
+
+	return model.MemberPortalData{
+		User:           u,
+		Member:         mbr,
+		PoinAktif:      poinAktif,
+		NilaiRupiah:    poinAktif * 1000,
+		SisaMenujuGold: sisaGold,
+		BatchPoin:      batchPoin,
+		Riwayat:        riwayat,
+	}
+}
+
 func (h *HalamanHandler) Home(w http.ResponseWriter, r *http.Request) {
 	u, _ := middleware.UserDari(r.Context())
 
 	// 1. Jika KASIR yang login
 	if u.Role == "KASIR" {
-		cabang, _ := h.Repo.Cabang(r.Context())
-		produk, _ := h.Repo.Produk(r.Context())
-		member, _ := h.Repo.Member(r.Context())
-		promo, _ := h.Repo.Promo(r.Context())
-		voucher, _ := h.Repo.Voucher(r.Context())
-		trx, _ := h.Repo.SemuaTransaksi(r.Context())
-
+		kd := h.ambilKasirData(r, u)
 		data := model.RingkasanData{
-			User: u,
-			KasirData: model.KasirData{
-				User:      u,
-				Cabang:    cabang,
-				Produk:    produk,
-				Member:    member,
-				Promo:     promo,
-				Voucher:   voucher,
-				Transaksi: trx,
-			},
+			User:      u,
+			KasirData: kd,
 		}
 		h.View.Tampil(w, "home.html", data)
 		return
@@ -47,26 +73,10 @@ func (h *HalamanHandler) Home(w http.ResponseWriter, r *http.Request) {
 
 	// 2. Jika MEMBER yang login
 	if u.Role == "MEMBER" {
-		mbr, _ := h.Repo.MemberByEmail(r.Context(), u.Email)
-		poinAktif, batchPoin, _ := h.Repo.PoinByMemberID(r.Context(), mbr.ID)
-		riwayat, _ := h.Repo.TransaksiByMemberID(r.Context(), mbr.ID)
-
-		sisaGold := 1500000 - mbr.Total
-		if sisaGold < 0 {
-			sisaGold = 0
-		}
-
+		md := h.ambilMemberData(r, u)
 		data := model.RingkasanData{
-			User: u,
-			MemberData: model.MemberPortalData{
-				User:           u,
-				Member:         mbr,
-				PoinAktif:      poinAktif,
-				NilaiRupiah:    poinAktif * 1000,
-				SisaMenujuGold: sisaGold,
-				BatchPoin:      batchPoin,
-				Riwayat:        riwayat,
-			},
+			User:       u,
+			MemberData: md,
 		}
 		h.View.Tampil(w, "home.html", data)
 		return
@@ -81,6 +91,34 @@ func (h *HalamanHandler) Home(w http.ResponseWriter, r *http.Request) {
 	}
 	ringkasan.User = u
 	h.View.Tampil(w, "home.html", ringkasan)
+}
+
+// KasirTransaksi menampilkan terminal khusus transaksi POS
+func (h *HalamanHandler) KasirTransaksi(w http.ResponseWriter, r *http.Request) {
+	u, _ := middleware.UserDari(r.Context())
+	kd := h.ambilKasirData(r, u)
+	h.View.Tampil(w, "kasir_transaksi.html", kd)
+}
+
+// KasirRiwayat menampilkan riwayat lengkap dan pembatalan pesanan kasir
+func (h *HalamanHandler) KasirRiwayat(w http.ResponseWriter, r *http.Request) {
+	u, _ := middleware.UserDari(r.Context())
+	kd := h.ambilKasirData(r, u)
+	h.View.Tampil(w, "kasir_riwayat.html", kd)
+}
+
+// MemberPoin menampilkan detail saldo poin aktif & riwayat masa berlaku FEFO 6 bulan
+func (h *HalamanHandler) MemberPoin(w http.ResponseWriter, r *http.Request) {
+	u, _ := middleware.UserDari(r.Context())
+	md := h.ambilMemberData(r, u)
+	h.View.Tampil(w, "member_poin.html", md)
+}
+
+// MemberRiwayat menampilkan histori lengkap belanja member di seluruh cabang
+func (h *HalamanHandler) MemberRiwayat(w http.ResponseWriter, r *http.Request) {
+	u, _ := middleware.UserDari(r.Context())
+	md := h.ambilMemberData(r, u)
+	h.View.Tampil(w, "member_riwayat.html", md)
 }
 
 // TransaksiKasir menangani proses penjualan oleh Kasir
