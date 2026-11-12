@@ -220,7 +220,7 @@ INSERT INTO produk (kategori_id, nama, harga, stok, keterangan) VALUES
 -- transaksi simulasi di bawah hanya sampel, bukan keseluruhan riwayat.
 INSERT INTO member (id, nomor_member, nama, no_hp, email, alamat, tingkat, total_belanja_3_bulan, created_at) VALUES
 (1, 'MBR-001', 'Nabila Zahra', '081234567890', 'nabila@gmail.com', 'Jl. Melati No. 12, Jakarta', 'GOLD', 1850000, DATE_SUB(NOW(), INTERVAL 8 MONTH)),
-(2, 'MBR-002', 'Budi Santoso', '081298765432', 'budi.santoso@yahoo.com', 'Jl. Cempaka No. 5, Jakarta', 'SILVER', 125000, DATE_SUB(NOW(), INTERVAL 6 MONTH)),
+(2, 'MBR-002', 'Budi Santoso', '081298765432', 'member@seduhkopi.com', 'Jl. Cempaka No. 5, Jakarta', 'SILVER', 125000, DATE_SUB(NOW(), INTERVAL 6 MONTH)),
 (3, 'MBR-003', 'Siti Rahmawati', '081377889900', 'siti.rahma@gmail.com', 'Jl. Mawar No. 8, Jakarta', 'GOLD', 2100000, DATE_SUB(NOW(), INTERVAL 4 MONTH)),
 (4, 'MBR-004', 'Dimas Pratama', '085611223344', 'dimas@outlook.com', 'Jl. Kenanga No. 19, Jakarta', 'SILVER', 150000, DATE_SUB(NOW(), INTERVAL 3 MONTH));
 
