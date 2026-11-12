@@ -2,6 +2,11 @@
 {{$role := userRole .}}
 
 {{if eq $role "KASIR"}}
+<style>
+.promo-row-head { display: grid; grid-template-columns: 1fr 84px 104px; gap: 8px; font-size: 10.5px; font-weight: 700; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+.promo-row { display: grid; grid-template-columns: 1fr 84px 104px; gap: 8px; margin-bottom: 8px; }
+.promo-row .form-control { padding: 9px 10px; font-size: 12.5px; }
+</style>
 <!-- ========================================== -->
 <!-- 1. TAMPILAN DASHBOARD KHUSUS KASIR         -->
 <!-- ========================================== -->
@@ -47,9 +52,16 @@
             </div>
 
             <div class="form-group">
-                <label>Potongan Diskon Promo / Voucher (Rp)</label>
-                <input class="form-control" type="number" id="posDiskon" name="total_diskon" min="0" value="0" placeholder="0" oninput="hitungPOS()">
-                <small style="color:var(--muted); font-size:11px;">* Potongan minimal belanja tidak dapat digabung voucher.</small>
+                <label>Promo / Voucher yang Diterapkan</label>
+                <div class="promo-row-head">
+                    <span>Promo</span><span>Diskon</span><span>Kode Voucher</span>
+                </div>
+                {{template "promoRow" .}}
+                {{template "promoRow" .}}
+                {{template "promoRow" .}}
+                <small style="color:var(--muted); font-size:11px;">
+                    * Nominal diskon yang diisi dicatat ke ledger promo sehingga masuk ke Laporan Biaya Realisasi Promo.
+                </small>
             </div>
 
             <div class="form-group" style="background: #fdfaf4; border: 1px solid #fae6cb; border-radius: 10px; padding: 14px;">
@@ -62,6 +74,10 @@
 
             <!-- Kalkulasi Ringkasan Bayar -->
             <div style="background: #f4f6f8; border-radius: 10px; padding: 16px; margin-bottom: 18px;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:12px; color:var(--muted);">
+                    <span>Total Diskon Promo:</span>
+                    <strong id="lblTotalDiskon" style="color:var(--coffee);">Rp0</strong>
+                </div>
                 <div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:13px;">
                     <span>Total Tagihan Akhir:</span>
                     <strong style="font-size:16px; color:var(--espresso);" id="lblTotalBayar">Rp0</strong>
@@ -72,7 +88,6 @@
                 </div>
             </div>
 
-            <input type="hidden" id="posTotalBayar" name="total_bayar" value="0">
             <input type="hidden" id="posPoinDapat" name="poin_diperoleh" value="0">
 
             <button type="submit" class="btn btn-block" style="background:#2980b9;">
@@ -178,9 +193,38 @@
 </div>
 
 <script>
+function hitungTotalDiskonPromo() {
+    var inputs = document.querySelectorAll('.promo-diskon');
+    var total = 0;
+    for (var i = 0; i < inputs.length; i++) {
+        total += parseInt(inputs[i].value) || 0;
+    }
+    return total;
+}
+
+function isiDiskonPromo(select) {
+    var opt = select.options[select.selectedIndex];
+    var jenis = opt.getAttribute('data-jenis');
+    var nilai = parseInt(opt.getAttribute('data-nilai')) || 0;
+    var minimal = parseInt(opt.getAttribute('data-minimal')) || 0;
+    var subtotal = parseInt(document.getElementById('posSubtotal').value) || 0;
+    var input = select.parentElement.querySelector('.promo-diskon');
+    if (!input) return;
+
+    if (jenis === 'PERSENTASE_PRODUK') {
+        input.value = Math.floor(subtotal * nilai / 100);
+    } else if (jenis === 'POTONGAN_MIN_BELANJA') {
+        input.value = (minimal === 0 || subtotal >= minimal) ? nilai : 0;
+    } else if (jenis === 'VOUCHER') {
+        input.value = nilai;
+    }
+    hitungPOS();
+}
+
 function hitungPOS() {
     var subtotal = parseInt(document.getElementById('posSubtotal').value) || 0;
-    var diskon = parseInt(document.getElementById('posDiskon').value) || 0;
+    var diskon = hitungTotalDiskonPromo();
+    document.getElementById('lblTotalDiskon').innerText = "Rp" + diskon.toLocaleString('id-ID');
     var stlhDiskon = subtotal - diskon;
     if (stlhDiskon < 0) stlhDiskon = 0;
 
@@ -198,7 +242,6 @@ function hitungPOS() {
     if (bayar < 0) bayar = 0;
 
     document.getElementById('lblTotalBayar').innerText = "Rp" + bayar.toLocaleString('id-ID');
-    document.getElementById('posTotalBayar').value = bayar;
 
     // Perolehan poin: 1 poin per Rp10.000, 1.5x jika Gold
     var mbrSelect = document.getElementById('posMember');
@@ -499,4 +542,17 @@ function hitungPOS() {
 </div>
 {{end}}
 
+{{end}}
+
+{{define "promoRow"}}
+<div class="promo-row">
+    <select class="form-control promo-pilih" name="promo_id" onchange="isiDiskonPromo(this)">
+        <option value="0" data-jenis="" data-nilai="0" data-minimal="0">-- Tanpa Promo --</option>
+        {{range .KasirData.Promo}}
+        <option value="{{.ID}}" data-jenis="{{.Jenis}}" data-nilai="{{.Nilai}}" data-minimal="{{.Minimal}}">{{.Kode}}</option>
+        {{end}}
+    </select>
+    <input class="form-control promo-diskon" type="number" name="promo_diskon" min="0" value="0" placeholder="0" oninput="hitungPOS()">
+    <input class="form-control" type="text" name="promo_voucher" placeholder="opsional" autocomplete="off">
+</div>
 {{end}}

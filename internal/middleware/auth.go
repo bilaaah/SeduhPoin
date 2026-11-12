@@ -70,7 +70,7 @@ func (a *Auth) RequireRole(roles ...string) func(http.Handler) http.Handler {
 
 			// Peran tidak diizinkan → tampilkan halaman 403
 			w.WriteHeader(http.StatusForbidden)
-			fmt.Fprintf(w, halaman403(u.Nama, u.Role))
+			fmt.Fprint(w, halaman403(u.Nama, u.Role))
 		})
 	}
 }

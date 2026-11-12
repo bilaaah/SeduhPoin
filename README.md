@@ -51,7 +51,7 @@ Kedai Kopi Seduh memiliki tiga cabang operasional. Sistem menghubungkan program 
 | **Lingkup 3** | **Transaksi Penjualan**: Perhitungan promo kombinasi, penukaran poin FEFO, dan akumulasi poin | **Rahma** | Siap Dikerjakan |
 | **Lingkup 4** | **Pembatalan Transaksi**: Rollback status, penarikan poin reward, refund poin terpakai, restock | **Hilal** | Siap Dikerjakan (Setelah L3) |
 | **Lingkup 5** | **Lifecycle Poin & Tier Member**: Validasi expired 6 bulan & evaluasi belanja 3 bulan (Silver/Gold) | **Dinda** | Siap Dikerjakan |
-| **Lingkup 6** | **Laporan Analitik**: Biaya realisasi promo, saldo poin aktif (Rp), dan statistik member | **Luhur** | Siap Dikerjakan |
+| **Lingkup 6** | **Laporan Analitik**: Biaya realisasi promo, saldo poin aktif (Rp), dan statistik member | **Luhur** | Selesai |
 
 ---
 
@@ -90,7 +90,8 @@ poinseduh/
 │       └── main.go                 # HTTP ServeMux, Server lifecycle, dependency injection
 ├── db/
 │   ├── schema.sql                  # DDL skema lengkap MySQL & seed data awal
-│   └── auth.sql                    # Skema tabel users, sessions, dan akun demo
+│   ├── auth.sql                    # Skema tabel users, sessions, dan akun demo
+│   └── migrate_laporan.sql         # Migrasi idempotent tabel transaksi_promo (Lingkup 6)
 ├── internal/
 │   ├── config/
 │   │   └── config.go               # Pembaca konfigurasi environment (.env)
@@ -98,19 +99,24 @@ poinseduh/
 │   │   ├── auth.go                 # Login, register, logout
 │   │   ├── admin.go                # Handler cabang, member, promo, voucher (Lingkup 1 & 2)
 │   │   ├── catalog.go              # Handler CRUD produk & kategori (Lingkup 1)
-│   │   ├── halaman.go              # Handler dashboard ringkasan
+│   │   ├── halaman.go              # Handler dashboard ringkasan & kasir POS
+│   │   ├── laporan.go              # Lingkup 6: handler laporan analitik & ekspor CSV
 │   │   ├── render.go               # Engine HTML Template renderer
 │   │   └── errors.go               # HTTP error helper
 │   ├── middleware/
-│   │   ├── auth.go                 # Middleware RequireLogin & konteks User
+│   │   ├── auth.go                 # Middleware RequireLogin, RequireRole & konteks User
 │   │   └── logging.go              # Request HTTP logger
 │   ├── model/
 │   │   ├── admin.go                # Entity: Cabang, Produk, Member, Promo, Voucher
+│   │   ├── laporan.go              # Lingkup 6: DTO laporan analitik
+│   │   ├── transaksi.go            # Lingkup 6: input transaksi kasir & alokasi promo
 │   │   ├── user.go                 # Entity User & domain error auth
 │   │   └── errors.go               # Sentinel errors
 │   ├── repository/
 │   │   ├── admin.go                # Query SQL Cabang, Member, Promo, Voucher
 │   │   ├── catalog.go              # Query SQL Produk & Kategori
+│   │   ├── laporan.go              # Lingkup 6: query 3 laporan analitik
+│   │   ├── transaksi.go            # Lingkup 6: tulis transaksi & ledger transaksi_promo
 │   │   ├── user.go                 # Query SQL Users
 │   │   └── session.go              # Query SQL Sessions
 │   └── service/
@@ -123,12 +129,13 @@ poinseduh/
 │   ├── header.html                 # Topbar header
 │   ├── sidebar.html                # Sidebar navigasi profesional
 │   ├── footer.html                 # Footer aplikasi
-│   ├── home.html                   # Dashboard ringkasan eksekutif
+│   ├── home.html                   # Dashboard ringkasan eksekutif + form kasir POS
 │   ├── produk.html                 # Lingkup 1: UI CRUD Produk & Kategori
 │   ├── cabang.html                 # Lingkup 1: UI Cabang Kedai
 │   ├── member.html                 # Lingkup 1: UI Registrasi & List Member
 │   ├── promo.html                  # Lingkup 2: UI Pengaturan Promo
-│   └── voucher.html                # Lingkup 2: UI Voucher Berkode
+│   ├── voucher.html                # Lingkup 2: UI Voucher Berkode
+│   └── laporan.html                # Lingkup 6: UI Laporan Analitik & grafik
 ├── .env                            # Konfigurasi aktif lokal
 ├── .env.example                    # Template konfigurasi
 ├── .gitignore                      # File pengecualian Git
@@ -159,6 +166,8 @@ erDiagram
     TRANSAKSI ||--o{ TRANSAKSI_ITEM : "berisi item"
     TRANSAKSI_ITEM ||--|| PRODUK : "merujuk produk"
     TRANSAKSI ||--o{ POIN_MEMBER : "menghasilkan / memakai"
+    TRANSAKSI ||--o{ TRANSAKSI_PROMO : "merealisasi promo"
+    PROMO ||--o{ TRANSAKSI_PROMO : "dicatat pemakaiannya"
 
     USERS {
         bigint id PK
@@ -209,6 +218,7 @@ erDiagram
         enum tingkat "SILVER, GOLD"
         bigint total_belanja_3_bulan
         tinyint aktif
+        timestamp created_at
     }
 
     PROMO {
@@ -268,11 +278,19 @@ erDiagram
         datetime kadaluarsa_at
         enum status "AKTIF, DIBATALKAN"
     }
+
+    TRANSAKSI_PROMO {
+        bigint id PK
+        bigint transaksi_id FK
+        bigint promo_id FK
+        enum jenis "PERSENTASE_PRODUK, POTONGAN_MIN_BELANJA, BUY2_GET1, VOUCHER"
+        int diskon
+    }
 ```
 
 ---
 
-## 📌 Status Implementasi & Rencana Peningkatan (Nabila)
+## 📌 Status Implementasi & Rencana Peningkatan (Nabila & Luhur)
 
 Fitur fondasi arsitektur, autentikasi session, serta Lingkup 1 dan 2 telah berfungsi dan saat ini berstatus **dalam progres penyempurnaan aktif** (*on progress*).
 
@@ -317,6 +335,29 @@ Fitur fondasi arsitektur, autentikasi session, serta Lingkup 1 dan 2 telah berfu
 - **Admin/Pemilik**: `admin@seduhkopi.com` | Password: `admin123`
 - **Kasir**: `kasir@seduhkopi.com` | Password: `kasir123`
 - **Member**: `member@seduhkopi.com` | Password: `member123`
+
+#### 4. Lingkup 6 — Laporan Analitik (Luhur)
+- **Halaman Laporan (`/laporan`)**: Khusus peran **Admin/Pemilik** (Kasir & Member mendapat `403 Forbidden`).
+  - **4 KPI Ringkasan**: Total Biaya Realisasi Promo, Total Poin Aktif Beredar, Nilai Rupiah Liabilitas Poin (1 poin = Rp1.000), dan Total Member Terdaftar.
+  - **Filter**: gabungan **cabang** dan **periode** (bulan `YYYY-MM`). Kedua filter bersifat opsional dan dapat dikombinasikan.
+  - **Export CSV**: tombol unduh per laporan — `GET /laporan/export.csv?jenis=promo|poin|member` (mengikuti filter aktif). File memakai BOM UTF-8 agar Excel Indonesia membaca karakter dengan benar.
+  - **Cetak**: tombol `window.print()` dengan aturan `@media print` yang menyembunyikan sidebar, header, dan bar filter.
+- **Laporan 1 — Biaya Realisasi Setiap Promo**:
+  - Sumber angka adalah tabel ledger **`transaksi_promo`** (satu baris = satu promo yang benar-benar dipakai pada satu transaksi, lengkap dengan rupiah diskon yang diserap), bukan estimasi dari `promo.terpakai * promo.nilai`.
+  - Rekap per promo: kode, nama, jenis promo, jumlah pemakaian, total biaya diskon, dan porsi biaya terhadap total.
+  - Transaksi berstatus `DIBATALKAN` **tidak** dihitung; filter cabang & periode ditempatkan di dalam subquery agar `SUM(diskon)` tidak ikut menjumlahkan transaksi yang dibatalkan.
+- **Laporan 2 — Poin yang Masih Berlaku & Nilai Rupiahnya**:
+  - Syarat hitung: `status = 'AKTIF'` **AND** `kadaluarsa_at > NOW()` **AND** `sisa > 0`.
+  - Nilai rupiah = `SUM(sisa) * 1000`.
+  - Rincian per member (jumlah batch, total poin, nilai rupiah, kedaluwarsa terdekat) serta sebaran liabilitas per cabang asal perolehan poin.
+  - Batch poin warisan tanpa `transaksi_id` tidak memiliki atribusi cabang, sehingga dihitung pada mode "Semua Cabang" lewat baris *Tanpa Atribusi Cabang* dan dikecualikan ketika filter cabang aktif.
+- **Ledger promo `transaksi_promo`**:
+  - Ditulis **hanya** oleh `TambahTransaksiKasir` di `internal/repository/transaksi.go`, di dalam transaksi database yang sama dengan penyimpanan transaksi ⇒ data promo tidak pernah menyimpang dari transaksi.
+  - `BatalkanTransaksi` membatalkan baris ledger terkait dan mengembalikan penghitung `promo.terpakai` / `voucher.terpakai`.
+  - Skema & seed data simulasi tersedia di `db/schema.sql`; instalasi lama memakai `db/migrate_laporan.sql` (idempotent).
+- **Laporan 3 — Perkembangan Jumlah Member per Tingkat**:
+  - Distribusi keanggotaan **Silver vs Gold** dengan bar persentase, serta tabel rinciannya.
+  - Grafik batang pertumbuhan member baru selama 12 bulan terakhir. Sumbu bulan dibangun di Go (`geserBulan`) sehingga bulan tanpa member baru tetap terlihat sebagai batang kosong, bukan hilang dari grafik.
 
 ---
 
@@ -446,31 +487,43 @@ Agar pengembangan sistem berjalan lancar dan terstruktur, berikut urutan keterga
 
 ---
 
-### 🔹 5. Lingkup 6: Laporan Promo, Poin, dan Member (Luhur)
+### 🔹 5. Lingkup 6: Laporan Promo, Poin, dan Member (Luhur) — ✅ Selesai
 - **Tujuan**: Membangun modul pelaporan analitik bisnis untuk pemilik kedai guna memantau efektivitas promo, nilai liabilitas poin, dan demografi member.
-- **Status**: **Siap Dikerjakan Sekarang** *(Kerangka awal query dan UI sudah tersedia di `/laporan`)*.
-- **Berkas yang Perlu Dikerjakan**:
-  - `internal/handler/laporan.go` (routing `GET /laporan`)
-  - `internal/repository/laporan.go` (query agregasi SQL laporan komprehensif)
-  - `templates/laporan.html` (penyempurnaan tabel analitik dan visualisasi data)
-  - Pastikan route hanya dapat diakses oleh Admin (`adminOnly`) di `cmd/web/main.go`.
+- **Status**: **Selesai** — halaman `/laporan` sudah berfungsi lengkap dengan 3 laporan wajib, filter, grafik, ekspor CSV, dan tombol cetak.
+- **Berkas yang Dibuat / Dimodifikasi**:
+  - `internal/handler/laporan.go` (routing `GET /laporan` & `GET /laporan/export.csv`)
+  - `internal/repository/laporan.go` (query 3 laporan analitik)
+  - `internal/repository/transaksi.go` (penulisan ledger `transaksi_promo`)
+  - `internal/model/laporan.go` & `internal/model/transaksi.go` (DTO laporan & input transaksi)
+  - `templates/laporan.html` (UI 3 laporan, filter, grafik, ekspor, cetak)
+  - `db/schema.sql` (DDL `transaksi_promo` + seed transaksi simulasi) dan `db/migrate_laporan.sql`
+  - `cmd/web/main.go` (pendaftaran route dengan `adminOnly`), `templates/home.html` (input promo pada form kasir POS)
 - **3 Laporan Wajib Sesuai Soal Topik 5**:
   1. **Laporan Biaya Setiap Promo**:
-     - Menghitung total realisasi rupiah potongan diskon yang dikeluarkan kedai untuk masing-masing promo.
-     - Rekapitulasi per promo: kode promo, nama promo, jenis promo, jumlah kali pemakaian, dan total biaya subsidi promo (Rp).
-  2. **Laporan Jumlah Poin Masih Berlaku & Nilai Rupiahnya**:
-     - Menghitung total saldo poin aktif yang belum kedaluwarsa di seluruh cabang:
+     - Menghitung total realisasi rupiah potongan diskon yang diserap oleh masing-masing promo.
+     - Rekap berdasarkan kode promo, jenis promo, jumlah pemakaian, dan total nominal rupiah diskon yang dikeluarkan kedai.
+     - **Sumber data**: tabel ledger `transaksi_promo` (bukan `promo.terpakai * promo.nilai`, yang keliru untuk promo persentase & BUY2_GET1). Satu baris ledger = satu promo yang benar-benar dipakai pada satu transaksi, berisi nominal rupiah diskon yang diserap.
+     - **Kontrak penulisan**: ledger hanya boleh ditulis oleh `TambahTransaksiKasir` (`internal/repository/transaksi.go`), di dalam transaksi database yang sama dengan penyimpanan transaksi. `BatalkanTransaksi` membatalkan baris ledger dan mengembalikan penghitung `promo.terpakai` / `voucher.terpakai`.
+     - Transaksi `DIBATALKAN` tidak dihitung; filter cabang & periode diletakkan di dalam subquery agar `SUM(diskon)` tidak ikut menjumlahkan transaksi yang dibatalkan.
+  2. **Laporan Poin yang Masih Berlaku & Nilai Rupiahnya**:
+     - Menampilkan total poin aktif yang masih berlaku di seluruh cabang:
        ```sql
        SELECT 
            COUNT(DISTINCT member_id) AS total_member_berpoin,
            COALESCE(SUM(sisa), 0) AS total_poin_aktif,
            COALESCE(SUM(sisa) * 1000, 0) AS total_nilai_rupiah
        FROM poin_member
-       WHERE status = 'AKTIF' AND kadaluarsa_at > NOW();
+       WHERE status = 'AKTIF' AND kadaluarsa_at > NOW() AND sisa > 0;
        ```
+     - Ditambah rincian poin per member (jumlah batch, total poin, nilai rupiah, kedaluwarsa terdekat) dan sebaran liabilitas per cabang asal perolehan poin.
+     - Batch poin tanpa `transaksi_id` (poin warisan) tidak punya atribusi cabang: ikut dihitung pada mode "Semua Cabang" sebagai baris *Tanpa Atribusi Cabang*, dan dikecualikan ketika filter cabang aktif.
   3. **Laporan Perkembangan Jumlah Member per Tingkat**:
-     - Rekapitulasi perbandingan total member **Silver** vs **Gold**.
-     - Menampilkan tabel persebaran member per cabang dan tren pertumbuhan registrasi member baru per bulan.
+     - Rekapitulasi perbandingan total member **Silver** vs **Gold** beserta porsinya.
+     - Grafik batang pertumbuhan member baru selama 12 bulan terakhir plus tabel rekap. Sumbu bulan dibangun di Go agar bulan tanpa member baru tetap tampil sebagai batang kosong.
+     - Tabel rekap pertubuhan member per bulan menampilkan jumlah member baru dan total kumulatif.
+- **Filter**: `?cabang=<id>` dan `?periode=YYYY-MM`, keduanya opsional dan dapat dikombinasikan. Nilai periode yang tidak valid diabaikan (treated as "Semua Periode").
+- **Endpoint Ekspor CSV**: `GET /laporan/export.csv?jenis=promo|poin|member&cabang=&periode=` — mengunduh satu laporan sesuai filter aktif, dengan BOM UTF-8 agar Excel Indonesia membaca karakter dengan benar.
+- **Akses**: route `/laporan` dan `/laporan/export.csv` dibungkus middleware `adminOnly` (`RequireRole("ADMIN")`), sehingga peran Kasir/Member menerima halaman **403 Forbidden**.
 
 ---
 

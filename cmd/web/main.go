@@ -32,6 +32,7 @@ func main() {
 	adminRepo := &repository.AdminRepo{DB: db}
 	halaman := &handler.HalamanHandler{Repo: adminRepo, View: view}
 	admin := &handler.AdminHandler{Repo: adminRepo, View: view}
+	laporan := &handler.LaporanHandler{Repo: adminRepo, View: view}
 
 	authSvc := &service.AuthService{
 		Users:    &repository.UserRepo{DB: db},
@@ -67,8 +68,9 @@ func main() {
 	privat.Handle("/promo",   adminOnly(http.HandlerFunc(admin.Promo)))
 	privat.Handle("/voucher", adminOnly(http.HandlerFunc(admin.Voucher)))
 
-	// ── Laporan ── hanya ADMIN
-	privat.Handle("GET /laporan", adminOnly(http.HandlerFunc(halaman.Laporan)))
+	// ── Lingkup 6: Laporan Analitik ── hanya ADMIN
+	privat.Handle("GET /laporan",             adminOnly(http.HandlerFunc(laporan.Laporan)))
+	privat.Handle("GET /laporan/export.csv",  adminOnly(http.HandlerFunc(laporan.ExportCSV)))
 
 	// ── Transaksi & Pembatalan ── ADMIN dan KASIR
 	privat.Handle("POST /transaksi",             adminKasir(http.HandlerFunc(halaman.SimpanTransaksi)))
