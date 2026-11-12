@@ -45,13 +45,13 @@ Kedai Kopi Seduh memiliki tiga cabang operasional. Sistem menghubungkan program 
 
 | Lingkup | Modul & Tanggung Jawab | Penanggung Jawab | Status |
 | :--- | :--- | :--- | :--- |
-| **Lingkup 1** | **Master Data**: Pengelolaan katalog produk, kategori, 3 cabang, dan data member | **Nabila** | Sedang Disempurnakan *(On Progress)* |
-| **Lingkup 2** | **Pengaturan Promo & Voucher**: Promo multi-kondisi, batasan jam/cabang, dan kuota voucher | **Nabila** | Sedang Disempurnakan *(On Progress)* |
-| **Auth & RBAC** | **Autentikasi & Otorisasi Peran**: Bcrypt, Session token 7 hari, middleware `RequireLogin` & `RequireRole` | **Nabila** | Sedang Disempurnakan *(On Progress)* |
+| **Lingkup 1** | **Master Data**: Pengelolaan katalog produk, kategori, 3 cabang, dan data member | **Nabila** | **Selesai** |
+| **Lingkup 2** | **Pengaturan Promo & Voucher**: Promo multi-kondisi, batasan jam/cabang, dan kuota voucher | **Nabila** | **Selesai** |
+| **Auth & RBAC** | **Autentikasi & Otorisasi Peran**: Bcrypt, Session token 7 hari, middleware `RequireLogin` & `RequireRole` | **Nabila** | **Selesai** |
 | **Lingkup 3** | **Transaksi Penjualan**: Perhitungan promo kombinasi, penukaran poin FEFO, dan akumulasi poin | **Rahma** | Siap Dikerjakan |
 | **Lingkup 4** | **Pembatalan Transaksi**: Rollback status, penarikan poin reward, refund poin terpakai, restock | **Hilal** | Siap Dikerjakan (Setelah L3) |
 | **Lingkup 5** | **Lifecycle Poin & Tier Member**: Validasi expired 6 bulan & evaluasi belanja 3 bulan (Silver/Gold) | **Dinda** | Siap Dikerjakan |
-| **Lingkup 6** | **Laporan Analitik**: Biaya realisasi promo, saldo poin aktif (Rp), dan statistik member | **Luhur** | Selesai |
+| **Lingkup 6** | **Laporan Analitik**: Biaya realisasi promo, saldo poin aktif (Rp), dan statistik member | **Luhur** | **Selesai** |
 
 ---
 
@@ -290,46 +290,41 @@ erDiagram
 
 ---
 
-## 📌 Status Implementasi & Rencana Peningkatan (Nabila & Luhur)
+## 📌 Status Implementasi Modul Selesai (Nabila)
 
-Fitur fondasi arsitektur, autentikasi session, serta Lingkup 1 dan 2 telah berfungsi dan saat ini berstatus **dalam progres penyempurnaan aktif** (*on progress*).
+Seluruh fitur fondasi arsitektur, modul autentikasi & RBAC, serta **Lingkup 1 dan Lingkup 2** telah **100% SELESAI** diimplementasikan, disempurnakan, dan diuji secara menyeluruh:
 
-### • Penyempurnaan dan peningkatan fitur yang telah dikembangkan (Nabila), meliputi:
-- **Evaluasi struktur kode, alur sistem, dan kesiapan integrasi antarmodul:**
-  Memastikan arsitektur *Layered/Modular* di Go (`handler`, `service`, `repository`, `model`, `middleware`) tetap bersih, terisolasi, dan siap diintegrasikan dengan modul transaksi, pembatalan, poin, serta laporan.
-- **Penyempurnaan validasi input serta pengujian fitur autentikasi dan session:**
-  Pengujian keamanan hash password `bcrypt`, proteksi cookie `HttpOnly` dengan expiry 7 hari, pencegahan email duplikat, dan penegakan otorisasi peran via middleware `RequireRole` (menolak akses ilegal dengan respon HTTP 403).
-- **Penyempurnaan tampilan dan konsistensi antarmuka berdasarkan peran pengguna:**
-  Menjaga standar UI/UX profesional bertema kedai kopi, perbaikan tata letak sidebar dan header dinamis agar bebas dari tumpang tindih teks, serta diferensiasi tampilan beranda khusus Admin, Kasir, dan Member.
-- **Pengujian fungsi pengelolaan produk, cabang, member, promo, dan voucher:**
-  Verifikasi alur data CRUD produk dan soft-delete (`deleted_at`), validasi identitas 3 cabang, registrasi member (Silver & Gold), mekanisme 4 jenis promo (persentase, minimal belanja, B2G1, voucher), serta batasan cabang dan jam operasional (*happy hour*).
-- **Evaluasi relasi serta integritas database agar sesuai dengan kebutuhan seluruh lingkup:**
-  Menyinkronkan skema database (`db/schema.sql`) dengan menambahkan tabel `transaksi_item`, relasi foreign key berintegritas, serta kolom `voucher_id` dan `poin_digunakan` agar seluruh kebutuhan pengerjaan anggota tim terpenuhi.
+### • Hasil Penyempurnaan dan Pengujian Fitur (Nabila):
+- [x] **Evaluasi struktur kode & modularitas**: Arsitektur *Layered Architecture* Go (`cmd`, `internal/handler`, `internal/repository`, `internal/service`, `internal/model`, `internal/middleware`) telah tertata rapi, bersih, dan berhasil terintegrasi secara mulus dengan modul lain (terbukti pada modul Laporan Luhur).
+- [x] **Penyempurnaan autentikasi & validasi**: Keamanan hash password `bcrypt` aktif, session token unik 64-karakter tersimpan di database dengan masa berlaku 7 hari, dan penegakan otorisasi server-side `RequireRole` berhasil membatasi hak akses per peran (HTTP 403 Forbidden).
+- [x] **Penyempurnaan tampilan & navigasi mandiri per peran**: Antarmuka Kasir dan Member telah berhasil dipisahkan ke rute mandiri yang bersih (`/kasir/transaksi`, `/kasir/riwayat`, `/member/poin`, `/member/riwayat`), bebas tumpang tindih teks, serta sangat ramah pengguna (*readable*).
+- [x] **Pengujian fungsi master data, promo, dan voucher**: CRUD produk lengkap dengan kategori & soft-delete, data 3 cabang kedai terhubung, pendaftaran kartu member Silver & Gold, 4 skenario promo multi-kondisi, serta kuota voucher berkode telah diuji dan berjalan normal.
+- [x] **Sinkronisasi akun member & integritas database**: Akun demo member (`member@seduhkopi.com`) telah disinkronkan tepat dengan kartu **Budi Santoso (`MBR-002`)**, skema database (`db/schema.sql`) telah dilengkapi tabel `transaksi_item`, kolom `voucher_id`, dan `poin_digunakan`.
 
 ---
 
-### Rincian Modul yang Telah Dibangun & Sedang Disempurnakan (Nabila)
+### Rincian Modul Selesai (Nabila)
 
-#### 1. Lingkup 1 — Pengelolaan Data Produk, Cabang, dan Member
+#### 1. Lingkup 1 — Pengelolaan Data Produk, Cabang, dan Member (Selesai ✅)
 - **Menu & Stok Produk (`/produk`)**: CRUD produk lengkap terhubung relasi kategori, penetapan harga jual, manajemen kuantitas stok, dan mekanisme soft-delete (`deleted_at`).
 - **Cabang Kedai (`/cabang`)**: Manajemen data 3 cabang resmi (**Seduh Pusat**, **Seduh Timur**, dan **Seduh Barat**) lengkap dengan kode identifikasi, nomor kontak, dan alamat operasional.
-- **Data Member (`/member`)**: Pendaftaran kartu anggota loyalitas, format kontak unik, penanda tingkatan **Silver** (standar) dan **Gold** (belanja $\ge$ Rp1.500.000 dalam 3 bulan terakhir).
+- **Data Member (`/member`)**: Pendaftaran kartu anggota loyalitas, format kontak unik, penanda tingkatan **Silver** (standar) dan **Gold** (belanja $\ge$ Rp1.500.000 dalam 3 bulan terakhir), serta sinkronisasi otomatis akun login pengguna.
 
-#### 2. Lingkup 2 — Pengaturan Promo dan Voucher
+#### 2. Lingkup 2 — Pengaturan Promo dan Voucher (Selesai ✅)
 - **Pengaturan Promo Multi-Kondisi (`/promo`)**:
   - 4 jenis promo: Diskon Persentase Produk, Potongan Min. Belanja, Buy 2 Get 1 Kategori, dan Promo Berbasis Voucher.
   - Batasan fleksibel: Rentang tanggal berlaku, jam operasional tertentu (*happy hour*), dan seleksi target cabang maupun item produk/kategori.
 - **Kupon Voucher Berkode (`/voucher`)**:
   - Penerbitan kode voucher eksklusif dengan pembatasan kuota klaim maksimal.
 
-#### 3. Autentikasi & Otorisasi Peran Server-Side (Auth & RBAC)
+#### 3. Autentikasi & Otorisasi Peran Server-Side (Auth & RBAC — Selesai ✅)
 - Login berbasis cookie session `HttpOnly` dengan keamanan `SameSite=Lax`.
 - Hashing password menggunakan algoritma `bcrypt`.
-- Otorisasi server-side: middleware `RequireLogin` dan `RequireRole("ADMIN")` / `RequireRole("ADMIN", "KASIR")`.
+- Otorisasi server-side: middleware `RequireLogin` dan `RequireRole("ADMIN")` / `RequireRole("ADMIN", "KASIR")` / `RequireRole("ADMIN", "MEMBER")`.
 - Mendukung 3 peran pengguna:
-  - **👑 Admin / Pemilik**: Hak akses penuh kelola master data, promo, voucher, member, dan memantau analitik.
-  - **☕ Kasir**: Menangani kasir POS transaksi, klaim promo, penukaran poin, dan pembatalan transaksi.
-  - **👤 Member**: Memiliki nomor anggota, cek reward poin, tiering, dan riwayat belanja.
+  - **👑 Admin / Pemilik**: Hak akses penuh kelola master data, promo, voucher, member, dan memantau analitik bisnis.
+  - **☕ Kasir**: Menangani kasir POS transaksi di `/kasir/transaksi`, klaim promo, penukaran poin, dan pembatalan transaksi di `/kasir/riwayat`.
+  - **👤 Member**: Memiliki nomor anggota resmi (`MBR-002` Budi Santoso), cek reward poin di `/member/poin`, tiering, dan riwayat belanja di `/member/riwayat`.
 
 **Kredensial Akun untuk Simulasi:**
 - **Admin/Pemilik**: `admin@seduhkopi.com` | Password: `admin123`
@@ -368,28 +363,29 @@ Agar pengembangan sistem berjalan lancar dan terstruktur, berikut urutan keterga
 ### ⏱️ Urutan & Ketergantungan Pengerjaan Antar Anggota
 
 ```
-[Nabila: Fondasi DB, Auth & L1-L2 (On Progress)]
+[Nabila: Fondasi DB, Auth, RBAC, L1 & L2 (Selesai ✅)]
         │
         ├───► [Rahma: Lingkup 3 - Transaksi POS] ────► [Hilal: Lingkup 4 - Pembatalan Transaksi]
         │                                                     ▲ (Tunggu L3 selesai)
         ├───► [Dinda: Lingkup 5 - Poin & Tier Member]
         │
-        └───► [Luhur: Lingkup 6 - Laporan Analitik Bisnis]
+        └───► [Luhur: Lingkup 6 - Laporan Analitik Bisnis (Selesai ✅)]
 ```
 
-- **Rahma, Dinda, dan Luhur** dapat **langsung mulai bekerja sekarang secara paralel** karena seluruh skema tabel, seed data awal, dan session login sudah siap di branch `dev`.
+- **Nabila** dan **Luhur** telah menyelesaikan modulnya masing-masing secara tuntas.
+- **Rahma dan Dinda** dapat **langsung mulai bekerja sekarang secara paralel** karena seluruh skema tabel, seed data awal, antarmuka mandiri, dan session login sudah siap di branch `dev`.
 - **Hilal** menunggu modul transaksi dari **Rahma** selesai dicatat di DB, agar proses pembatalan, pembalikan poin, restock barang, dan kuota voucher dapat diuji secara riil.
 
 ---
 
-### 🔹 1. Lingkup 1, Lingkup 2 & Fondasi Sistem (Nabila — On Progress)
+### 🔹 1. Lingkup 1, Lingkup 2 & Fondasi Sistem (Nabila — Selesai ✅)
 - **Fokus Utama**: Menjaga stabilitas arsitektur, menyempurnakan fitur yang telah dibuat, serta memastikan antarmuka dan basis data terintegrasi sempurna.
-- **Daftar Rencana Peningkatan**:
-  1. [ ] **Evaluasi struktur kode & modularitas**: Pastikan pemisahan handler, service, model, dan repository tetap rapi agar tidak terjadi bentrok saat modul Rahma/Hilal/Dinda/Luhur digabungkan.
-  2. [ ] **Penyempurnaan autentikasi & validasi**: Uji validasi input pendaftaran, login, logout, dan pengujian boundary rute dengan middleware `RequireRole` (403 Forbidden).
-  3. [ ] **Konsistensi UI/UX**: Pastikan komponen template (`layout.html`, `sidebar.html`, `header.html`) tampil rapi, responsif, dan bebas error rendering.
-  4. [ ] **Pengujian CRUD**: Uji operasi tambah, edit, soft-delete produk, kelola cabang, pendaftaran member, aturan multi-promo, dan kuota voucher.
-  5. [ ] **Integritas Database**: Mengawal skema tabel (`db/schema.sql`) agar selalu sinkron dengan kebutuhan kode seluruh tim.
+- **Hasil Verifikasi & Penyempurnaan Tuntas**:
+  1. [x] **Evaluasi struktur kode & modularitas**: Pemisahan handler, service, model, dan repository tertata rapi, modular, dan terbukti terintegrasi mulus dengan modul tim lain.
+  2. [x] **Penyempurnaan autentikasi & validasi**: Keamanan hash `bcrypt`, session token 7 hari, dan pengujian boundary rute via middleware `RequireRole` (403 Forbidden) berjalan sempurna.
+  3. [x] **Konsistensi UI/UX**: Antarmuka Kasir dan Member telah dipisahkan ke rute mandiri yang bersih (`/kasir/transaksi`, `/kasir/riwayat`, `/member/poin`, `/member/riwayat`), bebas tumpang tindih teks, serta sangat ramah pengguna.
+  4. [x] **Pengujian CRUD**: Seluruh operasi CRUD produk (kategori & soft-delete), kelola cabang, pendaftaran member, aturan 4 promo, dan kuota voucher tuntas diuji.
+  5. [x] **Integritas Database**: Skema tabel (`db/schema.sql`) telah disinkronkan lengkap, termasuk perbaikan binding akun member Budi Santoso (`member@seduhkopi.com`).
 
 ---
 
