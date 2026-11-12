@@ -5,11 +5,13 @@
 <!-- ========================================== -->
 <!-- 1. TAMPILAN BERANDA DASHBOARD KHUSUS KASIR  -->
 <!-- ========================================== -->
-<div class="dashboard-hero" style="background: linear-gradient(135deg, #eef4f8, #d8e6f1); border-color: rgba(41,128,185,0.3); margin-bottom: 24px;">
+<div class="dashboard-hero"
+    style="background: linear-gradient(135deg, #eef4f8, #d8e6f1); border-color: rgba(41,128,185,0.3); margin-bottom: 24px;">
     <div class="hero-text">
         <span class="hero-badge" style="background: #2980b9; color: #fff;">☕ Terminal Operasional Kasir</span>
         <h1>Halo, {{.User.Nama}}! 👋</h1>
-        <p>Selamat bertugas di Kedai Kopi Seduh. Gunakan terminal POS untuk memproses transaksi penjualan, melayani klaim promo & voucher, penukaran poin loyalitas, serta penanganan pembatalan pesanan.</p>
+        <p>Selamat bertugas di Kedai Kopi Seduh. Gunakan terminal POS untuk memproses transaksi penjualan, melayani
+            klaim promo & voucher, penukaran poin loyalitas, serta penanganan pembatalan pesanan.</p>
     </div>
 </div>
 
@@ -44,36 +46,44 @@
 <!-- 2 Kartu Aksi Utama Kasir: Terpisah Rapi & Terstruktur -->
 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 30px;">
     <!-- Kartu Aksi 1: Buka Terminal POS -->
-    <div style="background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 26px; box-shadow: var(--shadow); display: flex; flex-direction: column; justify-content: space-between;">
+    <div
+        style="background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 26px; box-shadow: var(--shadow); display: flex; flex-direction: column; justify-content: space-between;">
         <div>
-            <div style="display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: 12px; background: #ebf5fb; font-size: 24px; margin-bottom: 16px;">
+            <div
+                style="display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: 12px; background: #ebf5fb; font-size: 24px; margin-bottom: 16px;">
                 🛒
             </div>
             <h3 style="margin: 0 0 8px; font-size: 19px; color: var(--espresso);">Terminal Transaksi POS Baru</h3>
             <p style="margin: 0 0 20px; font-size: 13.5px; color: var(--muted); line-height: 1.6;">
-                Buka formulir kasir untuk memproses pesanan baru pelanggan: pilih cabang, masukkan member, terapkan promo bertumpuk, tukar poin (maks. 50%), dan peroleh poin reward baru.
+                Buka formulir kasir untuk memproses pesanan baru pelanggan: pilih cabang, masukkan member, terapkan
+                promo bertumpuk, tukar poin (maks. 50%), dan peroleh poin reward baru.
             </p>
         </div>
         <div>
-            <a href="/kasir/transaksi" class="btn btn-block" style="background: #2980b9; justify-content: center; padding: 12px; font-size: 14.5px;">
+            <a href="/kasir/transaksi" class="btn btn-block"
+                style="background: #2980b9; justify-content: center; padding: 12px; font-size: 14.5px;">
                 🚀 Buka Terminal Transaksi Baru &rarr;
             </a>
         </div>
     </div>
 
     <!-- Kartu Aksi 2: Kelola Riwayat & Pembatalan -->
-    <div style="background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 26px; box-shadow: var(--shadow); display: flex; flex-direction: column; justify-content: space-between;">
+    <div
+        style="background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 26px; box-shadow: var(--shadow); display: flex; flex-direction: column; justify-content: space-between;">
         <div>
-            <div style="display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: 12px; background: #fdf2f0; font-size: 24px; margin-bottom: 16px;">
+            <div
+                style="display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: 12px; background: #fdf2f0; font-size: 24px; margin-bottom: 16px;">
                 ↩️
             </div>
             <h3 style="margin: 0 0 8px; font-size: 19px; color: var(--espresso);">Riwayat & Pembatalan Transaksi</h3>
             <p style="margin: 0 0 20px; font-size: 13.5px; color: var(--muted); line-height: 1.6;">
-                Pantau seluruh riwayat transaksi penjualan yang telah selesai atau batalkan transaksi jika ada kesalahan pesanan dengan penarikan kembali poin dan pemulihan kuota voucher.
+                Pantau seluruh riwayat transaksi penjualan yang telah selesai atau batalkan transaksi jika ada kesalahan
+                pesanan dengan penarikan kembali poin dan pemulihan kuota voucher.
             </p>
         </div>
         <div>
-            <a href="/kasir/riwayat" class="btn btn-light btn-block" style="justify-content: center; padding: 12px; font-size: 14.5px; border-color: #cbd5e1;">
+            <a href="/kasir/riwayat" class="btn btn-light btn-block"
+                style="justify-content: center; padding: 12px; font-size: 14.5px; border-color: #cbd5e1;">
                 📜 Lihat Riwayat & Pembatalan &rarr;
             </a>
         </div>
@@ -81,11 +91,13 @@
 </div>
 
 <!-- Cuplikan 5 Transaksi Terakhir di Beranda Kasir -->
-<div style="background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow);">
+<div
+    style="background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow);">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
         <div>
             <h4 style="margin: 0 0 4px; font-size: 16px;">Transaksi Terkini</h4>
-            <p style="margin: 0; font-size: 12.5px; color: var(--muted);">Cuplikan transaksi kasir terbaru di seluruh cabang:</p>
+            <p style="margin: 0; font-size: 12.5px; color: var(--muted);">Cuplikan transaksi kasir terbaru di seluruh
+                cabang:</p>
         </div>
         <a href="/kasir/riwayat" class="btn btn-light btn-sm">
             Lihat Semua Transaksi &rarr;
@@ -114,16 +126,17 @@
                 <td class="num" style="font-weight: 700; color: var(--espresso);">{{rupiah .TotalBayar}}</td>
                 <td>
                     {{if eq .Status "SELESAI"}}
-                        <span class="badge badge-aktif">SELESAI</span>
+                    <span class="badge badge-aktif">SELESAI</span>
                     {{else}}
-                        <span class="badge" style="background: var(--red-bg); color: var(--red);">BATAL</span>
+                    <span class="badge" style="background: var(--red-bg); color: var(--red);">BATAL</span>
                     {{end}}
                 </td>
                 <td style="font-size: 12px; color: var(--muted);">{{.CreatedAt.Format "02/01/2006 15:04"}}</td>
             </tr>
             {{else}}
             <tr>
-                <td colspan="7" style="text-align: center; color: var(--muted); padding: 24px;">Belum ada transaksi. Silakan mulai transaksi di Terminal POS.</td>
+                <td colspan="7" style="text-align: center; color: var(--muted); padding: 24px;">Belum ada transaksi.
+                    Silakan mulai transaksi di Terminal POS.</td>
             </tr>
             {{end}}
         </tbody>
@@ -134,30 +147,38 @@
 <!-- ========================================== -->
 <!-- 2. TAMPILAN BERANDA DASHBOARD KHUSUS MEMBER -->
 <!-- ========================================== -->
-<div class="dashboard-hero" style="background: linear-gradient(135deg, #fbf2e6, #f7dfc6); border-color: rgba(196,120,60,0.3); margin-bottom: 24px;">
+<div class="dashboard-hero"
+    style="background: linear-gradient(135deg, #fbf2e6, #f7dfc6); border-color: rgba(196,120,60,0.3); margin-bottom: 24px;">
     <div class="hero-text">
-        <span class="hero-badge" style="background: var(--caramel); color: #fff;">🪪 Area Pelanggan Setia Kedai Seduh</span>
+        <span class="hero-badge" style="background: var(--caramel); color: #fff;">🪪 Area Pelanggan Setia Kedai
+            Seduh</span>
         <h1>Selamat Datang, {{.User.Nama}}! 👋</h1>
-        <p>Pantau saldo poin loyalitas, masa berlaku poin (6 bulan FEFO), status keanggotaan Silver & Gold (multiplier 1.5x), serta riwayat belanja Anda di seluruh cabang Kedai Kopi Seduh.</p>
+        <p>Pantau saldo poin loyalitas, masa berlaku poin (6 bulan FEFO), status keanggotaan Silver & Gold (multiplier
+            1.5x), serta riwayat belanja Anda di seluruh cabang Kedai Kopi Seduh.</p>
     </div>
 </div>
 
 <!-- Kartu Member & Poin Grid -->
 <div style="display: grid; grid-template-columns: 1.1fr 1fr; gap: 24px; margin-bottom: 28px;">
     <!-- Kartu Member Digital -->
-    <div style="background: linear-gradient(135deg, #2d1c15, #442a20); border-radius: 20px; padding: 28px; color: #fff; box-shadow: 0 16px 36px rgba(45,28,21,0.25); position: relative; overflow: hidden;">
+    <div
+        style="background: linear-gradient(135deg, #2d1c15, #442a20); border-radius: 20px; padding: 28px; color: #fff; box-shadow: 0 16px 36px rgba(45,28,21,0.25); position: relative; overflow: hidden;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
             <span style="font-size:22px; font-weight:700;">☕ SeduhPoin Member</span>
             {{if eq .MemberData.Member.Tingkat "GOLD"}}
-                <span class="badge" style="background:#f39c12; color:#fff; font-size:12px; padding:6px 14px;">🥇 GOLD MEMBER</span>
+            <span class="badge" style="background:#f39c12; color:#fff; font-size:12px; padding:6px 14px;">🥇 GOLD
+                MEMBER</span>
             {{else}}
-                <span class="badge" style="background:#95a5a6; color:#fff; font-size:12px; padding:6px 14px;">🥈 SILVER MEMBER</span>
+            <span class="badge" style="background:#95a5a6; color:#fff; font-size:12px; padding:6px 14px;">🥈 SILVER
+                MEMBER</span>
             {{end}}
         </div>
 
         <div style="margin-bottom: 24px;">
-            <small style="color: #c9b4a8; font-size: 11px; letter-spacing: 1.2px; text-transform: uppercase;">Nomor Keanggotaan</small>
-            <div style="font-family: monospace; font-size: 24px; font-weight: 700; letter-spacing: 2px; color: #f7d6be; margin-top: 4px;">
+            <small style="color: #c9b4a8; font-size: 11px; letter-spacing: 1.2px; text-transform: uppercase;">Nomor
+                Keanggotaan</small>
+            <div
+                style="font-family: monospace; font-size: 24px; font-weight: 700; letter-spacing: 2px; color: #f7d6be; margin-top: 4px;">
                 {{if .MemberData.Member.Nomor}}{{.MemberData.Member.Nomor}}{{else}}MBR-001{{end}}
             </div>
         </div>
@@ -169,16 +190,20 @@
             </div>
             <div style="text-align:right;">
                 <small style="color: #c9b4a8; font-size: 11px; text-transform: uppercase;">Belanja 3 Bulan</small>
-                <strong style="display:block; font-size:15px; color:#f7d6be;">{{rupiah .MemberData.Member.Total}}</strong>
+                <strong style="display:block; font-size:15px; color:#f7d6be;">{{rupiah
+                    .MemberData.Member.Total}}</strong>
             </div>
         </div>
     </div>
 
     <!-- Papan Saldo Poin Ringkas -->
-    <div style="background: #fff; border: 1px solid var(--line); border-radius: 20px; padding: 26px; box-shadow: var(--shadow); display: flex; flex-direction: column; justify-content: space-between;">
+    <div
+        style="background: #fff; border: 1px solid var(--line); border-radius: 20px; padding: 26px; box-shadow: var(--shadow); display: flex; flex-direction: column; justify-content: space-between;">
         <div>
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                <span style="font-size:12px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:1px;">Saldo Poin Aktif Anda</span>
+                <span
+                    style="font-size:12px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:1px;">Saldo
+                    Poin Aktif Anda</span>
                 <span class="badge badge-aktif">1 Poin = Rp1.000</span>
             </div>
             <div style="font-size: 42px; font-weight: 800; color: var(--espresso); line-height: 1; margin-bottom: 6px;">
@@ -190,13 +215,16 @@
         </div>
 
         <!-- Ketentuan Tiering Progress -->
-        <div style="background: #fdfaf4; border: 1px solid #fae6cb; border-radius: 12px; padding: 12px 14px; font-size: 12.5px;">
+        <div
+            style="background: #fdfaf4; border: 1px solid #fae6cb; border-radius: 12px; padding: 12px 14px; font-size: 12.5px;">
             {{if eq .MemberData.Member.Tingkat "GOLD"}}
-                <strong style="color:#856404; display:block; margin-bottom:2px;">🎉 Status Member GOLD Aktif!</strong>
-                <span style="color:#6b4c37;">Nikmati bonus perolehan reward <strong>1,5x lipat</strong> pada setiap transaksi di seluruh cabang.</span>
+            <strong style="color:#856404; display:block; margin-bottom:2px;">🎉 Status Member GOLD Aktif!</strong>
+            <span style="color:#6b4c37;">Nikmati bonus perolehan reward <strong>1,5x lipat</strong> pada setiap
+                transaksi di seluruh cabang.</span>
             {{else}}
-                <strong style="color:var(--espresso); display:block; margin-bottom:2px;">Target Menuju GOLD:</strong>
-                <span style="color:var(--muted);">Belanja min. Rp1.500.000 dalam 3 bulan. Sisa yang dibutuhkan: <strong>{{rupiah .MemberData.SisaMenujuGold}}</strong> lagi.</span>
+            <strong style="color:var(--espresso); display:block; margin-bottom:2px;">Target Menuju GOLD:</strong>
+            <span style="color:var(--muted);">Belanja min. Rp1.500.000 dalam 3 bulan. Sisa yang dibutuhkan:
+                <strong>{{rupiah .MemberData.SisaMenujuGold}}</strong> lagi.</span>
             {{end}}
         </div>
     </div>
@@ -205,14 +233,18 @@
 <!-- 2 Kartu Aksi Member Terpisah: Poin vs Riwayat Belanja -->
 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 28px;">
     <!-- Navigasi 1: Saldo & Masa Berlaku Poin -->
-    <div style="background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow); display: flex; flex-direction: column; justify-content: space-between;">
+    <div
+        style="background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow); display: flex; flex-direction: column; justify-content: space-between;">
         <div>
-            <div style="display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 12px; background: #fff5eb; font-size: 22px; margin-bottom: 14px;">
+            <div
+                style="display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 12px; background: #fff5eb; font-size: 22px; margin-bottom: 14px;">
                 🪙
             </div>
-            <h4 style="margin: 0 0 6px; font-size: 17px; color: var(--espresso);">Rincian Poin & Masa Berlaku (FEFO)</h4>
+            <h4 style="margin: 0 0 6px; font-size: 17px; color: var(--espresso);">Rincian Poin & Masa Berlaku (FEFO)
+            </h4>
             <p style="margin: 0 0 16px; font-size: 13px; color: var(--muted); line-height: 1.5;">
-                Lihat rincian tanggal kedaluwarsa per batch poin Anda (berlaku 6 bulan). Ketahui poin mana yang akan hangus terlebih dahulu.
+                Lihat rincian tanggal kedaluwarsa per batch poin Anda (berlaku 6 bulan). Ketahui poin mana yang akan
+                hangus terlebih dahulu.
             </p>
         </div>
         <div>
@@ -223,14 +255,17 @@
     </div>
 
     <!-- Navigasi 2: Riwayat Transaksi Belanja -->
-    <div style="background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow); display: flex; flex-direction: column; justify-content: space-between;">
+    <div
+        style="background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow); display: flex; flex-direction: column; justify-content: space-between;">
         <div>
-            <div style="display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 12px; background: #eafaf1; font-size: 22px; margin-bottom: 14px;">
+            <div
+                style="display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 12px; background: #eafaf1; font-size: 22px; margin-bottom: 14px;">
                 📜
             </div>
             <h4 style="margin: 0 0 6px; font-size: 17px; color: var(--espresso);">Riwayat Transaksi Belanja Saya</h4>
             <p style="margin: 0 0 16px; font-size: 13px; color: var(--muted); line-height: 1.5;">
-                Histori seluruh transaksi nota belanja Anda di cabang Pusat, Timur, dan Barat, beserta diskon promo dan nominal pembayaran.
+                Histori seluruh transaksi nota belanja Anda di cabang Pusat, Timur, dan Barat, beserta diskon promo dan
+                nominal pembayaran.
             </p>
         </div>
         <div>
@@ -249,7 +284,8 @@
     <div class="hero-text">
         <span class="hero-badge">👑 Pusat Kendali Operasional Kedai</span>
         <h1>Halo, {{if .User.Nama}}{{.User.Nama}}{{else}}Administrator{{end}}! 👋</h1>
-        <p>Sistem operasional dan program keanggotaan multi-cabang Kedai Kopi Seduh. Kelola data produk, 3 cabang aktif, program member Silver & Gold, serta pengaturan promo dan voucher.</p>
+        <p>Sistem operasional dan program keanggotaan multi-cabang Kedai Kopi Seduh. Kelola data produk, 3 cabang aktif,
+            program member Silver & Gold, serta pengaturan promo dan voucher.</p>
     </div>
 </div>
 
@@ -282,74 +318,93 @@
 
 <div style="display: grid; grid-template-columns: 1.6fr 1fr; gap: 24px; margin-bottom: 30px;">
     <!-- Akses Cepat Master Data & Promo -->
-    <div style="background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 26px; box-shadow: var(--shadow);">
+    <div
+        style="background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 26px; box-shadow: var(--shadow);">
         <h3 style="margin-top: 0; display: flex; align-items: center; gap: 10px;">
             <span>📌</span> Menu Master Data & Promosi
         </h3>
-        <p style="margin-bottom: 20px;">Kelola data master menu, lokasi cabang, member keanggotaan, dan ketentuan promosi kedai:</p>
-        
+        <p style="margin-bottom: 20px;">Kelola data master menu, lokasi cabang, member keanggotaan, dan ketentuan
+            promosi kedai:</p>
+
         <div style="display: flex; flex-direction: column; gap: 12px;">
-            <a href="/produk" style="display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border: 1px solid var(--line); border-radius: 12px; transition: all 0.2s; background: #fdfcfb;">
+            <a href="/produk"
+                style="display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border: 1px solid var(--line); border-radius: 12px; transition: all 0.2s; background: #fdfcfb;">
                 <div style="display: flex; align-items: center; gap: 14px;">
                     <span style="font-size: 22px;">☕</span>
                     <div>
-                        <strong style="display: block; font-size: 14px; color: var(--espresso);">Katalog & Stok Produk</strong>
-                        <small style="color: var(--muted);">Tambah menu, penetapan harga jual, update stok, dan kategori</small>
+                        <strong style="display: block; font-size: 14px; color: var(--espresso);">Katalog & Stok
+                            Produk</strong>
+                        <small style="color: var(--muted);">Tambah menu, penetapan harga jual, update stok, dan
+                            kategori</small>
                     </div>
                 </div>
                 <span style="font-weight: 700; color: var(--caramel);">Buka &rarr;</span>
             </a>
 
-            <a href="/cabang" style="display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border: 1px solid var(--line); border-radius: 12px; transition: all 0.2s; background: #fdfcfb;">
+            <a href="/cabang"
+                style="display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border: 1px solid var(--line); border-radius: 12px; transition: all 0.2s; background: #fdfcfb;">
                 <div style="display: flex; align-items: center; gap: 14px;">
                     <span style="font-size: 22px;">🏢</span>
                     <div>
-                        <strong style="display: block; font-size: 14px; color: var(--espresso);">Cabang Kedai Kopi Seduh</strong>
-                        <small style="color: var(--muted);">Data 3 cabang resmi: Seduh Pusat, Seduh Timur, dan Seduh Barat</small>
+                        <strong style="display: block; font-size: 14px; color: var(--espresso);">Cabang Kedai Kopi
+                            Seduh</strong>
+                        <small style="color: var(--muted);">Data 3 cabang resmi: Seduh Pusat, Seduh Timur, dan Seduh
+                            Barat</small>
                     </div>
                 </div>
                 <span style="font-weight: 700; color: var(--caramel);">Buka &rarr;</span>
             </a>
 
-            <a href="/member" style="display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border: 1px solid var(--line); border-radius: 12px; transition: all 0.2s; background: #fdfcfb;">
+            <a href="/member"
+                style="display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border: 1px solid var(--line); border-radius: 12px; transition: all 0.2s; background: #fdfcfb;">
                 <div style="display: flex; align-items: center; gap: 14px;">
                     <span style="font-size: 22px;">👥</span>
                     <div>
-                        <strong style="display: block; font-size: 14px; color: var(--espresso);">Keanggotaan Member</strong>
-                        <small style="color: var(--muted);">Registrasi member, pemantauan tier Silver & Gold, serta akumulasi belanja</small>
+                        <strong style="display: block; font-size: 14px; color: var(--espresso);">Keanggotaan
+                            Member</strong>
+                        <small style="color: var(--muted);">Registrasi member, pemantauan tier Silver & Gold, serta
+                            akumulasi belanja</small>
                     </div>
                 </div>
                 <span style="font-weight: 700; color: var(--caramel);">Buka &rarr;</span>
             </a>
 
-            <a href="/promo" style="display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border: 1px solid var(--line); border-radius: 12px; transition: all 0.2s; background: #fdfcfb;">
+            <a href="/promo"
+                style="display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border: 1px solid var(--line); border-radius: 12px; transition: all 0.2s; background: #fdfcfb;">
                 <div style="display: flex; align-items: center; gap: 14px;">
                     <span style="font-size: 22px;">🏷️</span>
                     <div>
-                        <strong style="display: block; font-size: 14px; color: var(--espresso);">Pengaturan Aturan Promo</strong>
-                        <small style="color: var(--muted);">Diskon persentase, potongan min. belanja, beli 2 gratis 1, dan voucher</small>
+                        <strong style="display: block; font-size: 14px; color: var(--espresso);">Pengaturan Aturan
+                            Promo</strong>
+                        <small style="color: var(--muted);">Diskon persentase, potongan min. belanja, beli 2 gratis 1,
+                            dan voucher</small>
                     </div>
                 </div>
                 <span style="font-weight: 700; color: var(--caramel);">Buka &rarr;</span>
             </a>
 
-            <a href="/voucher" style="display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border: 1px solid var(--line); border-radius: 12px; transition: all 0.2s; background: #fdfcfb;">
+            <a href="/voucher"
+                style="display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border: 1px solid var(--line); border-radius: 12px; transition: all 0.2s; background: #fdfcfb;">
                 <div style="display: flex; align-items: center; gap: 14px;">
                     <span style="font-size: 22px;">🎟️</span>
                     <div>
-                        <strong style="display: block; font-size: 14px; color: var(--espresso);">Voucher Berkode Unik</strong>
+                        <strong style="display: block; font-size: 14px; color: var(--espresso);">Voucher Berkode
+                            Unik</strong>
                         <small style="color: var(--muted);">Penerbitan kupon voucher dengan kuota klaim terbatas</small>
                     </div>
                 </div>
                 <span style="font-weight: 700; color: var(--caramel);">Buka &rarr;</span>
             </a>
 
-            <a href="/laporan" style="display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border: 1px solid #ebdcd0; border-radius: 12px; transition: all 0.2s; background: #fffcf8;">
+            <a href="/laporan"
+                style="display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border: 1px solid #ebdcd0; border-radius: 12px; transition: all 0.2s; background: #fffcf8;">
                 <div style="display: flex; align-items: center; gap: 14px;">
                     <span style="font-size: 22px;">📊</span>
                     <div>
-                        <strong style="display: block; font-size: 14px; color: var(--coffee);">Laporan Analitik Bisnis</strong>
-                        <small style="color: var(--muted);">Biaya promosi, saldo liabilitas poin, dan rasio member</small>
+                        <strong style="display: block; font-size: 14px; color: var(--coffee);">Laporan Analitik
+                            Bisnis</strong>
+                        <small style="color: var(--muted);">Biaya promosi, saldo liabilitas poin, dan rasio
+                            member</small>
                     </div>
                 </div>
                 <span style="font-weight: 700; color: var(--caramel);">Lihat Laporan &rarr;</span>
@@ -358,25 +413,34 @@
     </div>
 
     <!-- Ringkasan Hak Akses Sistem -->
-    <div style="background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 26px; box-shadow: var(--shadow);">
+    <div
+        style="background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 26px; box-shadow: var(--shadow);">
         <h3 style="margin-top: 0; display: flex; align-items: center; gap: 10px;">
             <span>💡</span> Panduan Hak Akses Sistem
         </h3>
         <p style="margin-bottom: 18px;">Arsitektur pembagian hak akses pengguna di Kedai Kopi Seduh:</p>
 
-        <div style="margin-bottom: 16px; padding: 14px; border-radius: 10px; background: #fffbf2; border-left: 4px solid var(--caramel);">
-            <strong style="display: block; font-size: 13.5px; color: var(--espresso); margin-bottom: 4px;">👑 Admin / Pemilik</strong>
-            <p style="margin: 0; font-size: 12.5px; color: var(--muted);">Mengelola data produk, cabang, promo, voucher, pendaftaran member, dan memantau laporan biaya serta liabilitas poin.</p>
+        <div
+            style="margin-bottom: 16px; padding: 14px; border-radius: 10px; background: #fffbf2; border-left: 4px solid var(--caramel);">
+            <strong style="display: block; font-size: 13.5px; color: var(--espresso); margin-bottom: 4px;">👑 Admin /
+                Pemilik</strong>
+            <p style="margin: 0; font-size: 12.5px; color: var(--muted);">Mengelola data produk, cabang, promo, voucher,
+                pendaftaran member, dan memantau laporan biaya serta liabilitas poin.</p>
         </div>
 
-        <div style="margin-bottom: 16px; padding: 14px; border-radius: 10px; background: #f4f8fb; border-left: 4px solid #2980b9;">
-            <strong style="display: block; font-size: 13.5px; color: var(--espresso); margin-bottom: 4px;">☕ Kasir (POS)</strong>
-            <p style="margin: 0; font-size: 12.5px; color: var(--muted);">Memproses transaksi penjualan, menerapkan promo, menggunakan poin member (maks 50%), dan membatalkan pesanan.</p>
+        <div
+            style="margin-bottom: 16px; padding: 14px; border-radius: 10px; background: #f4f8fb; border-left: 4px solid #2980b9;">
+            <strong style="display: block; font-size: 13.5px; color: var(--espresso); margin-bottom: 4px;">☕ Kasir
+                (POS)</strong>
+            <p style="margin: 0; font-size: 12.5px; color: var(--muted);">Memproses transaksi penjualan, menerapkan
+                promo, menggunakan poin member (maks 50%), dan membatalkan pesanan.</p>
         </div>
 
         <div style="padding: 14px; border-radius: 10px; background: #f4f9f4; border-left: 4px solid var(--green);">
-            <strong style="display: block; font-size: 13.5px; color: var(--espresso); margin-bottom: 4px;">👤 Member / Pelanggan</strong>
-            <p style="margin: 0; font-size: 12.5px; color: var(--muted);">Melihat nomor kartu member, memantau saldo poin aktif, masa berlaku (6 bulan FEFO), tier Silver/Gold, dan riwayat belanja.</p>
+            <strong style="display: block; font-size: 13.5px; color: var(--espresso); margin-bottom: 4px;">👤 Member /
+                Pelanggan</strong>
+            <p style="margin: 0; font-size: 12.5px; color: var(--muted);">Melihat nomor kartu member, memantau saldo
+                poin aktif, masa berlaku (6 bulan FEFO), tier Silver/Gold, dan riwayat belanja.</p>
         </div>
     </div>
 </div>
@@ -389,10 +453,12 @@
     <select class="form-control promo-pilih" name="promo_id" onchange="isiDiskonPromo(this)">
         <option value="0" data-jenis="" data-nilai="0" data-minimal="0">-- Tanpa Promo --</option>
         {{range .KasirData.Promo}}
-        <option value="{{.ID}}" data-jenis="{{.Jenis}}" data-nilai="{{.Nilai}}" data-minimal="{{.Minimal}}">{{.Kode}}</option>
+        <option value="{{.ID}}" data-jenis="{{.Jenis}}" data-nilai="{{.Nilai}}" data-minimal="{{.Minimal}}">{{.Kode}}
+        </option>
         {{end}}
     </select>
-    <input class="form-control promo-diskon" type="number" name="promo_diskon" min="0" value="0" placeholder="0" oninput="hitungPOS()">
+    <input class="form-control promo-diskon" type="number" name="promo_diskon" min="0" value="0" placeholder="0"
+        oninput="hitungPOS()">
     <input class="form-control" type="text" name="promo_voucher" placeholder="opsional" autocomplete="off">
 </div>
 {{end}}
