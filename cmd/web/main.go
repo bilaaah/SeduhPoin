@@ -33,6 +33,7 @@ func main() {
 	halaman := &handler.HalamanHandler{Repo: adminRepo, View: view}
 	admin := &handler.AdminHandler{Repo: adminRepo, View: view}
 	laporan := &handler.LaporanHandler{Repo: adminRepo, View: view}
+	tier := &handler.MemberTierHandler{Repo: &repository.MemberTierRepo{DB: db}, View: view}
 
 	authSvc := &service.AuthService{
 		Users:    &repository.UserRepo{DB: db},
@@ -69,7 +70,11 @@ func main() {
 	privat.Handle("/promo",   adminOnly(http.HandlerFunc(admin.Promo)))
 	privat.Handle("/voucher", adminOnly(http.HandlerFunc(admin.Voucher)))
 
-	// ── Lingkup 6: Laporan Analitik ── hanya ADMIN
+	// ── Lingkup 5: Poin & Tingkat Member (Dinda) ──
+	privat.HandleFunc("GET /member/tier", tier.Halaman)
+	privat.Handle("POST /member/tier/evaluasi", adminOnly(http.HandlerFunc(tier.Evaluasi)))
+
+	// ── Lingkup 6: Laporan Analitik (Luhur) ── hanya ADMIN
 	privat.Handle("GET /laporan",             adminOnly(http.HandlerFunc(laporan.Laporan)))
 	privat.Handle("GET /laporan/export.csv",  adminOnly(http.HandlerFunc(laporan.ExportCSV)))
 

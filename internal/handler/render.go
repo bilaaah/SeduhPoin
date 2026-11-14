@@ -113,6 +113,7 @@ func NewRenderer() *Renderer {
 		"promo.html",
 		"voucher.html",
 		"laporan.html",
+		"poin_tier.html",
 		"kasir_transaksi.html",
 		"kasir_riwayat.html",
 		"member_poin.html",
