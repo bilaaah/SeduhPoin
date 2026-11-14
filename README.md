@@ -50,7 +50,7 @@ Kedai Kopi Seduh memiliki tiga cabang operasional. Sistem menghubungkan program 
 | **Auth & RBAC** | **Autentikasi & Otorisasi Peran**: Bcrypt, Session token 7 hari, middleware `RequireLogin` & `RequireRole` | **Nabila** | **Selesai** |
 | **Lingkup 3** | **Transaksi Penjualan**: Perhitungan promo kombinasi, penukaran poin FEFO, dan akumulasi poin | **Rahma** | Siap Dikerjakan |
 | **Lingkup 4** | **Pembatalan Transaksi**: Rollback status, penarikan poin reward, refund poin terpakai, restock | **Hilal** | Siap Dikerjakan (Setelah L3) |
-| **Lingkup 5** | **Lifecycle Poin & Tier Member**: Validasi expired 6 bulan & evaluasi belanja 3 bulan (Silver/Gold) | **Dinda** | Siap Dikerjakan |
+| **Lingkup 5** | **Lifecycle Poin & Tier Member**: Validasi expired 6 bulan & evaluasi belanja 3 bulan (Silver/Gold) | **Dinda** | **Selesai** |
 | **Lingkup 6** | **Laporan Analitik**: Biaya realisasi promo, saldo poin aktif (Rp), dan statistik member | **Luhur** | **Selesai** |
 
 ---
@@ -100,6 +100,7 @@ poinseduh/
 │   │   ├── admin.go                # Handler cabang, member, promo, voucher (Lingkup 1 & 2)
 │   │   ├── catalog.go              # Handler CRUD produk & kategori (Lingkup 1)
 │   │   ├── halaman.go              # Handler dashboard ringkasan & kasir POS
+│   │   ├── member_tier.go          # Lingkup 5: handler masa berlaku poin & evaluasi tier
 │   │   ├── laporan.go              # Lingkup 6: handler laporan analitik & ekspor CSV
 │   │   ├── render.go               # Engine HTML Template renderer
 │   │   └── errors.go               # HTTP error helper
@@ -108,6 +109,7 @@ poinseduh/
 │   │   └── logging.go              # Request HTTP logger
 │   ├── model/
 │   │   ├── admin.go                # Entity: Cabang, Produk, Member, Promo, Voucher
+│   │   ├── member_tier.go          # Lingkup 5: struct BatchPoin & MemberTier
 │   │   ├── laporan.go              # Lingkup 6: DTO laporan analitik
 │   │   ├── transaksi.go            # Lingkup 6: input transaksi kasir & alokasi promo
 │   │   ├── user.go                 # Entity User & domain error auth
@@ -115,6 +117,7 @@ poinseduh/
 │   ├── repository/
 │   │   ├── admin.go                # Query SQL Cabang, Member, Promo, Voucher
 │   │   ├── catalog.go              # Query SQL Produk & Kategori
+│   │   ├── member_tier.go          # Lingkup 5: query audit poin FEFO & evaluasi tier
 │   │   ├── laporan.go              # Lingkup 6: query 3 laporan analitik
 │   │   ├── transaksi.go            # Lingkup 6: tulis transaksi & ledger transaksi_promo
 │   │   ├── user.go                 # Query SQL Users
@@ -129,12 +132,17 @@ poinseduh/
 │   ├── header.html                 # Topbar header
 │   ├── sidebar.html                # Sidebar navigasi profesional
 │   ├── footer.html                 # Footer aplikasi
-│   ├── home.html                   # Dashboard ringkasan eksekutif + form kasir POS
+│   ├── home.html                   # Dashboard ringkasan eksekutif
 │   ├── produk.html                 # Lingkup 1: UI CRUD Produk & Kategori
 │   ├── cabang.html                 # Lingkup 1: UI Cabang Kedai
 │   ├── member.html                 # Lingkup 1: UI Registrasi & List Member
 │   ├── promo.html                  # Lingkup 2: UI Pengaturan Promo
 │   ├── voucher.html                # Lingkup 2: UI Voucher Berkode
+│   ├── poin_tier.html              # Lingkup 5: UI Monitoring Poin & Evaluasi Tier
+│   ├── kasir_transaksi.html        # UI Terminal Kasir POS (Nabila)
+│   ├── kasir_riwayat.html          # UI Riwayat Transaksi Kasir (Nabila)
+│   ├── member_poin.html            # UI Kartu & Saldo Poin Member (Nabila)
+│   ├── member_riwayat.html         # UI Riwayat Belanja Member (Nabila)
 │   └── laporan.html                # Lingkup 6: UI Laporan Analitik & grafik
 ├── .env                            # Konfigurasi aktif lokal
 ├── .env.example                    # Template konfigurasi
@@ -448,14 +456,15 @@ Agar pengembangan sistem berjalan lancar dan terstruktur, berikut urutan keterga
 
 ---
 
-### 🔹 4. Lingkup 5: Pengelolaan Masa Berlaku Poin & Tingkat Member (Dinda)
+### 🔹 4. Lingkup 5: Pengelolaan Masa Berlaku Poin & Tingkat Member (Dinda) — ✅ Selesai
 - **Tujuan**: Menangani pemantauan masa berlaku poin (6 bulan), audit poin kedaluwarsa, dan evaluasi otomatis tingkat keanggotaan (Silver vs Gold).
-- **Status**: **Siap Dikerjakan Sekarang**.
-- **Berkas yang Perlu Dikerjakan**:
-  - `internal/handler/member_tier.go` (routing `GET /member/tier` atau manajemen poin)
-  - `internal/repository/member_tier.go` (query evaluasi akumulasi belanja 3 bulan dan status kedaluwarsa poin)
+- **Status**: **Selesai** — halaman `/member/tier` sudah terintegrasi lengkap dengan monitoring batch poin FEFO, audit Silver/Gold, dan tombol evaluasi massal/per-member.
+- **Berkas yang Dibuat / Dimodifikasi**:
+  - `internal/handler/member_tier.go` (routing `GET /member/tier` dan `POST /member/tier/evaluasi`)
+  - `internal/model/member_tier.go` (struct `BatchPoin` dan `MemberTier`)
+  - `internal/repository/member_tier.go` (query evaluasi akumulasi belanja 3 bulan dan status kedaluwarsa poin FEFO)
   - `templates/poin_tier.html` (halaman monitoring batch poin loyalitas dan status tingkat member)
-  - Daftarkan route di `cmd/web/main.go` dan tambahkan menu di `templates/sidebar.html`.
+  - Terintegrasi di `cmd/web/main.go`, `internal/handler/render.go`, dan `templates/sidebar.html`.
 - **Langkah-Langkah Logika Bisnis**:
   1. **Pemantauan Masa Berlaku Poin (6 Bulan)**:
      - Tampilkan riwayat batch poin per member: tanggal perolehan, tanggal kedaluwarsa, jumlah awal, sisa poin aktif, dan status (*Aktif* / *Kedaluwarsa* / *Dibatalkan*).
