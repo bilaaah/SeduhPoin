@@ -32,6 +32,7 @@ func main() {
 	adminRepo := &repository.AdminRepo{DB: db}
 	halaman := &handler.HalamanHandler{Repo: adminRepo, View: view}
 	admin := &handler.AdminHandler{Repo: adminRepo, View: view}
+	tier := &handler.MemberTierHandler{Repo: &repository.MemberTierRepo{DB: db}, View: view}
 
 	authSvc := &service.AuthService{
 		Users:    &repository.UserRepo{DB: db},
@@ -60,6 +61,10 @@ func main() {
 	// Lingkup 2 (Nabila)
 	privat.HandleFunc("/promo", admin.Promo)
 	privat.HandleFunc("/voucher", admin.Voucher)
+
+	// Lingkup 5 (Dinda)
+	privat.HandleFunc("GET /member/tier", tier.Halaman)
+	privat.HandleFunc("POST /member/tier/evaluasi", tier.Evaluasi)
 
 	// Laporan (Admin/Pemilik)
 	privat.HandleFunc("GET /laporan", halaman.Laporan)

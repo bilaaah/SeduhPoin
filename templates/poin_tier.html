@@ -1,0 +1,138 @@
+{{define "content"}}
+{{$role := userRole .}}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+        <h2 style="margin: 0 0 6px;">🪙 Poin & Tingkat Member</h2>
+        <p style="margin: 0;">Pantau masa berlaku poin (6 bulan) dan evaluasi tingkat Silver/Gold berdasarkan belanja 3 bulan terakhir.</p>
+    </div>
+    {{if eq $role "ADMIN"}}
+    <form method="post" action="/member/tier/evaluasi" onsubmit="return confirm('Evaluasi ulang tingkat SEMUA member?');">
+        <button type="submit" class="btn">🔄 Evaluasi Semua Member</button>
+    </form>
+    {{end}}
+</div>
+
+{{if .Info}}
+<div style="background: var(--green-bg); color: var(--green); padding: 10px 14px; border-radius: 8px; margin-bottom: 18px;">
+    Evaluasi selesai. {{.Info}} data member diperbarui.
+</div>
+{{end}}
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-num">{{.TotalPoin}}</div>
+        <div class="stat-label">Poin Aktif</div>
+        <div class="stat-desc">Belum kedaluwarsa</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-num">{{rupiah .TotalRupiah}}</div>
+        <div class="stat-label">Nilai Rupiah Poin</div>
+        <div class="stat-desc">1 Poin = Rp1.000</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-num">{{.Gold}}</div>
+        <div class="stat-label">Member Gold</div>
+        <div class="stat-desc">Poin 1,5x</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-num">{{.Silver}}</div>
+        <div class="stat-label">Member Silver</div>
+        <div class="stat-desc">Poin 1x</div>
+    </div>
+</div>
+
+<h3 style="margin: 28px 0 12px;">Tingkat & Saldo Poin Member</h3>
+<table class="table">
+    <thead>
+        <tr>
+            <th>No. Member</th>
+            <th>Nama</th>
+            <th>Tingkat</th>
+            <th>Belanja 3 Bulan</th>
+            <th>Menuju Gold</th>
+            <th>Poin Aktif</th>
+            <th>Nilai (Rp)</th>
+            <th>Aksi</th>
+        </tr>
+    </thead>
+    <tbody>
+        {{range .Daftar}}
+        <tr {{if eq .ID $.Pilih.ID}}style="background: #fbf3ea;"{{end}}>
+            <td><strong>{{.Nomor}}</strong></td>
+            <td>{{.Nama}}</td>
+            <td>
+                {{if eq .TingkatTersimpan "GOLD"}}<span class="badge badge-gold">Gold</span>
+                {{else}}<span class="badge badge-silver">Silver</span>{{end}}
+                {{if .PerluSinkron}}
+                    <small style="display:block; color: var(--muted);">
+                        seharusnya {{if eq .TingkatSeharusnya "GOLD"}}Gold{{else}}Silver{{end}} (belum disinkronkan)
+                    </small>
+                {{end}}
+            </td>
+            <td>{{rupiah .BelanjaRiil}}</td>
+            <td>
+                {{if eq .TingkatSeharusnya "GOLD"}}<span class="badge badge-aktif">Memenuhi syarat</span>
+                {{else}}Kurang {{rupiah .KurangKeGold}}{{end}}
+            </td>
+            <td>{{.PoinAktif}}</td>
+            <td>{{rupiah .NilaiRupiah}}</td>
+            <td style="white-space: nowrap;">
+                {{if ne $role "MEMBER"}}<a class="btn btn-sm btn-light" href="/member/tier?member={{.ID}}">Lihat Batch</a>{{end}}
+                {{if eq $role "ADMIN"}}
+                <form method="post" action="/member/tier/evaluasi" style="display:inline;">
+                    <input type="hidden" name="member" value="{{.ID}}">
+                    <button type="submit" class="btn btn-sm btn-light">Evaluasi</button>
+                </form>
+                {{end}}
+            </td>
+        </tr>
+        {{else}}
+        <tr><td colspan="8">Belum ada data member.</td></tr>
+        {{end}}
+    </tbody>
+</table>
+
+{{if .Pilih.ID}}
+<h3 style="margin: 28px 0 4px;">Riwayat Batch Poin — {{.Pilih.Nama}} ({{.Pilih.Nomor}})</h3>
+<p style="margin: 0 0 12px; color: var(--muted); font-size: 13px;">
+    Diurutkan dari yang paling dekat kedaluwarsa (urutan FEFO saat poin ditukar). Poin berlaku 6 bulan sejak diperoleh.
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Diperoleh</th>
+            <th>Kedaluwarsa</th>
+            <th>Jumlah Awal</th>
+            <th>Sisa</th>
+            <th>Sumber</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        {{range .Batch}}
+        <tr {{if eq .Status "KEDALUWARSA"}}style="opacity: .6;"{{end}}>
+            <td>{{.ID}}</td>
+            <td>{{.DiperolehAt.Format "02 Jan 2006"}}</td>
+            <td>
+                {{.KadaluarsaAt.Format "02 Jan 2006"}}
+                {{if and (eq .Status "AKTIF") (le .SisaHari 30)}}
+                    <small style="display:block; color: #b45309;">⚠ {{.SisaHari}} hari lagi</small>
+                {{end}}
+            </td>
+            <td>{{.Jumlah}}</td>
+            <td><strong>{{.Sisa}}</strong></td>
+            <td>{{if .TransaksiID}}Transaksi #{{.TransaksiID}}{{else}}-{{end}}</td>
+            <td>
+                {{if eq .Status "AKTIF"}}<span class="badge badge-aktif">Aktif</span>
+                {{else if eq .Status "KEDALUWARSA"}}<span class="badge" style="background:#fdecea; color:#b3261e;">Kedaluwarsa</span>
+                {{else}}<span class="badge">Dibatalkan</span>{{end}}
+            </td>
+        </tr>
+        {{else}}
+        <tr><td colspan="7">Member ini belum memiliki poin.</td></tr>
+        {{end}}
+    </tbody>
+</table>
+{{end}}
+{{end}}

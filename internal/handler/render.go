@@ -100,6 +100,7 @@ func NewRenderer() *Renderer {
 		"promo.html",
 		"voucher.html",
 		"laporan.html",
+		"poin_tier.html",
 		"auth/login.html",
 		"auth/register.html",
 	}
