@@ -48,7 +48,7 @@ Kedai Kopi Seduh memiliki tiga cabang operasional. Sistem menghubungkan program 
 | **Lingkup 1** | **Master Data**: Pengelolaan katalog produk, kategori, 3 cabang, dan data member | **Nabila** | **Selesai** |
 | **Lingkup 2** | **Pengaturan Promo & Voucher**: Promo multi-kondisi, batasan jam/cabang, dan kuota voucher | **Nabila** | **Selesai** |
 | **Auth & RBAC** | **Autentikasi & Otorisasi Peran**: Bcrypt, Session token 7 hari, middleware `RequireLogin` & `RequireRole` | **Nabila** | **Selesai** |
-| **Lingkup 3** | **Transaksi Penjualan**: Perhitungan promo kombinasi, penukaran poin FEFO, dan akumulasi poin | **Rahma** | Siap Dikerjakan |
+| **Lingkup 3** | **Transaksi Penjualan**: Perhitungan promo kombinasi, penukaran poin FEFO, dan akumulasi poin | **Rahma** | **Selesai** |
 | **Lingkup 4** | **Pembatalan Transaksi**: Rollback status, penarikan poin reward, refund poin terpakai, restock | **Hilal** | Siap Dikerjakan (Setelah L3) |
 | **Lingkup 5** | **Lifecycle Poin & Tier Member**: Validasi expired 6 bulan & evaluasi belanja 3 bulan (Silver/Gold) | **Dinda** | **Selesai** |
 | **Lingkup 6** | **Laporan Analitik**: Biaya realisasi promo, saldo poin aktif (Rp), dan statistik member | **Luhur** | **Selesai** |
@@ -95,6 +95,9 @@ poinseduh/
 ├── internal/
 │   ├── config/
 │   │   └── config.go               # Pembaca konfigurasi environment (.env)
+│   ├── kalkulasi/
+│   │   ├── transaksi.go            # Lingkup 3: mesin kalkulasi diskon, FEFO poin & reward
+│   │   └── transaksi_test.go       # Unit test logika bisnis kalkulasi (6/6 pass)
 │   ├── handler/
 │   │   ├── auth.go                 # Login, register, logout
 │   │   ├── admin.go                # Handler cabang, member, promo, voucher (Lingkup 1 & 2)
@@ -397,14 +400,15 @@ Agar pengembangan sistem berjalan lancar dan terstruktur, berikut urutan keterga
 
 ---
 
-### 🔹 2. Lingkup 3: Transaksi Penjualan & Kasir POS (Rahma)
+### 🔹 2. Lingkup 3: Transaksi Penjualan & Kasir POS (Rahma) — ✅ Selesai
 - **Tujuan**: Membangun modul kasir penjualan (POS) di cabang terpilih yang menghitung kalkulasi promo, penukaran poin, dan perolehan poin baru.
-- **Status**: **Siap Dikerjakan Sekarang**.
-- **Berkas yang Perlu Dikerjakan**:
-  - `internal/handler/transaksi.go` (routing `GET /transaksi` untuk form POS & `POST /transaksi` untuk proses simpan)
-  - `internal/repository/transaksi.go` (logika query kalkulasi promo, simpan transaksi & item, potong stok, potong poin, tambah poin baru)
-  - `templates/transaksi.html` (antarmuka kasir penjualan POS interaktif)
-  - Daftarkan route di `cmd/web/main.go` menggunakan middleware `adminKasir` dan tambahkan menu navigasi di `templates/sidebar.html`.
+- **Status**: **Selesai** — modul POS sudah terintegrasi lengkap dengan keranjang dinamis, kalkulasi diskon otomatis, validasi bentrok voucher, tukar poin FEFO, potong stok, dan unit test 100% lolos.
+- **Berkas yang Dibuat / Dimodifikasi**:
+  - `internal/kalkulasi/transaksi.go` (mesin kalkulasi diskon, aturan bentrok voucher, tukar poin 50%, dan bonus poin Gold 1.5x)
+  - `internal/kalkulasi/transaksi_test.go` (6 unit test logika transaksi)
+  - `internal/repository/transaksi.go` (fungsi atomik `prosesTransaksiPOS`, potong stok dengan lock `FOR UPDATE`, simpan `transaksi_item`, potong poin FEFO, catat ledger `transaksi_promo`, terbitkan poin baru 6 bulan)
+  - `templates/kasir_transaksi.html` (antarmuka kasir penjualan POS interaktif dengan keranjang belanja dinamis dan live preview JavaScript)
+  - `internal/handler/halaman.go` (ekstraksi item transaksi POS dan redirect ke `/kasir/riwayat`)
 - **Tabel Database yang Dipakai**: `transaksi`, `transaksi_item`, `produk`, `promo`, `promo_produk`, `promo_kategori`, `promo_cabang`, `voucher`, `poin_member`, `member`.
 - **Langkah-Langkah Logika Bisnis Wajib**:
   1. **Form Kasir POS**: Kasir memilih cabang aktif, memilih produk serta kuantitas, mencari member berdasarkan nomor/nama (opsional), memasukkan kode voucher (opsional), dan opsi centang penukaran poin.
