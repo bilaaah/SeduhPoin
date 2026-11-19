@@ -28,6 +28,7 @@ type Member struct {
 	ID                                        int
 	Nomor, Nama, NoHP, Email, Alamat, Tingkat string
 	Total                                     int
+	SaldoPoin                                 int
 	Aktif                                     bool
 	CreatedAt                                 time.Time
 }
@@ -37,6 +38,7 @@ type Promo struct {
 	Kode, Nama, Jenis                          string
 	Nilai, Minimal, Maksimal, Terpakai         int
 	CabangID, TargetProdukID, TargetKategoriID int
+	CabangIDs, ProdukIDs, KategoriIDs          []int
 	MulaiJam, BerakhirJam                      string
 	Mulai, Berakhir                            time.Time
 	Aktif                                      bool

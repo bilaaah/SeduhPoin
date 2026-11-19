@@ -1,19 +1,23 @@
 {{define "content"}}
 <style>
-.promo-row-head { display: grid; grid-template-columns: 1fr 84px 104px; gap: 8px; font-size: 10.5px; font-weight: 700; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
-.promo-row { display: grid; grid-template-columns: 1fr 84px 104px; gap: 8px; margin-bottom: 8px; }
-.promo-row .form-control { padding: 9px 10px; font-size: 12.5px; }
+.cart-head { display: grid; grid-template-columns: 1fr 86px 38px; gap: 8px; font-size: 10.5px; font-weight: 700; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+.cart-row { display: grid; grid-template-columns: 1fr 86px 38px; gap: 8px; margin-bottom: 8px; align-items: center; }
+.cart-row .form-control { padding: 9px 10px; font-size: 12.5px; }
+.btn-del-row { background: #fdf2f0; color: var(--red); border: 1px solid #f5c6cb; border-radius: 8px; height: 36px; cursor: pointer; font-weight: 700; }
+.btn-del-row:hover { background: #f8d7da; }
+.promo-pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: 11.5px; font-weight: 600; background: #e8f5e9; color: #2e7d32; margin: 2px 4px 2px 0; }
+.promo-pill.warn { background: #fff3cd; color: #856404; }
 </style>
 
 <div class="dashboard-hero" style="background: linear-gradient(135deg, #eef4f8, #d8e6f1); border-color: rgba(41,128,185,0.3); margin-bottom: 24px;">
     <div class="hero-text">
         <span class="hero-badge" style="background: #2980b9; color: #fff;">🛒 Terminal Kasir POS Kedai Seduh</span>
         <h1>Input Transaksi Penjualan Baru</h1>
-        <p>Proses penjualan kasir, pilih cabang, masukkan member untuk klaim poin reward (1 poin per Rp10.000, 1.5x Gold), gunakan promo & voucher, dan tukar poin hingga 50% total belanja.</p>
+        <p>Pilih cabang, tambahkan item produk beserta kuantitas, pilih member untuk klaim poin reward (1 poin per Rp10.000, 1.5x Gold), gunakan promo otomatis &amp; kode voucher, serta tukar poin FEFO hingga 50% tagihan.</p>
     </div>
 </div>
 
-<div style="display: grid; grid-template-columns: 490px 1fr; gap: 28px; align-items: start;">
+<div style="display: grid; grid-template-columns: 520px 1fr; gap: 28px; align-items: start;">
     <!-- Form Kasir POS Transaksi Baru -->
     <div class="form" style="margin-bottom: 0; background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 26px; box-shadow: var(--shadow);">
         <h3 style="margin-top: 0; font-size: 19px; border-bottom: 1px solid var(--line); padding-bottom: 12px; margin-bottom: 18px; display: flex; align-items: center; gap: 8px;">
@@ -23,9 +27,11 @@
         <form method="post" action="/transaksi" id="formKasir">
             <div class="form-group">
                 <label>1. Pilih Cabang Transaksi</label>
-                <select class="form-control" name="cabang_id" required>
+                <select class="form-control" name="cabang_id" id="posCabang" onchange="hitungPOS()" required>
                     {{range .Cabang}}
+                    {{if .Aktif}}
                     <option value="{{.ID}}">{{.Nama}} (Kode: {{.Kode}})</option>
+                    {{end}}
                     {{end}}
                 </select>
             </div>
@@ -33,56 +39,91 @@
             <div class="form-group">
                 <label>2. Pilih Pelanggan / Member</label>
                 <select class="form-control" name="member_id" id="posMember" onchange="hitungPOS()">
-                    <option value="0" data-tingkat="NON" data-total="0">-- Pelanggan Umum (Tanpa Member) --</option>
+                    <option value="0" data-tingkat="NON" data-total="0" data-saldo="0">-- Pelanggan Umum (Tanpa Member) --</option>
                     {{range .Member}}
-                    <option value="{{.ID}}" data-tingkat="{{.Tingkat}}" data-total="{{.Total}}">
-                        {{.Nomor}} - {{.Nama}} ({{.Tingkat}} Member)
+                    {{if .Aktif}}
+                    <option value="{{.ID}}" data-tingkat="{{.Tingkat}}" data-total="{{.Total}}" data-saldo="{{.SaldoPoin}}">
+                        {{.Nomor}} - {{.Nama}} ({{.Tingkat}} | Saldo: {{.SaldoPoin}} Poin)
                     </option>
+                    {{end}}
                     {{end}}
                 </select>
                 <small style="color:var(--muted); font-size:11px; display:block; margin-top:4px;">
-                    * Member Silver dapat 1 poin per Rp10.000. Member Gold (belanja 3 bulan &ge; Rp1.500.000) otomatis dapat bonus 1,5x.
+                    * Member Silver dapat 1 poin per Rp10.000. Member Gold otomatis dapat multiplier 1,5x.
                 </small>
             </div>
 
             <div class="form-group">
-                <label>3. Subtotal Belanja Produk (Rp)</label>
-                <input class="form-control" type="number" id="posSubtotal" name="subtotal" min="1000" placeholder="Contoh: 60000" oninput="hitungPOS()" required>
-            </div>
-
-            <div class="form-group">
-                <label>4. Terapkan Promo / Voucher (Opsional)</label>
-                <div class="promo-row-head">
-                    <span>Promo</span><span>Diskon (Rp)</span><span>Kode Voucher</span>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                    <label style="margin-bottom:0;">3. Keranjang Produk &amp; Kuantitas</label>
+                    <button type="button" class="btn btn-sm" style="background:#2980b9; padding:5px 10px; font-size:11.5px;" onclick="tambahBarisProduk()">
+                        + Tambah Produk
+                    </button>
                 </div>
-                {{template "promoRowPOS" .}}
-                {{template "promoRowPOS" .}}
-                {{template "promoRowPOS" .}}
-                <small style="color:var(--muted); font-size:11px;">
-                    * Nominal diskon otomatis terisi saat promo dipilih dan dicatat ke ledger biaya promo.
+                <div class="cart-head">
+                    <span>Menu Produk</span><span>Qty</span><span></span>
+                </div>
+                <div id="keranjangContainer">
+                    <div class="cart-row">
+                        <select class="form-control item-produk" name="produk_id" onchange="hitungPOS()" required>
+                            {{range .Produk}}
+                            {{if and .Aktif (gt .Stok 0)}}
+                            <option value="{{.ID}}" data-harga="{{.Harga}}" data-kategori="{{.KategoriID}}" data-stok="{{.Stok}}" data-nama="{{.Nama}}">
+                                {{.Nama}} — {{rupiah .Harga}} (Stok: {{.Stok}})
+                            </option>
+                            {{end}}
+                            {{end}}
+                        </select>
+                        <input class="form-control item-qty" type="number" name="qty" min="1" value="1" oninput="hitungPOS()" required>
+                        <button type="button" class="btn-del-row" onclick="hapusBarisProduk(this)" title="Hapus baris">&times;</button>
+                    </div>
+                </div>
+                <input type="hidden" id="posSubtotal" name="subtotal" value="0">
+            </div>
+
+            <div class="form-group">
+                <label>4. Kode Voucher (Opsional)</label>
+                <div style="display:flex; gap:8px;">
+                    <input class="form-control" type="text" id="posVoucher" name="kode_voucher" placeholder="Ketik / klik kode voucher di kanan..." autocomplete="off" oninput="hitungPOS()">
+                    <button type="button" class="btn btn-light btn-sm" onclick="document.getElementById('posVoucher').value=''; hitungPOS();">Reset</button>
+                </div>
+                <small style="color:var(--muted); font-size:11px; display:block; margin-top:4px;">
+                    * Promo produk &amp; B2G1 dihitung otomatis. Sesuai aturan Topik 5, penggunaan <strong>Voucher</strong> tidak dapat digabung dengan <strong>Potongan Minimal Belanja</strong>.
                 </small>
+                <div id="lblPromoAktif" style="margin-top:8px;"></div>
             </div>
 
             <div class="form-group" style="background: #fdfaf4; border: 1px solid #fae6cb; border-radius: 10px; padding: 14px;">
-                <label style="color:#856404; margin-bottom: 4px;">5. 🪙 Tukar Poin Member (1 Poin = Rp1.000)</label>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                    <label style="color:#856404; margin-bottom: 0;">5. 🪙 Tukar Poin Member (FEFO, 1 Poin = Rp1.000)</label>
+                    <button type="button" class="btn btn-sm" style="background:#d97706; padding:3px 8px; font-size:11px;" onclick="pakaiPoinMaks()">Pakai Maks</button>
+                </div>
                 <input class="form-control" type="number" id="posPoinTukar" name="poin_ditukar" min="0" value="0" oninput="hitungPOS()">
                 <small style="color:#856404; display:block; margin-top:4px; font-size:11.5px;">
-                    Maksimal tukar poin: <strong id="posMaxPoinTukar">0 Poin (Maks. 50% belanja)</strong>
+                    Saldo aktif: <strong id="lblSaldoMember">0 Poin</strong> &middot; Maks. tukar: <strong id="posMaxPoinTukar">0 Poin (Maks. 50% belanja)</strong>
                 </small>
             </div>
 
             <!-- Kalkulasi Ringkasan Bayar -->
             <div style="background: #f4f6f8; border-radius: 10px; padding: 18px; margin-bottom: 20px; border: 1px solid #e2e8f0;">
                 <div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:12.5px; color:var(--muted);">
-                    <span>Total Diskon Promo:</span>
-                    <strong id="lblTotalDiskon" style="color:var(--coffee);">Rp0</strong>
+                    <span>Subtotal Belanja:</span>
+                    <strong id="lblSubtotal" style="color:var(--espresso);">Rp0</strong>
                 </div>
-                <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:14px;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:12.5px; color:var(--muted);">
+                    <span>Total Diskon Promo:</span>
+                    <strong id="lblTotalDiskon" style="color:var(--coffee);">-Rp0</strong>
+                </div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:12.5px; color:var(--muted);">
+                    <span>Potongan Tukar Poin:</span>
+                    <strong id="lblPotonganPoin" style="color:#b45309;">-Rp0</strong>
+                </div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:14px; border-top: 1px solid #cbd5e1; padding-top: 8px;">
                     <span>Total Tagihan Akhir:</span>
                     <strong style="font-size:20px; color:var(--espresso);" id="lblTotalBayar">Rp0</strong>
                 </div>
                 <div style="display:flex; justify-content:space-between; font-size:12.5px; color:var(--green); border-top: 1px dashed #cbd5e1; padding-top: 8px;">
-                    <span>Poin Diperoleh Member:</span>
+                    <span>Poin Baru Diperoleh (Aktif 6 Bulan):</span>
                     <strong id="lblPoinDapat">+0 Poin</strong>
                 </div>
             </div>
@@ -91,10 +132,10 @@
 
             <div style="display: flex; gap: 10px;">
                 <button type="submit" class="btn" style="flex: 1; background:#2980b9; padding: 12px; font-size: 15px; justify-content: center;">
-                    💾 Simpan & Selesaikan Transaksi
+                    💾 Simpan &amp; Selesaikan Transaksi
                 </button>
                 <a href="/kasir/riwayat" class="btn btn-light" style="padding: 12px 18px; justify-content: center;">
-                    Batal
+                    Riwayat
                 </a>
             </div>
         </form>
@@ -106,7 +147,7 @@
             <h4 style="margin-top:0; font-size:16px; display:flex; align-items:center; gap:8px;">
                 <span>🏷️</span> Referensi Promo Aktif di Kasir
             </h4>
-            <p style="font-size:12.5px; color:var(--muted); margin-bottom:14px;">Daftar promo resmi yang sedang berlaku untuk cabang kedai:</p>
+            <p style="font-size:12.5px; color:var(--muted); margin-bottom:14px;">Promo produk, Buy 2 Get 1, dan potongan minimal belanja diterapkan otomatis jika memenuhi syarat:</p>
             <div style="display:flex; flex-direction:column; gap:10px;">
                 {{range .Promo}}
                 <div style="padding:12px 14px; border:1px solid var(--line); border-radius:10px; font-size:12.5px; background: #fffcf9;">
@@ -117,6 +158,7 @@
                     <small style="color:var(--muted); display:block; margin-top:4px;">
                         Nilai: {{if eq .Jenis "PERSENTASE_PRODUK"}}{{.Nilai}}%{{else if eq .Jenis "BUY2_GET1"}}Beli 2 Gratis 1{{else}}{{rupiah .Nilai}}{{end}}
                         {{if gt .Minimal 0}} | Min. Belanja: {{rupiah .Minimal}}{{end}}
+                        {{if .MulaiJam}} | Jam: {{.MulaiJam}}&ndash;{{.BerakhirJam}}{{end}}
                     </small>
                 </div>
                 {{end}}
@@ -125,14 +167,15 @@
 
         <div style="background:#fff; border:1px solid var(--line); border-radius:var(--radius); padding:24px; box-shadow:var(--shadow);">
             <h4 style="margin-top:0; font-size:16px; display:flex; align-items:center; gap:8px;">
-                <span>🎟️</span> Kuota Voucher Tersedia
+                <span>🎟️</span> Kuota Voucher Tersedia (Klik untuk Pakai)
             </h4>
-            <p style="font-size:12.5px; color:var(--muted); margin-bottom:14px;">Voucher berkode unik dengan kuota pemakaian terbatas:</p>
+            <p style="font-size:12.5px; color:var(--muted); margin-bottom:14px;">Klik salah satu kartu voucher di bawah untuk mengisi kode voucher otomatis:</p>
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
                 {{range .Voucher}}
-                <div style="padding:12px; border:1px solid var(--line); border-radius:10px; font-size:12px; background: #fcfbf9;">
+                <div onclick="pilihVoucher('{{.Kode}}')" style="cursor:pointer; padding:12px; border:1px solid var(--line); border-radius:10px; font-size:12px; background: #fcfbf9; transition: all 0.15s;">
                     <strong style="color:var(--coffee); font-family:monospace; font-size:13.5px;">{{.Kode}}</strong>
-                    <small style="display:block; color:var(--muted); margin-top:2px;">Sisa Kuota: {{.Kuota}} kali</small>
+                    <small style="display:block; color:var(--muted); margin-top:2px;">{{.PromoNama}}</small>
+                    <small style="display:block; color:var(--green); font-weight:600; margin-top:2px;">Terpakai: {{.Terpakai}} / {{.Kuota}}</small>
                 </div>
                 {{end}}
             </div>
@@ -141,83 +184,258 @@
 </div>
 
 <script>
-function hitungTotalDiskonPromo() {
-    var inputs = document.querySelectorAll('.promo-diskon');
-    var total = 0;
-    for (var i = 0; i < inputs.length; i++) {
-        total += parseInt(inputs[i].value) || 0;
-    }
-    return total;
+var daftarPromo = [
+    {{range .Promo}}
+    {
+        id: {{.ID}},
+        kode: "{{.Kode}}",
+        nama: "{{.Nama}}",
+        jenis: "{{.Jenis}}",
+        nilai: {{.Nilai}},
+        minimal: {{.Minimal}},
+        maksimal: {{.Maksimal}},
+        terpakai: {{.Terpakai}},
+        aktif: {{.Aktif}},
+        mulaiJam: "{{.MulaiJam}}",
+        berakhirJam: "{{.BerakhirJam}}",
+        produkIDs: [{{range $i, $v := .ProdukIDs}}{{if $i}},{{end}}{{$v}}{{end}}],
+        kategoriIDs: [{{range $i, $v := .KategoriIDs}}{{if $i}},{{end}}{{$v}}{{end}}],
+        cabangIDs: [{{range $i, $v := .CabangIDs}}{{if $i}},{{end}}{{$v}}{{end}}]
+    },
+    {{end}}
+];
+
+var daftarVoucher = [
+    {{range .Voucher}}
+    {
+        id: {{.ID}},
+        promoID: {{.PromoID}},
+        kode: "{{.Kode}}",
+        kuota: {{.Kuota}},
+        terpakai: {{.Terpakai}}
+    },
+    {{end}}
+];
+
+function pilihVoucher(kode) {
+    document.getElementById('posVoucher').value = kode;
+    hitungPOS();
 }
 
-function isiDiskonPromo(select) {
-    var opt = select.options[select.selectedIndex];
-    var jenis = opt.getAttribute('data-jenis');
-    var nilai = parseInt(opt.getAttribute('data-nilai')) || 0;
-    var minimal = parseInt(opt.getAttribute('data-minimal')) || 0;
-    var subtotal = parseInt(document.getElementById('posSubtotal').value) || 0;
-    var input = select.parentElement.querySelector('.promo-diskon');
-    if (!input) return;
+function tambahBarisProduk() {
+    var container = document.getElementById('keranjangContainer');
+    var first = container.querySelector('.cart-row');
+    var clone = first.cloneNode(true);
+    clone.querySelector('.item-qty').value = 1;
+    container.appendChild(clone);
+    hitungPOS();
+}
 
-    if (jenis === 'PERSENTASE_PRODUK') {
-        input.value = Math.floor(subtotal * nilai / 100);
-    } else if (jenis === 'POTONGAN_MIN_BELANJA') {
-        input.value = (minimal === 0 || subtotal >= minimal) ? nilai : 0;
-    } else if (jenis === 'VOUCHER') {
-        input.value = nilai;
+function hapusBarisProduk(btn) {
+    var container = document.getElementById('keranjangContainer');
+    var rows = container.querySelectorAll('.cart-row');
+    if (rows.length > 1) {
+        btn.closest('.cart-row').remove();
+        hitungPOS();
     }
+}
+
+function jamSekarangHHMM() {
+    var d = new Date();
+    var hh = String(d.getHours()).padStart(2, '0');
+    var mm = String(d.getMinutes()).padStart(2, '0');
+    return hh + ":" + mm;
+}
+
+function promoBerlakuDiCabang(p, cabangID) {
+    if (!p.aktif) return false;
+    if (p.maksimal > 0 && p.terpakai >= p.maksimal) return false;
+    if (p.cabangIDs && p.cabangIDs.length > 0 && p.cabangIDs.indexOf(cabangID) === -1) return false;
+    if (p.mulaiJam && p.berakhirJam) {
+        var now = jamSekarangHHMM();
+        if (now < p.mulaiJam || now > p.berakhirJam) return false;
+    }
+    return true;
+}
+
+function pakaiPoinMaks() {
+    var maxAttr = parseInt(document.getElementById('posPoinTukar').getAttribute('data-max')) || 0;
+    document.getElementById('posPoinTukar').value = maxAttr;
     hitungPOS();
 }
 
 function hitungPOS() {
-    var subtotal = parseInt(document.getElementById('posSubtotal').value) || 0;
-    var diskon = hitungTotalDiskonPromo();
-    document.getElementById('lblTotalDiskon').innerText = "Rp" + diskon.toLocaleString('id-ID');
-    var stlhDiskon = subtotal - diskon;
-    if (stlhDiskon < 0) stlhDiskon = 0;
+    var cabangID = parseInt(document.getElementById('posCabang').value) || 0;
+    var rows = document.querySelectorAll('#keranjangContainer .cart-row');
 
-    var maxPoin = Math.floor((stlhDiskon * 0.5) / 1000);
-    document.getElementById('posMaxPoinTukar').innerText = maxPoin + " Poin (Maks. Rp" + (maxPoin * 1000).toLocaleString('id-ID') + ")";
+    // Gabungkan item dengan produk yang sama
+    var mapItem = {};
+    var urut = [];
+    for (var i = 0; i < rows.length; i++) {
+        var sel = rows[i].querySelector('.item-produk');
+        var qtyIn = rows[i].querySelector('.item-qty');
+        if (!sel || !sel.options[sel.selectedIndex]) continue;
+        var opt = sel.options[sel.selectedIndex];
+        var pid = parseInt(opt.value) || 0;
+        var harga = parseInt(opt.getAttribute('data-harga')) || 0;
+        var kat = parseInt(opt.getAttribute('data-kategori')) || 0;
+        var stok = parseInt(opt.getAttribute('data-stok')) || 0;
+        var qty = parseInt(qtyIn.value) || 0;
+        if (qty < 1) qty = 1;
+        if (stok > 0 && qty > stok) {
+            qty = stok;
+            qtyIn.value = stok;
+        }
+        if (!mapItem[pid]) {
+            mapItem[pid] = { produkID: pid, kategoriID: kat, harga: harga, qty: 0 };
+            urut.push(pid);
+        }
+        mapItem[pid].qty += qty;
+    }
+
+    var promosAktif = daftarPromo.filter(function(p) {
+        return p.jenis !== 'VOUCHER' && promoBerlakuDiCabang(p, cabangID);
+    });
+
+    var subtotal = 0;
+    var diskonProduk = 0;
+    var labelPromo = [];
+
+    for (var j = 0; j < urut.length; j++) {
+        var it = mapItem[urut[j]];
+        subtotal += it.harga * it.qty;
+        var qtyBayar = it.qty;
+
+        // BUY2_GET1
+        for (var k = 0; k < promosAktif.length; k++) {
+            var pb = promosAktif[k];
+            if (pb.jenis === 'BUY2_GET1' && pb.kategoriIDs.indexOf(it.kategoriID) !== -1) {
+                var gratis = Math.floor(it.qty / 3);
+                if (gratis > 0) {
+                    var dB2 = gratis * it.harga;
+                    diskonProduk += dB2;
+                    qtyBayar -= gratis;
+                    labelPromo.push(pb.kode + " (-Rp" + dB2.toLocaleString('id-ID') + ")");
+                }
+                break;
+            }
+        }
+
+        // PERSENTASE_PRODUK
+        var terbaik = null;
+        for (var m = 0; m < promosAktif.length; m++) {
+            var pp = promosAktif[m];
+            if (pp.jenis === 'PERSENTASE_PRODUK' && pp.produkIDs.indexOf(it.produkID) !== -1) {
+                if (!terbaik || pp.nilai > terbaik.nilai) terbaik = pp;
+            }
+        }
+        if (terbaik && qtyBayar > 0) {
+            var dP = Math.floor(qtyBayar * it.harga * terbaik.nilai / 100);
+            if (dP > 0) {
+                diskonProduk += dP;
+                labelPromo.push(terbaik.kode + " (-Rp" + dP.toLocaleString('id-ID') + ")");
+            }
+        }
+    }
+
+    var setelahProduk = subtotal - diskonProduk;
+    var diskonTransaksi = 0;
+    var kodeVoucher = (document.getElementById('posVoucher').value || '').trim().toUpperCase();
+    var infoBentrok = "";
+
+    if (kodeVoucher !== "") {
+        var vch = null;
+        for (var v = 0; v < daftarVoucher.length; v++) {
+            if (daftarVoucher[v].kode.toUpperCase() === kodeVoucher) {
+                vch = daftarVoucher[v];
+                break;
+            }
+        }
+        if (vch && vch.terpakai < vch.kuota) {
+            var pVch = null;
+            for (var pv = 0; pv < daftarPromo.length; pv++) {
+                if (daftarPromo[pv].id === vch.promoID) {
+                    pVch = daftarPromo[pv];
+                    break;
+                }
+            }
+            if (pVch && promoBerlakuDiCabang(pVch, cabangID) && subtotal >= pVch.minimal) {
+                diskonTransaksi = Math.min(pVch.nilai, setelahProduk);
+                labelPromo.push("Voucher " + vch.kode + " (-Rp" + diskonTransaksi.toLocaleString('id-ID') + ")");
+                infoBentrok = "Voucher aktif: Promo Potongan Min. Belanja dinonaktifkan";
+            } else {
+                infoBentrok = "Voucher belum memenuhi syarat cabang / jam / min. belanja";
+            }
+        } else {
+            infoBentrok = "Kode voucher tidak ditemukan atau kuota habis";
+        }
+    } else {
+        var terbaikMin = null;
+        for (var n = 0; n < promosAktif.length; n++) {
+            var pm = promosAktif[n];
+            if (pm.jenis === 'POTONGAN_MIN_BELANJA' && subtotal >= pm.minimal) {
+                if (!terbaikMin || pm.nilai > terbaikMin.nilai) terbaikMin = pm;
+            }
+        }
+        if (terbaikMin) {
+            diskonTransaksi = Math.min(terbaikMin.nilai, setelahProduk);
+            if (diskonTransaksi > 0) {
+                labelPromo.push(terbaikMin.kode + " (-Rp" + diskonTransaksi.toLocaleString('id-ID') + ")");
+            }
+        }
+    }
+
+    var pillsHTML = "";
+    for (var x = 0; x < labelPromo.length; x++) {
+        pillsHTML += '<span class="promo-pill">✓ ' + labelPromo[x] + '</span>';
+    }
+    if (infoBentrok) {
+        pillsHTML += '<span class="promo-pill warn">ℹ ' + infoBentrok + '</span>';
+    }
+    document.getElementById('lblPromoAktif').innerHTML = pillsHTML;
+
+    var totalDiskon = diskonProduk + diskonTransaksi;
+    var stlhDiskon = Math.max(0, subtotal - totalDiskon);
+
+    document.getElementById('posSubtotal').value = subtotal;
+    document.getElementById('lblSubtotal').innerText = "Rp" + subtotal.toLocaleString('id-ID');
+    document.getElementById('lblTotalDiskon').innerText = "-Rp" + totalDiskon.toLocaleString('id-ID');
+
+    var mbrSelect = document.getElementById('posMember');
+    var optMbr = mbrSelect.options[mbrSelect.selectedIndex];
+    var tingkat = optMbr.getAttribute('data-tingkat');
+    var saldoMember = parseInt(optMbr.getAttribute('data-saldo')) || 0;
+    document.getElementById('lblSaldoMember').innerText = saldoMember + " Poin";
+
+    var maxPoin50 = Math.floor((stlhDiskon * 0.5) / 1000);
+    var maxPoinBisa = (optMbr.value === "0") ? 0 : Math.min(saldoMember, maxPoin50);
+    document.getElementById('posPoinTukar').setAttribute('data-max', maxPoinBisa);
+    document.getElementById('posMaxPoinTukar').innerText = maxPoinBisa + " Poin (Rp" + (maxPoinBisa * 1000).toLocaleString('id-ID') + ")";
 
     var poinTukar = parseInt(document.getElementById('posPoinTukar').value) || 0;
-    if (poinTukar > maxPoin) {
-        poinTukar = maxPoin;
-        document.getElementById('posPoinTukar').value = maxPoin;
+    if (poinTukar < 0) poinTukar = 0;
+    if (poinTukar > maxPoinBisa) {
+        poinTukar = maxPoinBisa;
+        document.getElementById('posPoinTukar').value = maxPoinBisa;
     }
 
     var potPoin = poinTukar * 1000;
-    var bayar = stlhDiskon - potPoin;
-    if (bayar < 0) bayar = 0;
+    document.getElementById('lblPotonganPoin').innerText = "-Rp" + potPoin.toLocaleString('id-ID');
 
+    var bayar = Math.max(0, stlhDiskon - potPoin);
     document.getElementById('lblTotalBayar').innerText = "Rp" + bayar.toLocaleString('id-ID');
 
-    // Perolehan poin: 1 poin per Rp10.000, 1.5x jika Gold
-    var mbrSelect = document.getElementById('posMember');
-    var opt = mbrSelect.options[mbrSelect.selectedIndex];
-    var tingkat = opt.getAttribute('data-tingkat');
-
     var poinDapat = 0;
-    if (opt.value !== "0") {
+    if (optMbr.value !== "0") {
         poinDapat = Math.floor(bayar / 10000);
         if (tingkat === "GOLD") {
             poinDapat = Math.floor(poinDapat * 1.5);
         }
     }
-    document.getElementById('lblPoinDapat').innerText = "+" + poinDapat + " Poin (" + (tingkat === "GOLD" ? "Gold 1.5x" : "Standar 1x") + ")";
+    document.getElementById('lblPoinDapat').innerText = "+" + poinDapat + " Poin (" + (tingkat === "GOLD" ? "Gold 1.5x" : (optMbr.value === "0" ? "Non-Member" : "Silver 1x")) + ")";
     document.getElementById('posPoinDapat').value = poinDapat;
 }
-</script>
-{{end}}
 
-{{define "promoRowPOS"}}
-<div class="promo-row">
-    <select class="form-control promo-pilih" name="promo_id" onchange="isiDiskonPromo(this)">
-        <option value="0" data-jenis="" data-nilai="0" data-minimal="0">-- Tanpa Promo --</option>
-        {{range .Promo}}
-        <option value="{{.ID}}" data-jenis="{{.Jenis}}" data-nilai="{{.Nilai}}" data-minimal="{{.Minimal}}">{{.Kode}}</option>
-        {{end}}
-    </select>
-    <input class="form-control promo-diskon" type="number" name="promo_diskon" min="0" value="0" placeholder="0" oninput="hitungPOS()">
-    <input class="form-control" type="text" name="promo_voucher" placeholder="kode voucher" autocomplete="off">
-</div>
+document.addEventListener('DOMContentLoaded', hitungPOS);
+</script>
 {{end}}
