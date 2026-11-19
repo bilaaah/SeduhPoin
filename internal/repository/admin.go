@@ -33,7 +33,11 @@ func (r *AdminRepo) TambahCabang(ctx context.Context, x model.Cabang) error {
 }
 
 func (r *AdminRepo) Member(ctx context.Context) ([]model.Member, error) {
-	rows, e := r.DB.QueryContext(ctx, "SELECT id,nomor_member,nama,no_hp,COALESCE(email,''),COALESCE(alamat,''),tingkat,total_belanja_3_bulan,aktif,created_at FROM member ORDER BY id DESC")
+	rows, e := r.DB.QueryContext(ctx, `
+		SELECT m.id, m.nomor_member, m.nama, m.no_hp, COALESCE(m.email,''), COALESCE(m.alamat,''),
+		       m.tingkat, m.total_belanja_3_bulan, m.aktif, m.created_at,
+		       COALESCE((SELECT SUM(pm.sisa) FROM poin_member pm WHERE pm.member_id = m.id AND pm.status = 'AKTIF' AND pm.sisa > 0 AND pm.kadaluarsa_at > NOW()), 0)
+		FROM member m ORDER BY m.id DESC`)
 	if e != nil {
 		return nil, e
 	}
@@ -41,7 +45,7 @@ func (r *AdminRepo) Member(ctx context.Context) ([]model.Member, error) {
 	var out []model.Member
 	for rows.Next() {
 		var x model.Member
-		if e = rows.Scan(&x.ID, &x.Nomor, &x.Nama, &x.NoHP, &x.Email, &x.Alamat, &x.Tingkat, &x.Total, &x.Aktif, &x.CreatedAt); e != nil {
+		if e = rows.Scan(&x.ID, &x.Nomor, &x.Nama, &x.NoHP, &x.Email, &x.Alamat, &x.Tingkat, &x.Total, &x.Aktif, &x.CreatedAt, &x.SaldoPoin); e != nil {
 			return nil, e
 		}
 		out = append(out, x)
@@ -55,20 +59,61 @@ func (r *AdminRepo) TambahMember(ctx context.Context, x model.Member) error {
 }
 
 func (r *AdminRepo) Promo(ctx context.Context) ([]model.Promo, error) {
-	rows, e := r.DB.QueryContext(ctx, "SELECT id,kode,nama,jenis,nilai,minimal_belanja,COALESCE(maksimal_pemakaian,0),terpakai,mulai,berakhir,aktif FROM promo ORDER BY id DESC")
+	rows, e := r.DB.QueryContext(ctx, `
+		SELECT id, kode, nama, jenis, nilai, minimal_belanja, COALESCE(maksimal_pemakaian,0), terpakai,
+		       mulai, berakhir, COALESCE(DATE_FORMAT(mulai_jam,'%H:%i'),''), COALESCE(DATE_FORMAT(berakhir_jam,'%H:%i'),''), aktif
+		FROM promo ORDER BY id DESC`)
 	if e != nil {
 		return nil, e
 	}
 	defer rows.Close()
 	var out []model.Promo
+	idx := make(map[int]int)
 	for rows.Next() {
 		var x model.Promo
-		if e = rows.Scan(&x.ID, &x.Kode, &x.Nama, &x.Jenis, &x.Nilai, &x.Minimal, &x.Maksimal, &x.Terpakai, &x.Mulai, &x.Berakhir, &x.Aktif); e != nil {
+		if e = rows.Scan(&x.ID, &x.Kode, &x.Nama, &x.Jenis, &x.Nilai, &x.Minimal, &x.Maksimal, &x.Terpakai, &x.Mulai, &x.Berakhir, &x.MulaiJam, &x.BerakhirJam, &x.Aktif); e != nil {
 			return nil, e
 		}
+		idx[x.ID] = len(out)
 		out = append(out, x)
 	}
-	return out, rows.Err()
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	if r2, err := r.DB.QueryContext(ctx, "SELECT promo_id, produk_id FROM promo_produk"); err == nil {
+		defer r2.Close()
+		for r2.Next() {
+			var pid, prid int
+			if r2.Scan(&pid, &prid) == nil {
+				if i, ok := idx[pid]; ok {
+					out[i].ProdukIDs = append(out[i].ProdukIDs, prid)
+				}
+			}
+		}
+	}
+	if r3, err := r.DB.QueryContext(ctx, "SELECT promo_id, kategori_id FROM promo_kategori"); err == nil {
+		defer r3.Close()
+		for r3.Next() {
+			var pid, kid int
+			if r3.Scan(&pid, &kid) == nil {
+				if i, ok := idx[pid]; ok {
+					out[i].KategoriIDs = append(out[i].KategoriIDs, kid)
+				}
+			}
+		}
+	}
+	if r4, err := r.DB.QueryContext(ctx, "SELECT promo_id, cabang_id FROM promo_cabang"); err == nil {
+		defer r4.Close()
+		for r4.Next() {
+			var pid, cid int
+			if r4.Scan(&pid, &cid) == nil {
+				if i, ok := idx[pid]; ok {
+					out[i].CabangIDs = append(out[i].CabangIDs, cid)
+				}
+			}
+		}
+	}
+	return out, nil
 }
 
 func (r *AdminRepo) TambahPromo(ctx context.Context, x model.Promo) error {

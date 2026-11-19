@@ -134,18 +134,23 @@ func (h *HalamanHandler) SimpanTransaksi(w http.ResponseWriter, r *http.Request)
 		subtotal, _ := strconv.Atoi(r.FormValue("subtotal"))
 		poinTukar, _ := strconv.Atoi(r.FormValue("poin_ditukar"))
 		poinDapat, _ := strconv.Atoi(r.FormValue("poin_diperoleh"))
+		kodeVoucher := strings.TrimSpace(r.FormValue("kode_voucher"))
 
-		if cabangID <= 0 || subtotal <= 0 {
-			http.Error(w, "Data transaksi tidak valid", http.StatusBadRequest)
+		items := bacaItemBelanja(r.Form)
+
+		if cabangID <= 0 || (len(items) == 0 && subtotal <= 0) {
+			http.Error(w, "Data transaksi tidak valid: pilih cabang dan minimal 1 produk", http.StatusBadRequest)
 			return
 		}
 
 		in := model.TransaksiInput{
 			CabangID:      cabangID,
 			MemberID:      memberID,
+			VoucherKode:   kodeVoucher,
 			PoinDigunakan: poinTukar,
 			Subtotal:      subtotal,
 			PoinDiperoleh: poinDapat,
+			Items:         items,
 			Promo:         bacaAlokasiPromo(r.Form),
 		}
 
@@ -159,7 +164,27 @@ func (h *HalamanHandler) SimpanTransaksi(w http.ResponseWriter, r *http.Request)
 			return
 		}
 	}
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+	http.Redirect(w, r, "/kasir/riwayat", http.StatusSeeOther)
+}
+
+func bacaItemBelanja(form url.Values) []model.ItemBelanja {
+	pids := form["produk_id"]
+	qtys := form["qty"]
+	var out []model.ItemBelanja
+	for i, v := range pids {
+		pid, err := strconv.Atoi(v)
+		if err != nil || pid <= 0 {
+			continue
+		}
+		qty := 1
+		if i < len(qtys) {
+			qty, _ = strconv.Atoi(qtys[i])
+		}
+		if qty > 0 {
+			out = append(out, model.ItemBelanja{ProdukID: pid, Qty: qty})
+		}
+	}
+	return out
 }
 
 // bacaAlokasiPromo membaca promo yang diterapkan kasir. Nama field memakai
