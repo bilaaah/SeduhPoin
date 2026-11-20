@@ -43,7 +43,7 @@ func (s *AuthService) Register(ctx context.Context, nama, email, password, role 
 	}
 
 	if role != "ADMIN" && role != "KASIR" && role != "MEMBER" {
-		role = "ADMIN"
+		return &ValidasiError{"Peran (role) tidak valid. Pilih ADMIN, KASIR, atau MEMBER"}
 	}
 
 	hash, err := bcrypt.GenerateFromPassword(
