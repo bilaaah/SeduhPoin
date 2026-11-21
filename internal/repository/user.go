@@ -16,7 +16,7 @@ type UserRepo struct {
 
 func (r *UserRepo) Tambah(ctx context.Context, nama, email, hash, role string) error {
 	if role == "" {
-		role = "ADMIN"
+		role = "MEMBER"
 	}
 	_, err := r.DB.ExecContext(ctx,
 		"INSERT INTO users (nama, email, password_hash, role) VALUES (?, ?, ?, ?)",

@@ -23,7 +23,7 @@ type AuthHandler struct {
 }
 
 func (h *AuthHandler) FormRegister(w http.ResponseWriter, r *http.Request) {
-	h.View.Tampil(w, "auth/register.html", AuthForm{Role: "ADMIN"})
+	h.View.Tampil(w, "auth/register.html", AuthForm{Role: "MEMBER"})
 }
 
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
