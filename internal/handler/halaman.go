@@ -3,6 +3,7 @@ package handler
 import (
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/bilaaah/SeduhPoin/internal/middleware"
 	"github.com/bilaaah/SeduhPoin/internal/model"
@@ -95,34 +96,82 @@ func (h *HalamanHandler) Laporan(w http.ResponseWriter, r *http.Request) {
 }
 
 // TransaksiKasir menangani proses penjualan oleh Kasir
+
 func (h *HalamanHandler) SimpanTransaksi(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodPost {
-		cabangID, _ := strconv.Atoi(r.FormValue("cabang_id"))
-		memberID, _ := strconv.Atoi(r.FormValue("member_id"))
-		subtotal, _ := strconv.Atoi(r.FormValue("subtotal"))
-		diskon, _ := strconv.Atoi(r.FormValue("total_diskon"))
-		bayar, _ := strconv.Atoi(r.FormValue("total_bayar"))
-		poinTukar, _ := strconv.Atoi(r.FormValue("poin_ditukar"))
-		poinDapat, _ := strconv.Atoi(r.FormValue("poin_diperoleh"))
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method tidak diizinkan", http.StatusMethodNotAllowed)
+		return
+	}
 
-		if cabangID <= 0 || subtotal <= 0 {
-			http.Error(w, "Data transaksi tidak valid", http.StatusBadRequest)
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "Form tidak valid", http.StatusBadRequest)
+		return
+	}
+
+	cabangID, err := strconv.Atoi(r.FormValue("cabang_id"))
+	if err != nil || cabangID <= 0 {
+		http.Error(w, "Cabang tidak valid", http.StatusBadRequest)
+		return
+	}
+
+	memberID, _ := strconv.Atoi(r.FormValue("member_id"))
+	voucherID, _ := strconv.Atoi(r.FormValue("voucher_id"))
+	diskon, _ := strconv.Atoi(r.FormValue("total_diskon"))
+	bayar, _ := strconv.Atoi(r.FormValue("total_bayar"))
+	poinTukar, _ := strconv.Atoi(r.FormValue("poin_ditukar"))
+	poinDapat, _ := strconv.Atoi(r.FormValue("poin_diperoleh"))
+
+	// Membaca seluruh jumlah produk dari form
+	var items []model.TransaksiItemInput
+
+	for key, values := range r.PostForm {
+		if !strings.HasPrefix(key, "jumlah_produk_") || len(values) == 0 {
+			continue
+		}
+
+		produkID, err := strconv.Atoi(strings.TrimPrefix(key, "jumlah_produk_"))
+		if err != nil || produkID <= 0 {
+			http.Error(w, "ID produk tidak valid", http.StatusBadRequest)
 			return
 		}
 
-		if err := h.Repo.TambahTransaksiKasir(r.Context(), cabangID, memberID, subtotal, diskon, bayar, poinTukar, poinDapat); err != nil {
-			gagal(w, err)
+		jumlah, err := strconv.Atoi(values[0])
+		if err != nil || jumlah < 0 {
+			http.Error(w, "Jumlah produk tidak valid", http.StatusBadRequest)
 			return
 		}
+
+		if jumlah > 0 {
+			items = append(items, model.TransaksiItemInput{
+				ProdukID: produkID,
+				Jumlah:   jumlah,
+			})
+		}
 	}
+
+	if len(items) == 0 {
+		http.Error(w, "Pilih minimal satu produk", http.StatusBadRequest)
+		return
+	}
+
+	// Penyimpanan transaksi akan menggunakan daftar produk.
+	// Repository akan memvalidasi harga dan stok berdasarkan database.
+	if err := h.Repo.TambahTransaksiKasir(
+		r.Context(),
+		cabangID,
+		memberID,
+		voucherID,
+		diskon,
+		bayar,
+		poinTukar,
+		poinDapat,
+		items,
+	); err != nil {
+		gagal(w, err)
+		return
+	}
+
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
-// BatalTransaksiKasir menangani pembatalan transaksi oleh Kasir
-func (h *HalamanHandler) BatalTransaksi(w http.ResponseWriter, r *http.Request) {
-	id, _ := strconv.Atoi(r.PathValue("id"))
-	if id > 0 {
-		_ = h.Repo.BatalkanTransaksi(r.Context(), id)
-	}
-	http.Redirect(w, r, "/", http.StatusSeeOther)
-}
+

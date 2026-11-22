@@ -77,6 +77,7 @@ func main() {
 	mux.HandleFunc("POST /login", authH.Login)
 	mux.HandleFunc("GET /register", authH.FormRegister)
 	mux.HandleFunc("POST /register", authH.Register)
+	
 
 	mux.Handle("/", authMw.RequireLogin(privat))
 
