@@ -115,20 +115,49 @@ func nullString(s string) any {
 }
 
 func (r *AdminRepo) Voucher(ctx context.Context) ([]model.Voucher, error) {
-	rows, e := r.DB.QueryContext(ctx, "SELECT v.id,v.promo_id,v.kode,v.kuota,v.terpakai,p.nama FROM voucher v JOIN promo p ON p.id=v.promo_id ORDER BY v.id DESC")
-	if e != nil {
-		return nil, e
-	}
-	defer rows.Close()
-	var out []model.Voucher
-	for rows.Next() {
-		var x model.Voucher
-		if e = rows.Scan(&x.ID, &x.PromoID, &x.Kode, &x.Kuota, &x.Terpakai, &x.PromoNama); e != nil {
-			return nil, e
-		}
-		out = append(out, x)
-	}
-	return out, rows.Err()
+    rows, err := r.DB.QueryContext(ctx, `
+        SELECT
+            v.id,
+            v.promo_id,
+            v.kode,
+            v.kuota,
+            v.terpakai,
+            p.nama,
+            p.jenis,
+            p.nilai,
+            p.minimal_belanja
+        FROM voucher v
+        JOIN promo p ON p.id = v.promo_id
+        ORDER BY v.id DESC
+    `)
+    if err != nil {
+        return nil, err
+    }
+    defer rows.Close()
+
+    var out []model.Voucher
+
+    for rows.Next() {
+        var x model.Voucher
+
+        if err := rows.Scan(
+            &x.ID,
+            &x.PromoID,
+            &x.Kode,
+            &x.Kuota,
+            &x.Terpakai,
+            &x.PromoNama,
+            &x.PromoJenis,
+            &x.PromoNilai,
+            &x.PromoMinimal,
+        ); err != nil {
+            return nil, err
+        }
+
+        out = append(out, x)
+    }
+
+    return out, rows.Err()
 }
 
 func (r *AdminRepo) TambahVoucher(ctx context.Context, x model.Voucher) error {
@@ -288,91 +317,408 @@ func (r *AdminRepo) Laporan(ctx context.Context) (model.LaporanData, error) {
 }
 
 // TambahTransaksiKasir memproses transaksi kasir POS
-func (r *AdminRepo) TambahTransaksiKasir(ctx context.Context, cabangID, memberID, subtotal, diskon, bayar, poinTukar, poinDapat int) error {
+
+
+func (r *AdminRepo) TambahTransaksiKasir(
+	ctx context.Context,
+	cabangID, memberID, voucherID, diskon, bayar, poinTukar, poinDapat int,
+	items []model.TransaksiItemInput,
+) error {
 	tx, err := r.DB.BeginTx(ctx, nil)
 	if err != nil {
 		return err
 	}
+	defer tx.Rollback()
 
-	var mID any = nil
+	if len(items) == 0 {
+		return errors.New("minimal satu produk harus dipilih")
+	}
+
+	if cabangID <= 0 || voucherID < 0 || diskon < 0 || bayar < 0 || poinTukar < 0 || poinDapat < 0 {
+		return errors.New("data transaksi tidak valid")
+	}
+
+	type detailProduk struct {
+		ProdukID int
+		Jumlah   int
+		Harga    int
+	}
+
+	type batchPoinDipakai struct {
+		ID     int
+		Jumlah int
+	}
+
+	var daftarProduk []detailProduk
+	var daftarPoinDipakai []batchPoinDipakai
+
+	// 1. Validasi produk, harga, dan stok.
+	var subtotal int
+	produkTerpilih := make(map[int]bool)
+
+	for _, item := range items {
+		if item.ProdukID <= 0 || item.Jumlah <= 0 {
+			return errors.New("produk atau jumlah tidak valid")
+		}
+
+		if produkTerpilih[item.ProdukID] {
+			return errors.New("produk yang sama tidak boleh dikirim dua kali")
+		}
+		produkTerpilih[item.ProdukID] = true
+
+		var harga, stok int
+
+		err := tx.QueryRowContext(ctx, `
+			SELECT harga, stok
+			FROM produk
+			WHERE id = ?
+			  AND aktif = 1
+			  AND deleted_at IS NULL
+			FOR UPDATE
+		`, item.ProdukID).Scan(&harga, &stok)
+
+		if err != nil {
+			return err
+		}
+
+		if stok < item.Jumlah {
+			return errors.New("stok produk tidak mencukupi")
+		}
+
+		subtotal += harga * item.Jumlah
+
+		daftarProduk = append(daftarProduk, detailProduk{
+			ProdukID: item.ProdukID,
+			Jumlah:   item.Jumlah,
+			Harga:    harga,
+		})
+	}
+
+	// 2. Validasi diskon dan pembayaran.
+	if voucherID > 0 {
+		var (
+			promoID       int
+			promoJenis    string
+			promoNilai    int
+			promoMinimal  int
+			promoMaksimal int
+			promoTerpakai int
+			voucherKuota  int
+			voucherPakai  int
+			promoAktif    bool
+			promoBerlaku  bool
+		)
+
+		err := tx.QueryRowContext(ctx, `
+			SELECT
+				p.id,
+				p.jenis,
+				p.nilai,
+				p.minimal_belanja,
+				p.maksimal_pemakaian,
+				p.terpakai,
+				p.aktif,
+				CASE
+					WHEN NOW() BETWEEN p.mulai AND p.berakhir THEN 1
+					ELSE 0
+				END,
+				v.kuota,
+				v.terpakai
+			FROM voucher v
+			JOIN promo p ON p.id = v.promo_id
+			WHERE v.id = ?
+			FOR UPDATE
+		`, voucherID).Scan(
+			&promoID,
+			&promoJenis,
+			&promoNilai,
+			&promoMinimal,
+			&promoMaksimal,
+			&promoTerpakai,
+			&promoAktif,
+			&promoBerlaku,
+			&voucherKuota,
+			&voucherPakai,
+		)
+
+		if err != nil {
+			return errors.New("voucher tidak ditemukan")
+		}
+
+		if promoJenis != "VOUCHER" || !promoAktif || !promoBerlaku {
+			return errors.New("voucher tidak aktif atau sudah kedaluwarsa")
+		}
+
+		if voucherPakai >= voucherKuota {
+			return errors.New("kuota voucher sudah habis")
+		}
+
+		if promoMaksimal > 0 && promoTerpakai >= promoMaksimal {
+			return errors.New("batas penggunaan promo sudah tercapai")
+		}
+
+		if subtotal < promoMinimal {
+			return errors.New("subtotal belum memenuhi minimal penggunaan voucher")
+		}
+
+		if promoNilai < 0 || promoNilai > subtotal {
+			return errors.New("nilai diskon voucher tidak valid")
+		}
+
+		// Nominal diskon diambil dari database, bukan dari form.
+		diskon = promoNilai
+
+		// Simpan ID promo untuk pencatatan pemakaian.
+		_ = promoID
+	} else {
+		// Jika tidak menggunakan voucher, diskon manual tetap berlaku.
+		if diskon > subtotal {
+			return errors.New("diskon melebihi subtotal")
+		}
+	}
+
+	if poinTukar > 0 && memberID <= 0 {
+		return errors.New("pelanggan umum tidak dapat menukar poin")
+	}
+
+	if poinTukar*1000*2 > subtotal-diskon {
+		return errors.New("penukaran poin melebihi batas 50 persen")
+	}
+
+	totalSeharusnya := subtotal - diskon - (poinTukar * 1000)
+
+	if bayar != totalSeharusnya {
+		return errors.New("total pembayaran tidak sesuai")
+	}
+
+	if memberID <= 0 && poinDapat > 0 {
+		return errors.New("pelanggan umum tidak memperoleh poin")
+	}
+
+	// 3. Ambil batch poin berdasarkan FEFO.
+	if poinTukar > 0 {
+		rows, err := tx.QueryContext(ctx, `
+			SELECT id, sisa
+			FROM poin_member
+			WHERE member_id = ?
+			  AND status = 'AKTIF'
+			  AND sisa > 0
+			  AND kadaluarsa_at > NOW()
+			ORDER BY kadaluarsa_at ASC
+			FOR UPDATE
+		`, memberID)
+
+		if err != nil {
+			return err
+		}
+
+		var batchPoin []batchPoinDipakai
+		totalPoinTersedia := 0
+
+		for rows.Next() {
+			var id, sisa int
+
+			if err := rows.Scan(&id, &sisa); err != nil {
+				rows.Close()
+				return err
+			}
+
+			batchPoin = append(batchPoin, batchPoinDipakai{
+				ID:     id,
+				Jumlah: sisa,
+			})
+
+			totalPoinTersedia += sisa
+		}
+
+		err = rows.Err()
+		rows.Close()
+
+		if err != nil {
+			return err
+		}
+
+		if totalPoinTersedia < poinTukar {
+			return errors.New("saldo poin member tidak mencukupi")
+		}
+
+		// Tentukan jumlah poin yang diambil dari setiap batch.
+		sisaTukar := poinTukar
+
+		for _, batch := range batchPoin {
+			if sisaTukar <= 0 {
+				break
+			}
+
+			pakai := batch.Jumlah
+			if pakai > sisaTukar {
+				pakai = sisaTukar
+			}
+
+			daftarPoinDipakai = append(daftarPoinDipakai, batchPoinDipakai{
+				ID:     batch.ID,
+				Jumlah: pakai,
+			})
+
+			sisaTukar -= pakai
+		}
+	}
+
+	// 4. Simpan transaksi.
+	var mID any
+	var mVoucher any
+
 	if memberID > 0 {
 		mID = memberID
 	}
 
+	if voucherID > 0 {
+		mVoucher = voucherID
+	}
+
 	res, err := tx.ExecContext(ctx, `
-		INSERT INTO transaksi (cabang_id, member_id, subtotal, total_diskon, total_bayar, status)
-		VALUES (?, ?, ?, ?, ?, 'SELESAI')
-	`, cabangID, mID, subtotal, diskon, bayar)
+		INSERT INTO transaksi (
+			cabang_id,
+			member_id,
+			voucher_id,
+			subtotal,
+			total_diskon,
+			total_bayar,
+			status
+		)
+		VALUES (?, ?, ?, ?, ?, ?, 'SELESAI')
+	`, cabangID, mID, mVoucher, subtotal, diskon, bayar)
+
 	if err != nil {
-		tx.Rollback()
 		return err
 	}
 
 	transaksiID, err := res.LastInsertId()
 	if err != nil {
-		tx.Rollback()
 		return err
 	}
 
-	// Jika ada penukaran poin, kurangi saldo poin terdekat (FEFO)
-	if memberID > 0 && poinTukar > 0 {
-		rows, err := tx.QueryContext(ctx, `
-			SELECT id, sisa
-			FROM poin_member
-			WHERE member_id = ? AND status = 'AKTIF' AND sisa > 0 AND kadaluarsa_at > NOW()
-			ORDER BY kadaluarsa_at ASC
-		`, memberID)
-		if err == nil {
-			sisaTukar := poinTukar
-			var updates [][2]int
-			for rows.Next() {
-				var pID, sisa int
-				if rows.Scan(&pID, &sisa) == nil {
-					if sisaTukar <= 0 {
-						break
-					}
-					potong := sisa
-					if potong > sisaTukar {
-						potong = sisaTukar
-					}
-					updates = append(updates, [2]int{pID, sisa - potong})
-					sisaTukar -= potong
-				}
-			}
-			rows.Close()
-			for _, u := range updates {
-				_, _ = tx.ExecContext(ctx, "UPDATE poin_member SET sisa = ? WHERE id = ?", u[1], u[0])
-			}
+	// 5. Catat penggunaan voucher.
+	if voucherID > 0 {
+		result, err := tx.ExecContext(ctx, `
+			UPDATE voucher
+			SET terpakai = terpakai + 1
+			WHERE id = ?
+			  AND terpakai < kuota
+		`, voucherID)
+
+		if err != nil {
+			return err
+		}
+
+		affected, err := result.RowsAffected()
+		if err != nil {
+			return err
+		}
+
+		if affected != 1 {
+			return errors.New("kuota voucher sudah habis")
+		}
+
+		_, err = tx.ExecContext(ctx, `
+			UPDATE promo
+			SET terpakai = terpakai + 1
+			WHERE id = (
+				SELECT promo_id
+				FROM voucher
+				WHERE id = ?
+			)
+		`, voucherID)
+
+		if err != nil {
+			return err
 		}
 	}
 
-	// Jika ada perolehan poin baru, masukkan ke poin_member dengan masa berlaku 6 bulan
+	// 6. Simpan detail produk dan kurangi stok.
+	for _, item := range daftarProduk {
+		_, err = tx.ExecContext(ctx, `
+			INSERT INTO transaksi_item (
+				transaksi_id,
+				produk_id,
+				jumlah,
+				harga_satuan
+			)
+			VALUES (?, ?, ?, ?)
+		`, transaksiID, item.ProdukID, item.Jumlah, item.Harga)
+
+		if err != nil {
+			return err
+		}
+
+		_, err = tx.ExecContext(ctx, `
+			UPDATE produk
+			SET stok = stok - ?
+			WHERE id = ?
+		`, item.Jumlah, item.ProdukID)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	// 7. Kurangi saldo poin dan simpan riwayat penukaran.
+	for _, p := range daftarPoinDipakai {
+		result, err := tx.ExecContext(ctx, `
+			UPDATE poin_member
+			SET sisa = sisa - ?
+			WHERE id = ?
+			  AND sisa >= ?
+			  AND status = 'AKTIF'
+		`, p.Jumlah, p.ID, p.Jumlah)
+
+		if err != nil {
+			return err
+		}
+
+		affected, err := result.RowsAffected()
+		if err != nil {
+			return err
+		}
+
+		if affected != 1 {
+			return errors.New("gagal mengurangi saldo poin")
+		}
+
+		_, err = tx.ExecContext(ctx, `
+			INSERT INTO transaksi_poin_ditukar (
+				transaksi_id,
+				poin_member_id,
+				jumlah_dipakai
+			)
+			VALUES (?, ?, ?)
+		`, transaksiID, p.ID, p.Jumlah)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	// 8. Simpan poin reward yang diperoleh member.
 	if memberID > 0 && poinDapat > 0 {
-		_, _ = tx.ExecContext(ctx, `
-			INSERT INTO poin_member (member_id, transaksi_id, jumlah, sisa, diperoleh_at, kadaluarsa_at, status)
+		_, err = tx.ExecContext(ctx, `
+			INSERT INTO poin_member (
+				member_id,
+				transaksi_id,
+				jumlah,
+				sisa,
+				diperoleh_at,
+				kadaluarsa_at,
+				status
+			)
 			VALUES (?, ?, ?, ?, NOW(), NOW() + INTERVAL 6 MONTH, 'AKTIF')
 		`, memberID, transaksiID, poinDapat, poinDapat)
+
+		if err != nil {
+			return err
+		}
 	}
 
-	return tx.Commit()
-}
-
-// BatalkanTransaksi membatalkan pesanan dan mengembalikan poin
-func (r *AdminRepo) BatalkanTransaksi(ctx context.Context, transaksiID int) error {
-	tx, err := r.DB.BeginTx(ctx, nil)
-	if err != nil {
-		return err
-	}
-
-	// 1. Ubah status transaksi
-	_, err = tx.ExecContext(ctx, "UPDATE transaksi SET status = 'DIBATALKAN' WHERE id = ?", transaksiID)
-	if err != nil {
-		tx.Rollback()
-		return err
-	}
-
-	// 2. Tarik kembali poin yang diperoleh dari transaksi ini
-	_, _ = tx.ExecContext(ctx, "UPDATE poin_member SET status = 'DIBATALKAN', sisa = 0 WHERE transaksi_id = ?", transaksiID)
-
+	// 9. Simpan seluruh perubahan.
 	return tx.Commit()
 }

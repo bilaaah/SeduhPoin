@@ -43,8 +43,10 @@ type Promo struct {
 }
 
 type Voucher struct {
-	ID, PromoID, Kuota, Terpakai int
-	Kode, PromoNama              string
+    ID, PromoID, Kuota, Terpakai int
+    Kode, PromoNama              string
+    PromoJenis                   string
+    PromoNilai, PromoMinimal     int
 }
 
 type RingkasanData struct {
@@ -130,4 +132,15 @@ type MemberPortalData struct {
 	SisaMenujuGold int
 	BatchPoin      []PoinDetail
 	Riwayat        []Transaksi
+}
+
+
+type TransaksiItemInput struct {
+    ProdukID int
+    Jumlah   int
+}
+
+type TransaksiPoinDitukar struct {
+    PoinMemberID int
+    JumlahDipakai int
 }
