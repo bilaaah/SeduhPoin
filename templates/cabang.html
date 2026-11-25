@@ -7,29 +7,44 @@
 </div>
 
 <div style="display: grid; grid-template-columns: 380px 1fr; gap: 28px; align-items: start;">
-    <!-- Form Tambah Cabang -->
+    <!-- Form Cabang (Tambah / Ubah) -->
     <div class="form" style="margin-bottom: 0;">
         <h3 style="margin-top: 0; font-size: 18px; border-bottom: 1px solid var(--line); padding-bottom: 12px; margin-bottom: 18px;">
-            Tambah Lokasi Cabang
+            {{if eq .Mode "edit"}}✏️ Ubah Data Cabang{{else}}Tambah Lokasi Cabang{{end}}
         </h3>
-        <form method="post">
+        <form method="post" action="/cabang">
+            <input type="hidden" name="id" value="{{if .Edit.ID}}{{.Edit.ID}}{{end}}">
             <div class="form-group">
                 <label>Kode Cabang (Unik)</label>
-                <input class="form-control" name="kode" placeholder="Contoh: SELATAN" required>
+                <input class="form-control" name="kode" value="{{.Edit.Kode}}" placeholder="Contoh: SELATAN" {{if eq .Mode "edit"}}readonly style="background:#f9f9f9; cursor:not-allowed;"{{else}}required{{end}}>
+                {{if eq .Mode "edit"}}<small style="color:var(--muted); font-size:11px;">Kode cabang tidak dapat diubah agar tidak merusak data relasi.</small>{{end}}
             </div>
             <div class="form-group">
                 <label>Nama Cabang</label>
-                <input class="form-control" name="nama" placeholder="Contoh: Seduh Selatan" required>
+                <input class="form-control" name="nama" value="{{.Edit.Nama}}" placeholder="Contoh: Seduh Selatan" required>
             </div>
             <div class="form-group">
                 <label>Alamat Lengkap</label>
-                <input class="form-control" name="alamat" placeholder="Jl. Contoh No. 10" required>
+                <input class="form-control" name="alamat" value="{{.Edit.Alamat}}" placeholder="Jl. Contoh No. 10" required>
             </div>
             <div class="form-group">
                 <label>Nomor Telepon</label>
-                <input class="form-control" name="telepon" placeholder="021-xxxxxx">
+                <input class="form-control" name="telepon" value="{{.Edit.Telepon}}" placeholder="021-xxxxxx">
             </div>
-            <button type="submit" class="btn btn-block">Tambah Cabang</button>
+            {{if eq .Mode "edit"}}
+            <div class="form-group">
+                <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                    <input type="checkbox" name="aktif" value="1" {{if .Edit.Aktif}}checked{{end}}>
+                    <span style="font-weight:600; font-size:13px;">Cabang Beroperasi (Aktif)</span>
+                </label>
+            </div>
+            {{end}}
+            <button type="submit" class="btn btn-block">
+                {{if eq .Mode "edit"}}💾 Simpan Perubahan{{else}}Tambah Cabang{{end}}
+            </button>
+            {{if eq .Mode "edit"}}
+            <a href="/cabang" class="btn btn-light btn-block" style="text-align:center; margin-top:8px;">Batal Edit</a>
+            {{end}}
         </form>
     </div>
 
@@ -43,11 +58,12 @@
                     <th>Alamat</th>
                     <th>Telepon</th>
                     <th>Status</th>
+                    <th style="text-align:right;">Aksi</th>
                 </tr>
             </thead>
             <tbody>
                 {{range .Cabang}}
-                <tr>
+                <tr {{if eq .ID $.Edit.ID}}style="background:#fbf3ea;"{{end}}>
                     <td><strong>{{.Kode}}</strong></td>
                     <td>{{.Nama}}</td>
                     <td>{{.Alamat}}</td>
@@ -56,13 +72,23 @@
                         {{if .Aktif}}
                             <span class="badge badge-aktif">Aktif</span>
                         {{else}}
-                            <span class="badge">Nonaktif</span>
+                            <span class="badge" style="background:var(--red-bg); color:var(--red);">Nonaktif</span>
                         {{end}}
+                    </td>
+                    <td style="text-align:right; white-space:nowrap;">
+                        <a href="/cabang?edit={{.ID}}" class="btn btn-sm btn-light">✏️ Ubah</a>
+                        <form method="post" action="/cabang/{{.ID}}/toggle" style="display:inline;" onsubmit="return confirm('Ubah status operasional cabang {{.Nama}}?');">
+                            {{if .Aktif}}
+                            <button type="submit" class="btn btn-sm btn-light" style="color:var(--red);" title="Nonaktifkan cabang">Nonaktifkan</button>
+                            {{else}}
+                            <button type="submit" class="btn btn-sm btn-light" style="color:var(--green);" title="Aktifkan kembali cabang">Aktifkan</button>
+                            {{end}}
+                        </form>
                     </td>
                 </tr>
                 {{else}}
                 <tr>
-                    <td colspan="5" style="text-align: center; color: var(--muted); padding: 24px;">Belum ada cabang terdaftar</td>
+                    <td colspan="6" style="text-align: center; color: var(--muted); padding: 24px;">Belum ada cabang terdaftar</td>
                 </tr>
                 {{end}}
             </tbody>

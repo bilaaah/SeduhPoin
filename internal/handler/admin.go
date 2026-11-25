@@ -3,6 +3,7 @@ package handler
 import (
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/bilaaah/SeduhPoin/internal/middleware"
@@ -15,54 +16,164 @@ type AdminHandler struct {
 	View *Renderer
 }
 
+type CabangPage struct {
+	User   model.User
+	Cabang []model.Cabang
+	Edit   model.Cabang
+	Mode   string
+}
+
 func (h *AdminHandler) Cabang(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
-		if r.FormValue("kode") == "" || r.FormValue("nama") == "" || r.FormValue("alamat") == "" {
-			http.Error(w, "Kode, nama, dan alamat cabang wajib diisi", http.StatusBadRequest)
-			return
+		id, _ := strconv.Atoi(r.FormValue("id"))
+		nama := strings.TrimSpace(r.FormValue("nama"))
+		alamat := strings.TrimSpace(r.FormValue("alamat"))
+		telepon := strings.TrimSpace(r.FormValue("telepon"))
+		aktif := r.FormValue("aktif") == "1" || r.FormValue("aktif") == "on" || (id == 0 && r.FormValue("aktif") != "0")
+
+		if id > 0 {
+			if nama == "" || alamat == "" {
+				http.Error(w, "Nama dan alamat cabang wajib diisi", http.StatusBadRequest)
+				return
+			}
+			if err := h.Repo.UbahCabang(r.Context(), model.Cabang{
+				ID:      id,
+				Nama:    nama,
+				Alamat:  alamat,
+				Telepon: telepon,
+				Aktif:   aktif,
+			}); err != nil {
+				gagal(w, err)
+				return
+			}
+		} else {
+			kode := strings.ToUpper(strings.TrimSpace(r.FormValue("kode")))
+			if kode == "" || nama == "" || alamat == "" {
+				http.Error(w, "Kode, nama, dan alamat cabang wajib diisi", http.StatusBadRequest)
+				return
+			}
+			if err := h.Repo.TambahCabang(r.Context(), model.Cabang{
+				Kode:    kode,
+				Nama:    nama,
+				Alamat:  alamat,
+				Telepon: telepon,
+				Aktif:   true,
+			}); err != nil {
+				gagal(w, err)
+				return
+			}
 		}
-		if e := h.Repo.TambahCabang(r.Context(), model.Cabang{Kode: r.FormValue("kode"), Nama: r.FormValue("nama"), Alamat: r.FormValue("alamat"), Telepon: r.FormValue("telepon")}); e != nil {
-			gagal(w, e)
-			return
-		}
-		http.Redirect(w, r, "/cabang", 303)
+		http.Redirect(w, r, "/cabang", http.StatusSeeOther)
 		return
 	}
-	x, e := h.Repo.Cabang(r.Context())
-	if e != nil {
-		gagal(w, e)
+
+	list, err := h.Repo.Cabang(r.Context())
+	if err != nil {
+		gagal(w, err)
 		return
 	}
 	u, _ := middleware.UserDari(r.Context())
-	h.View.Tampil(w, "cabang.html", struct {
-		User   model.User
-		Cabang []model.Cabang
-	}{u, x})
+
+	page := CabangPage{User: u, Cabang: list}
+	if editID, _ := strconv.Atoi(r.URL.Query().Get("edit")); editID > 0 {
+		for _, c := range list {
+			if c.ID == editID {
+				page.Edit = c
+				page.Mode = "edit"
+				break
+			}
+		}
+	}
+	h.View.Tampil(w, "cabang.html", page)
+}
+
+func (h *AdminHandler) ToggleCabang(w http.ResponseWriter, r *http.Request) {
+	id, _ := strconv.Atoi(r.PathValue("id"))
+	if id > 0 {
+		_ = h.Repo.ToggleCabang(r.Context(), id)
+	}
+	http.Redirect(w, r, "/cabang", http.StatusSeeOther)
+}
+
+type MemberPage struct {
+	User   model.User
+	Member []model.Member
+	Edit   model.Member
+	Mode   string
 }
 
 func (h *AdminHandler) Member(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
-		if r.FormValue("nomor") == "" || r.FormValue("nama") == "" || r.FormValue("no_hp") == "" {
-			http.Error(w, "Nomor member, nama, dan nomor HP wajib diisi", http.StatusBadRequest)
-			return
+		id, _ := strconv.Atoi(r.FormValue("id"))
+		nama := strings.TrimSpace(r.FormValue("nama"))
+		noHP := strings.TrimSpace(r.FormValue("no_hp"))
+		email := strings.TrimSpace(r.FormValue("email"))
+		alamat := strings.TrimSpace(r.FormValue("alamat"))
+		aktif := r.FormValue("aktif") == "1" || r.FormValue("aktif") == "on" || (id == 0 && r.FormValue("aktif") != "0")
+
+		if id > 0 {
+			if nama == "" || noHP == "" {
+				http.Error(w, "Nama dan nomor HP member wajib diisi", http.StatusBadRequest)
+				return
+			}
+			if err := h.Repo.UbahMember(r.Context(), model.Member{
+				ID:     id,
+				Nama:   nama,
+				NoHP:   noHP,
+				Email:  email,
+				Alamat: alamat,
+				Aktif:  aktif,
+			}); err != nil {
+				gagal(w, err)
+				return
+			}
+		} else {
+			nomor := strings.ToUpper(strings.TrimSpace(r.FormValue("nomor")))
+			if nomor == "" || nama == "" || noHP == "" {
+				http.Error(w, "Nomor member, nama, dan nomor HP wajib diisi", http.StatusBadRequest)
+				return
+			}
+			if err := h.Repo.TambahMember(r.Context(), model.Member{
+				Nomor:  nomor,
+				Nama:   nama,
+				NoHP:   noHP,
+				Email:  email,
+				Alamat: alamat,
+			}); err != nil {
+				gagal(w, err)
+				return
+			}
 		}
-		if e := h.Repo.TambahMember(r.Context(), model.Member{Nomor: r.FormValue("nomor"), Nama: r.FormValue("nama"), NoHP: r.FormValue("no_hp"), Email: r.FormValue("email"), Alamat: r.FormValue("alamat")}); e != nil {
-			gagal(w, e)
-			return
-		}
-		http.Redirect(w, r, "/member", 303)
+		http.Redirect(w, r, "/member", http.StatusSeeOther)
 		return
 	}
-	x, e := h.Repo.Member(r.Context())
-	if e != nil {
-		gagal(w, e)
+
+	list, err := h.Repo.Member(r.Context())
+	if err != nil {
+		gagal(w, err)
 		return
 	}
 	u, _ := middleware.UserDari(r.Context())
-	h.View.Tampil(w, "member.html", struct {
-		User   model.User
-		Member []model.Member
-	}{u, x})
+
+	page := MemberPage{User: u, Member: list}
+	if editID, _ := strconv.Atoi(r.URL.Query().Get("edit")); editID > 0 {
+		for _, m := range list {
+			if m.ID == editID {
+				page.Edit = m
+				page.Mode = "edit"
+				break
+			}
+		}
+	}
+	h.View.Tampil(w, "member.html", page)
+}
+
+func (h *AdminHandler) ToggleMember(w http.ResponseWriter, r *http.Request) {
+	id, _ := strconv.Atoi(r.PathValue("id"))
+	if id > 0 {
+		_ = h.Repo.ToggleMember(r.Context(), id)
+	}
+	http.Redirect(w, r, "/member", http.StatusSeeOther)
 }
 
 func (h *AdminHandler) Promo(w http.ResponseWriter, r *http.Request) {

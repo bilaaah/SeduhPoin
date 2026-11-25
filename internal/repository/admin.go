@@ -32,6 +32,16 @@ func (r *AdminRepo) TambahCabang(ctx context.Context, x model.Cabang) error {
 	return e
 }
 
+func (r *AdminRepo) UbahCabang(ctx context.Context, x model.Cabang) error {
+	_, e := r.DB.ExecContext(ctx, "UPDATE cabang SET nama = ?, alamat = ?, telepon = ?, aktif = ? WHERE id = ?", x.Nama, x.Alamat, x.Telepon, x.Aktif, x.ID)
+	return e
+}
+
+func (r *AdminRepo) ToggleCabang(ctx context.Context, id int) error {
+	_, e := r.DB.ExecContext(ctx, "UPDATE cabang SET aktif = NOT aktif WHERE id = ?", id)
+	return e
+}
+
 func (r *AdminRepo) Member(ctx context.Context) ([]model.Member, error) {
 	rows, e := r.DB.QueryContext(ctx, `
 		SELECT m.id, m.nomor_member, m.nama, m.no_hp, COALESCE(m.email,''), COALESCE(m.alamat,''),
@@ -55,6 +65,16 @@ func (r *AdminRepo) Member(ctx context.Context) ([]model.Member, error) {
 
 func (r *AdminRepo) TambahMember(ctx context.Context, x model.Member) error {
 	_, e := r.DB.ExecContext(ctx, "INSERT INTO member(nomor_member,nama,no_hp,email,alamat) VALUES(?,?,?,?,?)", x.Nomor, x.Nama, x.NoHP, x.Email, x.Alamat)
+	return e
+}
+
+func (r *AdminRepo) UbahMember(ctx context.Context, x model.Member) error {
+	_, e := r.DB.ExecContext(ctx, "UPDATE member SET nama = ?, no_hp = ?, email = ?, alamat = ?, aktif = ? WHERE id = ?", x.Nama, x.NoHP, x.Email, x.Alamat, x.Aktif, x.ID)
+	return e
+}
+
+func (r *AdminRepo) ToggleMember(ctx context.Context, id int) error {
+	_, e := r.DB.ExecContext(ctx, "UPDATE member SET aktif = NOT aktif WHERE id = ?", id)
 	return e
 }
 
