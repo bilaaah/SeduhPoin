@@ -74,8 +74,10 @@ func (h *AdminHandler) Cabang(w http.ResponseWriter, r *http.Request) {
 	}
 	u, _ := middleware.UserDari(r.Context())
 
-	page := CabangPage{User: u, Cabang: list}
-	if editID, _ := strconv.Atoi(r.URL.Query().Get("edit")); editID > 0 {
+	page := CabangPage{User: u, Cabang: list, Mode: "list"}
+	if r.URL.Query().Get("action") == "tambah" {
+		page.Mode = "tambah"
+	} else if editID, _ := strconv.Atoi(r.URL.Query().Get("edit")); editID > 0 {
 		for _, c := range list {
 			if c.ID == editID {
 				page.Edit = c
@@ -155,8 +157,10 @@ func (h *AdminHandler) Member(w http.ResponseWriter, r *http.Request) {
 	}
 	u, _ := middleware.UserDari(r.Context())
 
-	page := MemberPage{User: u, Member: list}
-	if editID, _ := strconv.Atoi(r.URL.Query().Get("edit")); editID > 0 {
+	page := MemberPage{User: u, Member: list, Mode: "list"}
+	if r.URL.Query().Get("action") == "tambah" {
+		page.Mode = "tambah"
+	} else if editID, _ := strconv.Atoi(r.URL.Query().Get("edit")); editID > 0 {
 		for _, m := range list {
 			if m.ID == editID {
 				page.Edit = m
@@ -251,8 +255,10 @@ func (h *AdminHandler) Promo(w http.ResponseWriter, r *http.Request) {
 
 	editID := angka(r.URL.Query().Get("edit"))
 	var editPromo model.Promo
-	mode := "create"
-	if editID > 0 {
+	mode := "list"
+	if r.URL.Query().Get("action") == "tambah" {
+		mode = "tambah"
+	} else if editID > 0 {
 		for _, item := range x {
 			if item.ID == editID {
 				editPromo = item
@@ -319,8 +325,10 @@ func (h *AdminHandler) Voucher(w http.ResponseWriter, r *http.Request) {
 
 	editID := angka(r.URL.Query().Get("edit"))
 	var editVoucher model.Voucher
-	mode := "create"
-	if editID > 0 {
+	mode := "list"
+	if r.URL.Query().Get("action") == "tambah" {
+		mode = "tambah"
+	} else if editID > 0 {
 		for _, item := range x {
 			if item.ID == editID {
 				editVoucher = item

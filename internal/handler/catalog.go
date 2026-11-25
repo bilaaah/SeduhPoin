@@ -48,12 +48,14 @@ func (h *AdminHandler) Produk(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	u, _ := middleware.UserDari(r.Context())
-	data := ProdukPage{User: u, Produk: items, Kategori: kategori, Mode: "Tambah Produk"}
-	if id, _ := strconv.Atoi(r.URL.Query().Get("edit")); id > 0 {
+	data := ProdukPage{User: u, Produk: items, Kategori: kategori, Mode: "list"}
+	if r.URL.Query().Get("action") == "tambah" {
+		data.Mode = "tambah"
+	} else if id, _ := strconv.Atoi(r.URL.Query().Get("edit")); id > 0 {
 		for _, x := range items {
 			if x.ID == id {
 				data.Edit = x
-				data.Mode = "Ubah Produk"
+				data.Mode = "edit"
 				break
 			}
 		}

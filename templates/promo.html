@@ -4,18 +4,30 @@
         <h2 style="margin: 0 0 6px;">🏷️ Pengaturan Promo Multi-Kondisi</h2>
         <p style="margin: 0;">Atur promo diskon produk, potongan minimal belanja, Buy 2 Get 1, dan promo voucher.</p>
     </div>
+    {{if eq .Mode "list"}}
+    <div>
+        <a href="/promo?action=tambah" class="btn" style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px; padding: 10px 18px; font-weight: 600;">
+            ➕ Buat Promo Baru
+        </a>
+    </div>
+    {{end}}
 </div>
 
-<div style="background: #fffbf2; border: 1px solid #fae6cb; border-radius: 12px; padding: 14px 18px; margin-bottom: 24px; font-size: 13px; color: #6b4c37;">
-    📌 <strong>Aturan Bisnis Penggabungan Promo:</strong> Promo produk (diskon % & beli 2 gratis 1) <strong>dapat digabung</strong> dengan promo lain. Namun, <strong>potongan minimal belanja TIDAK DAPAT digabung dengan voucher</strong>.
-</div>
+{{if or (eq .Mode "tambah") (eq .Mode "edit")}}
+<!-- TAMPILAN FORM (HALAMAN FOKUS TAMBAH / UBAH PROMO) -->
+<div style="max-width: 680px; margin: 0 auto;">
+    <div class="form" style="margin-bottom: 0; box-shadow: 0 4px 16px rgba(0,0,0,0.06); border-radius: 14px; padding: 24px 28px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 14px; margin-bottom: 20px;">
+            <h3 style="margin: 0; font-size: 19px;">
+                {{if eq .Mode "edit"}}✏️ Ubah Data Promo{{else}}✨ Buat Promo Baru{{end}}
+            </h3>
+            <a href="/promo" style="color: var(--muted); text-decoration: none; font-size: 13px;">✕ Tutup</a>
+        </div>
 
-<div style="display: grid; grid-template-columns: 420px 1fr; gap: 28px; align-items: start;">
-    <!-- Form Promo -->
-    <div class="form" style="margin-bottom: 0;">
-        <h3 style="margin-top: 0; font-size: 18px; border-bottom: 1px solid var(--line); padding-bottom: 12px; margin-bottom: 18px;">
-            {{if eq .Mode "edit"}}✏️ Ubah Data Promo{{else}}Buat Promo Baru{{end}}
-        </h3>
+        <div style="background: #fffbf2; border: 1px solid #fae6cb; border-radius: 8px; padding: 10px 14px; margin-bottom: 20px; font-size: 12px; color: #6b4c37;">
+            📌 <strong>Ketentuan Kombinasi:</strong> Promo produk (diskon % & beli 2 gratis 1) <strong>dapat digabung</strong> dengan promo lain. Namun, <strong>potongan minimal belanja TIDAK DAPAT digabung dengan voucher</strong>.
+        </div>
+
         <form method="post" action="/promo">
             {{if eq .Mode "edit"}}
             <input type="hidden" name="id" value="{{.Edit.ID}}">
@@ -37,7 +49,7 @@
                     <option value="VOUCHER" {{if eq .Edit.Jenis "VOUCHER"}}selected{{end}}>4. Promo Berbasis Voucher</option>
                 </select>
             </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
                 <div class="form-group">
                     <label>Nilai Promo</label>
                     <input class="form-control" type="number" name="nilai" min="0" placeholder="% atau Rp" value="{{if eq .Mode "edit"}}{{.Edit.Nilai}}{{else}}0{{end}}">
@@ -79,15 +91,17 @@
                 <label>Maksimal Pemakaian (0 = Tanpa Batas)</label>
                 <input class="form-control" type="number" name="maksimal" min="0" value="{{if eq .Mode "edit"}}{{.Edit.Maksimal}}{{else}}0{{end}}">
             </div>
-            <div class="form-group">
-                <label>Tanggal Mulai Berlaku</label>
-                <input class="form-control" type="datetime-local" name="mulai" value="{{if eq .Mode "edit"}}{{.Edit.Mulai.Format "2006-01-02T15:04"}}{{end}}" required>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div class="form-group">
+                    <label>Tanggal Mulai Berlaku</label>
+                    <input class="form-control" type="datetime-local" name="mulai" value="{{if eq .Mode "edit"}}{{.Edit.Mulai.Format "2006-01-02T15:04"}}{{end}}" required>
+                </div>
+                <div class="form-group">
+                    <label>Tanggal Berakhir</label>
+                    <input class="form-control" type="datetime-local" name="berakhir" value="{{if eq .Mode "edit"}}{{.Edit.Berakhir.Format "2006-01-02T15:04"}}{{end}}" required>
+                </div>
             </div>
-            <div class="form-group">
-                <label>Tanggal Berakhir</label>
-                <input class="form-control" type="datetime-local" name="berakhir" value="{{if eq .Mode "edit"}}{{.Edit.Berakhir.Format "2006-01-02T15:04"}}{{end}}" required>
-            </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
                 <div class="form-group">
                     <label>Jam Mulai (Happy Hour)</label>
                     <input class="form-control" type="time" name="mulai_jam" value="{{if eq .Mode "edit"}}{{.Edit.MulaiJam}}{{end}}">
@@ -97,83 +111,86 @@
                     <input class="form-control" type="time" name="berakhir_jam" value="{{if eq .Mode "edit"}}{{.Edit.BerakhirJam}}{{end}}">
                 </div>
             </div>
-            {{if eq .Mode "edit"}}
-            <div style="display: flex; gap: 10px;">
-                <button type="submit" class="btn" style="flex: 1;">Simpan Perubahan</button>
-                <a href="/promo" class="btn" style="background: var(--line); color: var(--text); text-decoration: none; text-align: center; padding: 10px 16px;">Batal</a>
+            <div style="display: flex; gap: 12px; margin-top: 24px;">
+                <button type="submit" class="btn" style="flex: 1; padding: 11px;">
+                    {{if eq .Mode "edit"}}Simpan Perubahan{{else}}Simpan Promo Baru{{end}}
+                </button>
+                <a href="/promo" class="btn btn-light" style="text-decoration: none; text-align: center; padding: 11px 20px;">Batal</a>
             </div>
-            {{else}}
-            <button type="submit" class="btn btn-block">Simpan Promo Baru</button>
-            {{end}}
         </form>
     </div>
-
-    <!-- Tabel Promo -->
-    <div>
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Kode / Nama</th>
-                    <th>Jenis Promo</th>
-                    <th>Nilai</th>
-                    <th>Periode Aktif</th>
-                    <th>Pemakaian</th>
-                    <th>Status</th>
-                    <th style="text-align: right;">Aksi</th>
-                </tr>
-            </thead>
-            <tbody>
-                {{range .Promo}}
-                <tr {{if not .Aktif}}style="opacity: 0.65; background: #fafafa;"{{end}}>
-                    <td>
-                        <strong>{{.Kode}}</strong>
-                        <small style="display:block; color:var(--muted);">{{.Nama}}</small>
-                    </td>
-                    <td>
-                        <span class="badge" style="background:#f5eee8; color:var(--coffee);">
-                            {{.Jenis}}
-                        </span>
-                    </td>
-                    <td style="font-weight:700;">
-                        {{if eq .Jenis "PERSENTASE_PRODUK"}}
-                            {{.Nilai}}%
-                        {{else if eq .Jenis "BUY2_GET1"}}
-                            Beli 2 Gratis 1
-                        {{else}}
-                            {{rupiah .Nilai}}
-                        {{end}}
-                    </td>
-                    <td style="font-size:12px; color:var(--muted);">
-                        {{.Mulai.Format "02/01/2006 15:04"}} s/d<br>{{.Berakhir.Format "02/01/2006 15:04"}}
-                    </td>
-                    <td>
-                        <strong>{{.Terpakai}}</strong> / {{if eq .Maksimal 0}}&infin;{{else}}{{.Maksimal}}{{end}}
-                    </td>
-                    <td>
-                        {{if .Aktif}}
-                            <span class="badge badge-aktif">Aktif</span>
-                        {{else}}
-                            <span class="badge" style="background:#999; color:#fff;">Nonaktif</span>
-                        {{end}}
-                    </td>
-                    <td style="text-align: right; white-space: nowrap;">
-                        <a href="/promo?edit={{.ID}}" class="btn" style="padding: 4px 8px; font-size: 11px; text-decoration: none; display: inline-block;">✏️ Ubah</a>
-                        <form method="post" action="/promo/{{.ID}}/toggle" style="display: inline-block; margin: 0 0 0 4px;">
-                            {{if .Aktif}}
-                            <button type="submit" class="btn" style="padding: 4px 8px; font-size: 11px; background: #e07a5f; color: white; border: none; cursor: pointer;" onclick="return confirm('Nonaktifkan promo ini? Pelanggan tidak akan bisa memakainya.')">Nonaktifkan</button>
-                            {{else}}
-                            <button type="submit" class="btn" style="padding: 4px 8px; font-size: 11px; background: #81b29a; color: white; border: none; cursor: pointer;">Aktifkan</button>
-                            {{end}}
-                        </form>
-                    </td>
-                </tr>
-                {{else}}
-                <tr>
-                    <td colspan="7" style="text-align: center; color: var(--muted); padding: 24px;">Belum ada promo yang dibuat</td>
-                </tr>
-                {{end}}
-            </tbody>
-        </table>
-    </div>
 </div>
+
+{{else}}
+
+<!-- TAMPILAN TABEL PENUH (LIST) -->
+<div class="card" style="padding: 0; overflow: hidden; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.03);">
+    <table class="table" style="margin: 0;">
+        <thead>
+            <tr>
+                <th>Kode / Nama</th>
+                <th>Jenis Promo</th>
+                <th>Nilai</th>
+                <th>Periode Aktif</th>
+                <th>Pemakaian</th>
+                <th style="width: 100px;">Status</th>
+                <th style="text-align: right; width: 180px;">Aksi</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{range .Promo}}
+            <tr {{if not .Aktif}}style="opacity: 0.65; background: #fafafa;"{{end}}>
+                <td>
+                    <strong>{{.Kode}}</strong>
+                    <small style="display:block; color:var(--muted);">{{.Nama}}</small>
+                </td>
+                <td>
+                    <span class="badge" style="background:#f5eee8; color:var(--coffee);">
+                        {{.Jenis}}
+                    </span>
+                </td>
+                <td style="font-weight:700;">
+                    {{if eq .Jenis "PERSENTASE_PRODUK"}}
+                        {{.Nilai}}%
+                    {{else if eq .Jenis "BUY2_GET1"}}
+                        Beli 2 Gratis 1
+                    {{else}}
+                        {{rupiah .Nilai}}
+                    {{end}}
+                </td>
+                <td style="font-size:12px; color:var(--muted);">
+                    {{.Mulai.Format "02/01/2006 15:04"}} s/d<br>{{.Berakhir.Format "02/01/2006 15:04"}}
+                </td>
+                <td>
+                    <strong>{{.Terpakai}}</strong> / {{if eq .Maksimal 0}}&infin;{{else}}{{.Maksimal}}{{end}}
+                </td>
+                <td>
+                    {{if .Aktif}}
+                        <span class="badge badge-aktif">Aktif</span>
+                    {{else}}
+                        <span class="badge" style="background:#999; color:#fff;">Nonaktif</span>
+                    {{end}}
+                </td>
+                <td style="text-align: right; white-space: nowrap;">
+                    <a href="/promo?edit={{.ID}}" class="btn btn-sm btn-light">✏️ Ubah</a>
+                    <form method="post" action="/promo/{{.ID}}/toggle" style="display: inline-block; margin: 0 0 0 4px;">
+                        {{if .Aktif}}
+                        <button type="submit" class="btn btn-sm btn-light" style="color:var(--red);" onclick="return confirm('Nonaktifkan promo ini? Pelanggan tidak akan bisa memakainya.')">Nonaktifkan</button>
+                        {{else}}
+                        <button type="submit" class="btn btn-sm btn-light" style="color:var(--green);">Aktifkan</button>
+                        {{end}}
+                    </form>
+                </td>
+            </tr>
+            {{else}}
+            <tr>
+                <td colspan="7" style="text-align: center; color: var(--muted); padding: 36px;">
+                    Belum ada promo yang dibuat. Klik <strong>+ Buat Promo Baru</strong> di atas.
+                </td>
+            </tr>
+            {{end}}
+        </tbody>
+    </table>
+</div>
+{{end}}
 {{end}}
