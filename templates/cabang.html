@@ -15,16 +15,15 @@
 
 {{if or (eq .Mode "tambah") (eq .Mode "edit")}}
 <!-- TAMPILAN FORM (HALAMAN FOKUS TAMBAH / UBAH CABANG) -->
-<div style="max-width: 600px; margin: 0 auto;">
-    <div class="form" style="margin-bottom: 0; box-shadow: 0 4px 16px rgba(0,0,0,0.06); border-radius: 14px; padding: 24px 28px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 14px; margin-bottom: 20px;">
-            <h3 style="margin: 0; font-size: 19px;">
-                {{if eq .Mode "edit"}}✏️ Ubah Data Cabang{{else}}✨ Tambah Lokasi Cabang{{end}}
-            </h3>
-            <a href="/cabang" style="color: var(--muted); text-decoration: none; font-size: 13px;">✕ Tutup</a>
-        </div>
-        <form method="post" action="/cabang">
-            <input type="hidden" name="id" value="{{if .Edit.ID}}{{.Edit.ID}}{{end}}">
+<div class="card" style="box-shadow: 0 4px 16px rgba(0,0,0,0.06); border-radius: 14px; padding: 28px 32px; margin-bottom: 24px;">
+    <div style="border-bottom: 1px solid var(--line); padding-bottom: 14px; margin-bottom: 24px;">
+        <h3 style="margin: 0; font-size: 19px;">
+            {{if eq .Mode "edit"}}✏️ Ubah Data Cabang{{else}}✨ Tambah Lokasi Cabang{{end}}
+        </h3>
+    </div>
+    <form method="post" action="/cabang">
+        <input type="hidden" name="id" value="{{if .Edit.ID}}{{.Edit.ID}}{{end}}">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
             <div class="form-group">
                 <label>Kode Cabang (Unik)</label>
                 <input class="form-control" name="kode" value="{{.Edit.Kode}}" placeholder="Contoh: SELATAN" {{if eq .Mode "edit"}}readonly style="background:#f9f9f9; cursor:not-allowed;"{{else}}required{{end}}>
@@ -34,6 +33,8 @@
                 <label>Nama Cabang</label>
                 <input class="form-control" name="nama" value="{{.Edit.Nama}}" placeholder="Contoh: Seduh Selatan" required>
             </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
             <div class="form-group">
                 <label>Alamat Lengkap</label>
                 <input class="form-control" name="alamat" value="{{.Edit.Alamat}}" placeholder="Jl. Contoh No. 10" required>
@@ -42,22 +43,22 @@
                 <label>Nomor Telepon</label>
                 <input class="form-control" name="telepon" value="{{.Edit.Telepon}}" placeholder="021-xxxxxx">
             </div>
-            {{if eq .Mode "edit"}}
-            <div class="form-group">
-                <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-                    <input type="checkbox" name="aktif" value="1" {{if .Edit.Aktif}}checked{{end}}>
-                    <span style="font-weight:600; font-size:13px;">Cabang Beroperasi (Aktif)</span>
-                </label>
-            </div>
-            {{end}}
-            <div style="display: flex; gap: 12px; margin-top: 24px;">
-                <button type="submit" class="btn" style="flex: 1; padding: 11px;">
-                    {{if eq .Mode "edit"}}💾 Simpan Perubahan{{else}}Simpan Cabang{{end}}
-                </button>
-                <a href="/cabang" class="btn btn-light" style="text-decoration: none; text-align: center; padding: 11px 20px;">Batal</a>
-            </div>
-        </form>
-    </div>
+        </div>
+        {{if eq .Mode "edit"}}
+        <div class="form-group">
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                <input type="checkbox" name="aktif" value="1" {{if .Edit.Aktif}}checked{{end}}>
+                <span style="font-weight:600; font-size:13px;">Cabang Beroperasi (Aktif)</span>
+            </label>
+        </div>
+        {{end}}
+        <div style="display: flex; gap: 12px; margin-top: 24px;">
+            <button type="submit" class="btn" style="padding: 11px 28px;">
+                {{if eq .Mode "edit"}}💾 Simpan Perubahan{{else}}Simpan Cabang{{end}}
+            </button>
+            <a href="/cabang" class="btn btn-light" style="text-decoration: none; text-align: center; padding: 11px 24px;">Batal</a>
+        </div>
+    </form>
 </div>
 
 {{else}}

@@ -15,16 +15,15 @@
 
 {{if or (eq .Mode "tambah") (eq .Mode "edit")}}
 <!-- TAMPILAN FORM (HALAMAN FOKUS TAMBAH / UBAH) -->
-<div style="max-width: 640px; margin: 0 auto;">
-    <div class="form" style="margin-bottom: 0; box-shadow: 0 4px 16px rgba(0,0,0,0.06); border-radius: 14px; padding: 24px 28px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 14px; margin-bottom: 20px;">
-            <h3 style="margin: 0; font-size: 19px;">
-                {{if eq .Mode "edit"}}✏️ Ubah Data Produk{{else}}✨ Tambah Produk Baru{{end}}
-            </h3>
-            <a href="/produk" style="color: var(--muted); text-decoration: none; font-size: 13px;">✕ Tutup</a>
-        </div>
-        <form method="post" action="/produk">
-            <input type="hidden" name="id" value="{{.Edit.ID}}">
+<div class="card" style="box-shadow: 0 4px 16px rgba(0,0,0,0.06); border-radius: 14px; padding: 28px 32px; margin-bottom: 24px;">
+    <div style="border-bottom: 1px solid var(--line); padding-bottom: 14px; margin-bottom: 24px;">
+        <h3 style="margin: 0; font-size: 19px;">
+            {{if eq .Mode "edit"}}✏️ Ubah Data Produk{{else}}✨ Tambah Produk Baru{{end}}
+        </h3>
+    </div>
+    <form method="post" action="/produk">
+        <input type="hidden" name="id" value="{{.Edit.ID}}">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
             <div class="form-group">
                 <label>Nama Produk</label>
                 <input class="form-control" name="nama" value="{{.Edit.Nama}}" placeholder="Contoh: Caramel Macchiato" required>
@@ -38,28 +37,28 @@
                     {{end}}
                 </select>
             </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-                <div class="form-group">
-                    <label>Harga (Rp)</label>
-                    <input class="form-control" type="number" name="harga" min="0" value="{{.Edit.Harga}}" placeholder="18000" required>
-                </div>
-                <div class="form-group">
-                    <label>Stok Tersedia</label>
-                    <input class="form-control" type="number" name="stok" min="0" value="{{.Edit.Stok}}" placeholder="100" required>
-                </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div class="form-group">
+                <label>Harga (Rp)</label>
+                <input class="form-control" type="number" name="harga" min="0" value="{{.Edit.Harga}}" placeholder="18000" required>
             </div>
             <div class="form-group">
-                <label>Keterangan / Komposisi</label>
-                <textarea class="form-control" name="keterangan" rows="3" placeholder="Deskripsi singkat produk...">{{.Edit.Keterangan}}</textarea>
+                <label>Stok Tersedia</label>
+                <input class="form-control" type="number" name="stok" min="0" value="{{.Edit.Stok}}" placeholder="100" required>
             </div>
-            <div style="display: flex; gap: 12px; margin-top: 24px;">
-                <button type="submit" class="btn" style="flex: 1; padding: 11px;">
-                    {{if eq .Mode "edit"}}Simpan Perubahan{{else}}Simpan Produk{{end}}
-                </button>
-                <a class="btn btn-light" href="/produk" style="text-decoration: none; text-align: center; padding: 11px 20px;">Batal</a>
-            </div>
-        </form>
-    </div>
+        </div>
+        <div class="form-group">
+            <label>Keterangan / Komposisi</label>
+            <textarea class="form-control" name="keterangan" rows="3" placeholder="Deskripsi singkat produk...">{{.Edit.Keterangan}}</textarea>
+        </div>
+        <div style="display: flex; gap: 12px; margin-top: 24px;">
+            <button type="submit" class="btn" style="padding: 11px 28px;">
+                {{if eq .Mode "edit"}}Simpan Perubahan{{else}}Simpan Produk{{end}}
+            </button>
+            <a class="btn btn-light" href="/produk" style="text-decoration: none; text-align: center; padding: 11px 24px;">Batal</a>
+        </div>
+    </form>
 </div>
 
 {{else}}

@@ -15,18 +15,17 @@
 
 {{if or (eq .Mode "tambah") (eq .Mode "edit")}}
 <!-- TAMPILAN FORM (HALAMAN FOKUS TERBITKAN / UBAH KUOTA VOUCHER) -->
-<div style="max-width: 580px; margin: 0 auto;">
-    <div class="form" style="margin-bottom: 0; box-shadow: 0 4px 16px rgba(0,0,0,0.06); border-radius: 14px; padding: 24px 28px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 14px; margin-bottom: 20px;">
-            <h3 style="margin: 0; font-size: 19px;">
-                {{if eq .Mode "edit"}}✏️ Ubah Kuota Voucher{{else}}✨ Terbitkan Kode Voucher Baru{{end}}
-            </h3>
-            <a href="/voucher" style="color: var(--muted); text-decoration: none; font-size: 13px;">✕ Tutup</a>
-        </div>
-        <form method="post" action="/voucher">
-            {{if eq .Mode "edit"}}
-            <input type="hidden" name="id" value="{{.Edit.ID}}">
-            {{end}}
+<div class="card" style="box-shadow: 0 4px 16px rgba(0,0,0,0.06); border-radius: 14px; padding: 28px 32px; margin-bottom: 24px;">
+    <div style="border-bottom: 1px solid var(--line); padding-bottom: 14px; margin-bottom: 24px;">
+        <h3 style="margin: 0; font-size: 19px;">
+            {{if eq .Mode "edit"}}✏️ Ubah Kuota Voucher{{else}}✨ Terbitkan Kode Voucher Baru{{end}}
+        </h3>
+    </div>
+    <form method="post" action="/voucher">
+        {{if eq .Mode "edit"}}
+        <input type="hidden" name="id" value="{{.Edit.ID}}">
+        {{end}}
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
             <div class="form-group">
                 <label>Pilih Promo Terkait</label>
                 {{if eq .Mode "edit"}}
@@ -45,23 +44,23 @@
                 <label>Kode Voucher Unik</label>
                 <input class="form-control" name="kode" placeholder="Contoh: SEDUHSERU25" value="{{if eq .Mode "edit"}}{{.Edit.Kode}}{{end}}" {{if eq .Mode "edit"}}readonly style="background:#f1eee9; cursor:not-allowed;"{{else}}required{{end}}>
             </div>
-            <div class="form-group">
-                <label>Kuota Maksimal Pemakaian (Total Lembar)</label>
-                <input class="form-control" type="number" name="kuota" min="1" placeholder="50" value="{{if eq .Mode "edit"}}{{.Edit.Kuota}}{{end}}" required>
-                {{if eq .Mode "edit"}}
-                <small style="color:var(--muted); font-size:12px; display:block; margin-top:4px;">
-                    Sudah terpakai: <strong>{{.Edit.Terpakai}}</strong> lembar.
-                </small>
-                {{end}}
-            </div>
-            <div style="display: flex; gap: 12px; margin-top: 24px;">
-                <button type="submit" class="btn" style="flex: 1; padding: 11px;">
-                    {{if eq .Mode "edit"}}Simpan Kuota{{else}}Terbitkan Voucher{{end}}
-                </button>
-                <a href="/voucher" class="btn btn-light" style="text-decoration: none; text-align: center; padding: 11px 20px;">Batal</a>
-            </div>
-        </form>
-    </div>
+        </div>
+        <div class="form-group">
+            <label>Kuota Maksimal Pemakaian (Total Lembar)</label>
+            <input class="form-control" type="number" name="kuota" min="1" placeholder="50" value="{{if eq .Mode "edit"}}{{.Edit.Kuota}}{{end}}" required style="max-width: 320px;">
+            {{if eq .Mode "edit"}}
+            <small style="color:var(--muted); font-size:12px; display:block; margin-top:6px;">
+                Sudah terpakai: <strong>{{.Edit.Terpakai}}</strong> lembar.
+            </small>
+            {{end}}
+        </div>
+        <div style="display: flex; gap: 12px; margin-top: 24px;">
+            <button type="submit" class="btn" style="padding: 11px 28px;">
+                {{if eq .Mode "edit"}}Simpan Kuota{{else}}Terbitkan Voucher{{end}}
+            </button>
+            <a href="/voucher" class="btn btn-light" style="text-decoration: none; text-align: center; padding: 11px 24px;">Batal</a>
+        </div>
+    </form>
 </div>
 
 {{else}}
