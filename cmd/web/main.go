@@ -72,6 +72,7 @@ func main() {
 
 	// ── Lingkup 2: Promo & Voucher ── hanya ADMIN (nabila)
 	privat.Handle("/promo", adminOnly(http.HandlerFunc(admin.Promo)))
+	privat.Handle("POST /promo/{id}/toggle", adminOnly(http.HandlerFunc(admin.TogglePromo)))
 	privat.Handle("/voucher", adminOnly(http.HandlerFunc(admin.Voucher)))
 
 	// ── Lingkup 5: Poin & Tingkat Member (Dinda) ──

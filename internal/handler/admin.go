@@ -176,20 +176,56 @@ func (h *AdminHandler) ToggleMember(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/member", http.StatusSeeOther)
 }
 
+func (h *AdminHandler) TogglePromo(w http.ResponseWriter, r *http.Request) {
+	id, _ := strconv.Atoi(r.PathValue("id"))
+	if id > 0 {
+		_ = h.Repo.TogglePromo(r.Context(), id)
+	}
+	http.Redirect(w, r, "/promo", http.StatusSeeOther)
+}
+
 func (h *AdminHandler) Promo(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		a, _ := time.Parse("2006-01-02T15:04", r.FormValue("mulai"))
 		b, _ := time.Parse("2006-01-02T15:04", r.FormValue("berakhir"))
-		if r.FormValue("kode") == "" || r.FormValue("nama") == "" || a.IsZero() || b.IsZero() || !b.After(a) || angka(r.FormValue("nilai")) < 0 || angka(r.FormValue("minimal")) < 0 {
+		if r.FormValue("nama") == "" || a.IsZero() || b.IsZero() || !b.After(a) || angka(r.FormValue("nilai")) < 0 || angka(r.FormValue("minimal")) < 0 {
 			http.Error(w, "Data promo atau periode tidak valid", http.StatusBadRequest)
 			return
 		}
-		x := model.Promo{Kode: r.FormValue("kode"), Nama: r.FormValue("nama"), Jenis: r.FormValue("jenis"), Nilai: angka(r.FormValue("nilai")), Minimal: angka(r.FormValue("minimal")), Maksimal: angka(r.FormValue("maksimal")), CabangID: angka(r.FormValue("cabang_id")), TargetProdukID: angka(r.FormValue("produk_id")), TargetKategoriID: angka(r.FormValue("kategori_id")), MulaiJam: r.FormValue("mulai_jam"), BerakhirJam: r.FormValue("berakhir_jam"), Mulai: a, Berakhir: b}
-		if e := h.Repo.TambahPromo(r.Context(), x); e != nil {
-			gagal(w, e)
-			return
+		promoID := angka(r.FormValue("id"))
+		x := model.Promo{
+			ID:               promoID,
+			Kode:             r.FormValue("kode"),
+			Nama:             r.FormValue("nama"),
+			Jenis:            r.FormValue("jenis"),
+			Nilai:            angka(r.FormValue("nilai")),
+			Minimal:          angka(r.FormValue("minimal")),
+			Maksimal:         angka(r.FormValue("maksimal")),
+			CabangID:         angka(r.FormValue("cabang_id")),
+			TargetProdukID:   angka(r.FormValue("produk_id")),
+			TargetKategoriID: angka(r.FormValue("kategori_id")),
+			MulaiJam:         r.FormValue("mulai_jam"),
+			BerakhirJam:      r.FormValue("berakhir_jam"),
+			Mulai:            a,
+			Berakhir:         b,
 		}
-		http.Redirect(w, r, "/promo", 303)
+
+		if promoID > 0 {
+			if e := h.Repo.UbahPromo(r.Context(), x); e != nil {
+				gagal(w, e)
+				return
+			}
+		} else {
+			if r.FormValue("kode") == "" {
+				http.Error(w, "Kode promo wajib diisi", http.StatusBadRequest)
+				return
+			}
+			if e := h.Repo.TambahPromo(r.Context(), x); e != nil {
+				gagal(w, e)
+				return
+			}
+		}
+		http.Redirect(w, r, "/promo", http.StatusSeeOther)
 		return
 	}
 	x, e := h.Repo.Promo(r.Context())
@@ -212,6 +248,29 @@ func (h *AdminHandler) Promo(w http.ResponseWriter, r *http.Request) {
 		gagal(w, e)
 		return
 	}
+
+	editID := angka(r.URL.Query().Get("edit"))
+	var editPromo model.Promo
+	mode := "create"
+	if editID > 0 {
+		for _, item := range x {
+			if item.ID == editID {
+				editPromo = item
+				if len(item.CabangIDs) > 0 {
+					editPromo.CabangID = item.CabangIDs[0]
+				}
+				if len(item.ProdukIDs) > 0 {
+					editPromo.TargetProdukID = item.ProdukIDs[0]
+				}
+				if len(item.KategoriIDs) > 0 {
+					editPromo.TargetKategoriID = item.KategoriIDs[0]
+				}
+				mode = "edit"
+				break
+			}
+		}
+	}
+
 	u, _ := middleware.UserDari(r.Context())
 	h.View.Tampil(w, "promo.html", struct {
 		User     model.User
@@ -219,20 +278,36 @@ func (h *AdminHandler) Promo(w http.ResponseWriter, r *http.Request) {
 		Produk   []model.Produk
 		Kategori []model.Kategori
 		Cabang   []model.Cabang
-	}{u, x, p, k, c})
+		Edit     model.Promo
+		Mode     string
+	}{u, x, p, k, c, editPromo, mode})
 }
 
 func (h *AdminHandler) Voucher(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
-		if angka(r.FormValue("promo_id")) <= 0 || r.FormValue("kode") == "" || angka(r.FormValue("kuota")) <= 0 {
-			http.Error(w, "Promo, kode voucher, dan kuota wajib valid", http.StatusBadRequest)
+		voucherID := angka(r.FormValue("id"))
+		kuota := angka(r.FormValue("kuota"))
+		if kuota <= 0 {
+			http.Error(w, "Kuota voucher harus lebih besar dari 0", http.StatusBadRequest)
 			return
 		}
-		if e := h.Repo.TambahVoucher(r.Context(), model.Voucher{PromoID: angka(r.FormValue("promo_id")), Kode: r.FormValue("kode"), Kuota: angka(r.FormValue("kuota"))}); e != nil {
-			gagal(w, e)
-			return
+
+		if voucherID > 0 {
+			if e := h.Repo.UbahVoucher(r.Context(), voucherID, kuota); e != nil {
+				gagal(w, e)
+				return
+			}
+		} else {
+			if angka(r.FormValue("promo_id")) <= 0 || r.FormValue("kode") == "" {
+				http.Error(w, "Promo dan kode voucher wajib diisi", http.StatusBadRequest)
+				return
+			}
+			if e := h.Repo.TambahVoucher(r.Context(), model.Voucher{PromoID: angka(r.FormValue("promo_id")), Kode: r.FormValue("kode"), Kuota: kuota}); e != nil {
+				gagal(w, e)
+				return
+			}
 		}
-		http.Redirect(w, r, "/voucher", 303)
+		http.Redirect(w, r, "/voucher", http.StatusSeeOther)
 		return
 	}
 	x, e := h.Repo.Voucher(r.Context())
@@ -241,12 +316,28 @@ func (h *AdminHandler) Voucher(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	p, _ := h.Repo.Promo(r.Context())
+
+	editID := angka(r.URL.Query().Get("edit"))
+	var editVoucher model.Voucher
+	mode := "create"
+	if editID > 0 {
+		for _, item := range x {
+			if item.ID == editID {
+				editVoucher = item
+				mode = "edit"
+				break
+			}
+		}
+	}
+
 	u, _ := middleware.UserDari(r.Context())
 	h.View.Tampil(w, "voucher.html", struct {
 		User    model.User
 		Voucher []model.Voucher
 		Promo   []model.Promo
-	}{u, x, p})
+		Edit    model.Voucher
+		Mode    string
+	}{u, x, p, editVoucher, mode})
 }
 
 func angka(s string) int { n, _ := strconv.Atoi(s); return n }

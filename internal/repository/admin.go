@@ -172,6 +172,56 @@ func (r *AdminRepo) TambahPromo(ctx context.Context, x model.Promo) error {
 	return tx.Commit()
 }
 
+func (r *AdminRepo) UbahPromo(ctx context.Context, x model.Promo) error {
+	tx, e := r.DB.BeginTx(ctx, nil)
+	if e != nil {
+		return e
+	}
+	_, e = tx.ExecContext(ctx, `
+		UPDATE promo 
+		SET nama=?, jenis=?, nilai=?, minimal_belanja=?, maksimal_pemakaian=?, mulai=?, berakhir=?, mulai_jam=?, berakhir_jam=? 
+		WHERE id=?
+	`, x.Nama, x.Jenis, x.Nilai, x.Minimal, x.Maksimal, x.Mulai, x.Berakhir, nullString(x.MulaiJam), nullString(x.BerakhirJam), x.ID)
+	if e != nil {
+		tx.Rollback()
+		return e
+	}
+
+	// Update relasi cabang jika ditentukan atau direset
+	_, _ = tx.ExecContext(ctx, "DELETE FROM promo_cabang WHERE promo_id=?", x.ID)
+	if x.CabangID > 0 {
+		if _, e = tx.ExecContext(ctx, "INSERT INTO promo_cabang(promo_id,cabang_id) VALUES(?,?)", x.ID, x.CabangID); e != nil {
+			tx.Rollback()
+			return e
+		}
+	}
+
+	// Update relasi produk
+	_, _ = tx.ExecContext(ctx, "DELETE FROM promo_produk WHERE promo_id=?", x.ID)
+	if x.TargetProdukID > 0 {
+		if _, e = tx.ExecContext(ctx, "INSERT INTO promo_produk(promo_id,produk_id) VALUES(?,?)", x.ID, x.TargetProdukID); e != nil {
+			tx.Rollback()
+			return e
+		}
+	}
+
+	// Update relasi kategori
+	_, _ = tx.ExecContext(ctx, "DELETE FROM promo_kategori WHERE promo_id=?", x.ID)
+	if x.TargetKategoriID > 0 {
+		if _, e = tx.ExecContext(ctx, "INSERT INTO promo_kategori(promo_id,kategori_id) VALUES(?,?)", x.ID, x.TargetKategoriID); e != nil {
+			tx.Rollback()
+			return e
+		}
+	}
+
+	return tx.Commit()
+}
+
+func (r *AdminRepo) TogglePromo(ctx context.Context, id int) error {
+	_, e := r.DB.ExecContext(ctx, "UPDATE promo SET aktif = NOT aktif WHERE id = ?", id)
+	return e
+}
+
 func nullString(s string) any {
 	if s == "" {
 		return nil
@@ -198,6 +248,11 @@ func (r *AdminRepo) Voucher(ctx context.Context) ([]model.Voucher, error) {
 
 func (r *AdminRepo) TambahVoucher(ctx context.Context, x model.Voucher) error {
 	_, e := r.DB.ExecContext(ctx, "INSERT INTO voucher(promo_id,kode,kuota) VALUES(?,?,?)", x.PromoID, x.Kode, x.Kuota)
+	return e
+}
+
+func (r *AdminRepo) UbahVoucher(ctx context.Context, id, kuota int) error {
+	_, e := r.DB.ExecContext(ctx, "UPDATE voucher SET kuota = ? WHERE id = ?", kuota, id)
 	return e
 }
 

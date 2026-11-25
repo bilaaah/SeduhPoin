@@ -7,30 +7,50 @@
 </div>
 
 <div style="display: grid; grid-template-columns: 380px 1fr; gap: 28px; align-items: start;">
-    <!-- Form Tambah Voucher -->
+    <!-- Form Tambah/Ubah Voucher -->
     <div class="form" style="margin-bottom: 0;">
         <h3 style="margin-top: 0; font-size: 18px; border-bottom: 1px solid var(--line); padding-bottom: 12px; margin-bottom: 18px;">
-            Terbitkan Kode Voucher
+            {{if eq .Mode "edit"}}✏️ Ubah Kuota Voucher{{else}}Terbitkan Kode Voucher{{end}}
         </h3>
-        <form method="post">
+        <form method="post" action="/voucher">
+            {{if eq .Mode "edit"}}
+            <input type="hidden" name="id" value="{{.Edit.ID}}">
+            {{end}}
             <div class="form-group">
                 <label>Pilih Promo Terkait</label>
+                {{if eq .Mode "edit"}}
+                <input class="form-control" value="{{.Edit.PromoNama}}" readonly style="background:#f1eee9; cursor:not-allowed;">
+                <input type="hidden" name="promo_id" value="{{.Edit.PromoID}}">
+                {{else}}
                 <select class="form-control" name="promo_id" required>
                     <option value="">-- Pilih Promo Voucher --</option>
                     {{range .Promo}}
                     <option value="{{.ID}}">{{.Kode}} &mdash; {{.Nama}}</option>
                     {{end}}
                 </select>
+                {{end}}
             </div>
             <div class="form-group">
                 <label>Kode Voucher Unik</label>
-                <input class="form-control" name="kode" placeholder="Contoh: SEDUHSERU25" required>
+                <input class="form-control" name="kode" placeholder="Contoh: SEDUHSERU25" value="{{if eq .Mode "edit"}}{{.Edit.Kode}}{{end}}" {{if eq .Mode "edit"}}readonly style="background:#f1eee9; cursor:not-allowed;"{{else}}required{{end}}>
             </div>
             <div class="form-group">
-                <label>Kuota Maksimal Pemakaian</label>
-                <input class="form-control" type="number" name="kuota" min="1" placeholder="50" required>
+                <label>Kuota Maksimal Pemakaian (Total Lembar)</label>
+                <input class="form-control" type="number" name="kuota" min="1" placeholder="50" value="{{if eq .Mode "edit"}}{{.Edit.Kuota}}{{end}}" required>
+                {{if eq .Mode "edit"}}
+                <small style="color:var(--muted); font-size:12px; display:block; margin-top:4px;">
+                    Sudah terpakai: <strong>{{.Edit.Terpakai}}</strong> lembar.
+                </small>
+                {{end}}
             </div>
+            {{if eq .Mode "edit"}}
+            <div style="display: flex; gap: 10px;">
+                <button type="submit" class="btn" style="flex: 1;">Simpan Kuota</button>
+                <a href="/voucher" class="btn" style="background: var(--line); color: var(--text); text-decoration: none; text-align: center; padding: 10px 16px;">Batal</a>
+            </div>
+            {{else}}
             <button type="submit" class="btn btn-block">Terbitkan Voucher</button>
+            {{end}}
         </form>
     </div>
 
@@ -44,6 +64,7 @@
                     <th class="num">Kuota</th>
                     <th class="num">Terpakai</th>
                     <th class="num">Sisa Kuota</th>
+                    <th style="text-align: right;">Aksi</th>
                 </tr>
             </thead>
             <tbody>
@@ -53,19 +74,20 @@
                     <td>{{.PromoNama}}</td>
                     <td class="num">{{.Kuota}}</td>
                     <td class="num">{{.Terpakai}}</td>
-                    <td class="num" style="font-weight:700; color:var(--green);">
-                        {{/* Hitung sisa kuota */}}
-                        {{/* kuota - terpakai */}}
-                        {{if ge .Kuota .Terpakai}}
-                            Tersedia
+                    <td class="num" style="font-weight:700;">
+                        {{if ge .Terpakai .Kuota}}
+                            <span style="color: #e07a5f;">Habis (0)</span>
                         {{else}}
-                            Habis
+                            <span style="color: var(--green);">Tersedia</span>
                         {{end}}
+                    </td>
+                    <td style="text-align: right;">
+                        <a href="/voucher?edit={{.ID}}" class="btn" style="padding: 4px 8px; font-size: 11px; text-decoration: none; display: inline-block;">✏️ Ubah Kuota</a>
                     </td>
                 </tr>
                 {{else}}
                 <tr>
-                    <td colspan="5" style="text-align: center; color: var(--muted); padding: 24px;">Belum ada voucher diterbitkan</td>
+                    <td colspan="6" style="text-align: center; color: var(--muted); padding: 24px;">Belum ada voucher diterbitkan</td>
                 </tr>
                 {{end}}
             </tbody>

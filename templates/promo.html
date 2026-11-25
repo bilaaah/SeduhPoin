@@ -14,35 +14,38 @@
     <!-- Form Promo -->
     <div class="form" style="margin-bottom: 0;">
         <h3 style="margin-top: 0; font-size: 18px; border-bottom: 1px solid var(--line); padding-bottom: 12px; margin-bottom: 18px;">
-            Buat Promo Baru
+            {{if eq .Mode "edit"}}✏️ Ubah Data Promo{{else}}Buat Promo Baru{{end}}
         </h3>
-        <form method="post">
+        <form method="post" action="/promo">
+            {{if eq .Mode "edit"}}
+            <input type="hidden" name="id" value="{{.Edit.ID}}">
+            {{end}}
             <div class="form-group">
                 <label>Kode Promo (Unik)</label>
-                <input class="form-control" name="kode" placeholder="Contoh: DISKONHEMAT20" required>
+                <input class="form-control" name="kode" placeholder="Contoh: DISKONHEMAT20" value="{{if eq .Mode "edit"}}{{.Edit.Kode}}{{end}}" {{if eq .Mode "edit"}}readonly style="background:#f1eee9; cursor:not-allowed;"{{else}}required{{end}}>
             </div>
             <div class="form-group">
                 <label>Nama Promo</label>
-                <input class="form-control" name="nama" placeholder="Contoh: Diskon Kopi 20% Akhir Pekan" required>
+                <input class="form-control" name="nama" placeholder="Contoh: Diskon Kopi 20% Akhir Pekan" value="{{if eq .Mode "edit"}}{{.Edit.Nama}}{{end}}" required>
             </div>
             <div class="form-group">
                 <label>Jenis Promo</label>
                 <select class="form-control" name="jenis" required>
-                    <option value="PERSENTASE_PRODUK">1. Diskon Persentase Produk (%)</option>
-                    <option value="POTONGAN_MIN_BELANJA">2. Potongan Nominal Min. Belanja (Rp)</option>
-                    <option value="BUY2_GET1">3. Beli 2 Gratis 1 (Buy 2 Get 1)</option>
-                    <option value="VOUCHER">4. Promo Berbasis Voucher</option>
+                    <option value="PERSENTASE_PRODUK" {{if eq .Edit.Jenis "PERSENTASE_PRODUK"}}selected{{end}}>1. Diskon Persentase Produk (%)</option>
+                    <option value="POTONGAN_MIN_BELANJA" {{if eq .Edit.Jenis "POTONGAN_MIN_BELANJA"}}selected{{end}}>2. Potongan Nominal Min. Belanja (Rp)</option>
+                    <option value="BUY2_GET1" {{if eq .Edit.Jenis "BUY2_GET1"}}selected{{end}}>3. Beli 2 Gratis 1 (Buy 2 Get 1)</option>
+                    <option value="VOUCHER" {{if eq .Edit.Jenis "VOUCHER"}}selected{{end}}>4. Promo Berbasis Voucher</option>
                 </select>
             </div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                 <div class="form-group">
                     <label>Nilai Promo</label>
-                    <input class="form-control" type="number" name="nilai" min="0" placeholder="% atau Rp" value="0">
+                    <input class="form-control" type="number" name="nilai" min="0" placeholder="% atau Rp" value="{{if eq .Mode "edit"}}{{.Edit.Nilai}}{{else}}0{{end}}">
                     <small style="color:var(--muted); font-size:11px;">Isi % diskon atau nominal Rp</small>
                 </div>
                 <div class="form-group">
                     <label>Min. Belanja (Rp)</label>
-                    <input class="form-control" type="number" name="minimal" min="0" placeholder="0 jika bebas" value="0">
+                    <input class="form-control" type="number" name="minimal" min="0" placeholder="0 jika bebas" value="{{if eq .Mode "edit"}}{{.Edit.Minimal}}{{else}}0{{end}}">
                 </div>
             </div>
             <div class="form-group">
@@ -50,7 +53,7 @@
                 <select class="form-control" name="produk_id">
                     <option value="0">-- Berlaku Semua Produk --</option>
                     {{range .Produk}}
-                    <option value="{{.ID}}">{{.Nama}} ({{rupiah .Harga}})</option>
+                    <option value="{{.ID}}" {{if eq $.Edit.TargetProdukID .ID}}selected{{end}}>{{.Nama}} ({{rupiah .Harga}})</option>
                     {{end}}
                 </select>
             </div>
@@ -59,7 +62,7 @@
                 <select class="form-control" name="kategori_id">
                     <option value="0">-- Berlaku Semua Kategori --</option>
                     {{range .Kategori}}
-                    <option value="{{.ID}}">{{.Nama}}</option>
+                    <option value="{{.ID}}" {{if eq $.Edit.TargetKategoriID .ID}}selected{{end}}>{{.Nama}}</option>
                     {{end}}
                 </select>
             </div>
@@ -68,33 +71,40 @@
                 <select class="form-control" name="cabang_id">
                     <option value="0">-- Berlaku di Seluruh 3 Cabang --</option>
                     {{range .Cabang}}
-                    <option value="{{.ID}}">{{.Nama}} ({{.Kode}})</option>
+                    <option value="{{.ID}}" {{if eq $.Edit.CabangID .ID}}selected{{end}}>{{.Nama}} ({{.Kode}})</option>
                     {{end}}
                 </select>
             </div>
             <div class="form-group">
                 <label>Maksimal Pemakaian (0 = Tanpa Batas)</label>
-                <input class="form-control" type="number" name="maksimal" min="0" value="0">
+                <input class="form-control" type="number" name="maksimal" min="0" value="{{if eq .Mode "edit"}}{{.Edit.Maksimal}}{{else}}0{{end}}">
             </div>
             <div class="form-group">
                 <label>Tanggal Mulai Berlaku</label>
-                <input class="form-control" type="datetime-local" name="mulai" required>
+                <input class="form-control" type="datetime-local" name="mulai" value="{{if eq .Mode "edit"}}{{.Edit.Mulai.Format "2006-01-02T15:04"}}{{end}}" required>
             </div>
             <div class="form-group">
                 <label>Tanggal Berakhir</label>
-                <input class="form-control" type="datetime-local" name="berakhir" required>
+                <input class="form-control" type="datetime-local" name="berakhir" value="{{if eq .Mode "edit"}}{{.Edit.Berakhir.Format "2006-01-02T15:04"}}{{end}}" required>
             </div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                 <div class="form-group">
                     <label>Jam Mulai (Happy Hour)</label>
-                    <input class="form-control" type="time" name="mulai_jam">
+                    <input class="form-control" type="time" name="mulai_jam" value="{{if eq .Mode "edit"}}{{.Edit.MulaiJam}}{{end}}">
                 </div>
                 <div class="form-group">
                     <label>Jam Selesai</label>
-                    <input class="form-control" type="time" name="berakhir_jam">
+                    <input class="form-control" type="time" name="berakhir_jam" value="{{if eq .Mode "edit"}}{{.Edit.BerakhirJam}}{{end}}">
                 </div>
             </div>
+            {{if eq .Mode "edit"}}
+            <div style="display: flex; gap: 10px;">
+                <button type="submit" class="btn" style="flex: 1;">Simpan Perubahan</button>
+                <a href="/promo" class="btn" style="background: var(--line); color: var(--text); text-decoration: none; text-align: center; padding: 10px 16px;">Batal</a>
+            </div>
+            {{else}}
             <button type="submit" class="btn btn-block">Simpan Promo Baru</button>
+            {{end}}
         </form>
     </div>
 
@@ -109,11 +119,12 @@
                     <th>Periode Aktif</th>
                     <th>Pemakaian</th>
                     <th>Status</th>
+                    <th style="text-align: right;">Aksi</th>
                 </tr>
             </thead>
             <tbody>
                 {{range .Promo}}
-                <tr>
+                <tr {{if not .Aktif}}style="opacity: 0.65; background: #fafafa;"{{end}}>
                     <td>
                         <strong>{{.Kode}}</strong>
                         <small style="display:block; color:var(--muted);">{{.Nama}}</small>
@@ -142,13 +153,23 @@
                         {{if .Aktif}}
                             <span class="badge badge-aktif">Aktif</span>
                         {{else}}
-                            <span class="badge">Nonaktif</span>
+                            <span class="badge" style="background:#999; color:#fff;">Nonaktif</span>
                         {{end}}
+                    </td>
+                    <td style="text-align: right; white-space: nowrap;">
+                        <a href="/promo?edit={{.ID}}" class="btn" style="padding: 4px 8px; font-size: 11px; text-decoration: none; display: inline-block;">✏️ Ubah</a>
+                        <form method="post" action="/promo/{{.ID}}/toggle" style="display: inline-block; margin: 0 0 0 4px;">
+                            {{if .Aktif}}
+                            <button type="submit" class="btn" style="padding: 4px 8px; font-size: 11px; background: #e07a5f; color: white; border: none; cursor: pointer;" onclick="return confirm('Nonaktifkan promo ini? Pelanggan tidak akan bisa memakainya.')">Nonaktifkan</button>
+                            {{else}}
+                            <button type="submit" class="btn" style="padding: 4px 8px; font-size: 11px; background: #81b29a; color: white; border: none; cursor: pointer;">Aktifkan</button>
+                            {{end}}
+                        </form>
                     </td>
                 </tr>
                 {{else}}
                 <tr>
-                    <td colspan="6" style="text-align: center; color: var(--muted); padding: 24px;">Belum ada promo yang dibuat</td>
+                    <td colspan="7" style="text-align: center; color: var(--muted); padding: 24px;">Belum ada promo yang dibuat</td>
                 </tr>
                 {{end}}
             </tbody>
