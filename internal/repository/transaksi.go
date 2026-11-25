@@ -466,47 +466,6 @@ func validasiVoucherPOS(ctx context.Context, tx *sql.Tx, kode string, cabangID, 
 	return &p, vID, nil
 }
 
-// BatalkanTransaksi membatalkan pesanan dan menarik kembali poin yang diperoleh
-// dari transaksi tersebut, sekaligus mengembalikan counter promo dan voucher.
-func (r *AdminRepo) BatalkanTransaksi(ctx context.Context, transaksiID int) error {
-	tx, err := r.DB.BeginTx(ctx, nil)
-	if err != nil {
-		return err
-	}
-
-	if _, err := tx.ExecContext(ctx, "UPDATE transaksi SET status = 'DIBATALKAN' WHERE id = ?", transaksiID); err != nil {
-		tx.Rollback()
-		return err
-	}
-
-	if _, err := tx.ExecContext(ctx, `
-		UPDATE poin_member SET status = 'DIBATALKAN', sisa = 0 WHERE transaksi_id = ?
-	`, transaksiID); err != nil {
-		tx.Rollback()
-		return err
-	}
-
-	if _, err := tx.ExecContext(ctx, `
-		UPDATE promo p JOIN transaksi_promo tp ON tp.promo_id = p.id
-		SET p.terpakai = GREATEST(p.terpakai - 1, 0)
-		WHERE tp.transaksi_id = ?
-	`, transaksiID); err != nil {
-		tx.Rollback()
-		return err
-	}
-
-	if _, err := tx.ExecContext(ctx, `
-		UPDATE voucher v JOIN transaksi t ON t.voucher_id = v.id
-		SET v.terpakai = GREATEST(v.terpakai - 1, 0)
-		WHERE t.id = ?
-	`, transaksiID); err != nil {
-		tx.Rollback()
-		return err
-	}
-
-	return tx.Commit()
-}
-
 // gabungAlokasi menjumlahkan diskon per promo dan memvalidasi nominalnya.
 func gabungAlokasi(promo []model.AlokasiPromo) ([]model.AlokasiPromo, int, error) {
 	terpakai := make(map[int]int)

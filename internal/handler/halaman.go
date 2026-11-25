@@ -213,12 +213,3 @@ func bacaAlokasiPromo(form url.Values) []model.AlokasiPromo {
 	}
 	return out
 }
-
-// BatalTransaksiKasir menangani pembatalan transaksi oleh Kasir
-func (h *HalamanHandler) BatalTransaksi(w http.ResponseWriter, r *http.Request) {
-	id, _ := strconv.Atoi(r.PathValue("id"))
-	if id > 0 {
-		_ = h.Repo.BatalkanTransaksi(r.Context(), id)
-	}
-	http.Redirect(w, r, "/", http.StatusSeeOther)
-}

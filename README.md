@@ -49,7 +49,7 @@ Kedai Kopi Seduh memiliki tiga cabang operasional. Sistem menghubungkan program 
 | **Lingkup 2** | **Pengaturan Promo & Voucher**: Promo multi-kondisi, batasan jam/cabang, dan kuota voucher | **Nabila** | **Selesai** |
 | **Auth & RBAC** | **Autentikasi & Otorisasi Peran**: Bcrypt, Session token 7 hari, middleware `RequireLogin` & `RequireRole` | **Nabila** | **Selesai** |
 | **Lingkup 3** | **Transaksi Penjualan**: Perhitungan promo kombinasi, penukaran poin FEFO, dan akumulasi poin | **Rahma** | **Selesai** |
-| **Lingkup 4** | **Pembatalan Transaksi**: Rollback status, penarikan poin reward, refund poin terpakai, restock | **Hilal** | Siap Dikerjakan (Setelah L3) |
+| **Lingkup 4** | **Pembatalan Transaksi**: Rollback status, penarikan poin reward, refund poin terpakai, restock | **Hilal** | **Selesai** |
 | **Lingkup 5** | **Lifecycle Poin & Tier Member**: Validasi expired 6 bulan & evaluasi belanja 3 bulan (Silver/Gold) | **Dinda** | **Selesai** |
 | **Lingkup 6** | **Laporan Analitik**: Biaya realisasi promo, saldo poin aktif (Rp), dan statistik member | **Luhur** | **Selesai** |
 
@@ -103,6 +103,7 @@ poinseduh/
 │   │   ├── admin.go                # Handler cabang, member, promo, voucher (Lingkup 1 & 2)
 │   │   ├── catalog.go              # Handler CRUD produk & kategori (Lingkup 1)
 │   │   ├── halaman.go              # Handler dashboard ringkasan & kasir POS
+│   │   ├── batal.go                # Lingkup 4: handler pembatalan transaksi kasir
 │   │   ├── member_tier.go          # Lingkup 5: handler masa berlaku poin & evaluasi tier
 │   │   ├── laporan.go              # Lingkup 6: handler laporan analitik & ekspor CSV
 │   │   ├── render.go               # Engine HTML Template renderer
@@ -120,6 +121,7 @@ poinseduh/
 │   ├── repository/
 │   │   ├── admin.go                # Query SQL Cabang, Member, Promo, Voucher
 │   │   ├── catalog.go              # Query SQL Produk & Kategori
+│   │   ├── batal.go                # Lingkup 4: query rollback transaksi atomik & restock
 │   │   ├── member_tier.go          # Lingkup 5: query audit poin FEFO & evaluasi tier
 │   │   ├── laporan.go              # Lingkup 6: query 3 laporan analitik
 │   │   ├── transaksi.go            # Lingkup 6: tulis transaksi & ledger transaksi_promo
@@ -434,13 +436,13 @@ Agar pengembangan sistem berjalan lancar dan terstruktur, berikut urutan keterga
 
 ---
 
-### 🔹 3. Lingkup 4: Pembatalan Transaksi (Hilal)
+### 🔹 3. Lingkup 4: Pembatalan Transaksi (Hilal) — ✅ Selesai
 - **Tujuan**: Membatalkan transaksi penjualan jika terjadi kesalahan atau pembatalan pesanan oleh pelanggan, dengan rollback data yang konsisten.
-- **Status**: **Menunggu Modul Transaksi Rahma Selesai**.
-- **Berkas yang Perlu Dikerjakan**:
+- **Status**: **Selesai** — modul pembatalan transaksi telah terintegrasi penuh secara atomik (`db.BeginTx`), merestok produk, membatalkan reward, me-refund poin terpakai, memulihkan kuota voucher/promo, dan memperbarui tier member.
+- **Berkas yang Dibuat / Dimodifikasi**:
   - `internal/handler/batal.go` (routing `POST /transaksi/{id}/batal`)
-  - `internal/repository/batal.go` (logika rollback database transaksi)
-  - Tampilkan tombol konfirmasi "Batalkan Transaksi" pada baris tabel riwayat transaksi kasir.
+  - `internal/repository/batal.go` (logika rollback database transaksi atomik)
+  - `templates/kasir_riwayat.html` (antarmuka riwayat transaksi kasir dengan tombol konfirmasi pembatalan)
 - **Tabel Database yang Dipakai**: `transaksi`, `transaksi_item`, `produk`, `poin_member`, `voucher`.
 - **Langkah-Langkah Logika Bisnis (Wajib Atomic Transaction / `db.BeginTx`)**:
   1. Validasi transaksi yang akan dibatalkan (pastikan status saat ini adalah `SELESAI`).

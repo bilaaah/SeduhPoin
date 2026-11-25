@@ -49,9 +49,9 @@ func main() {
 	authMw := &middleware.Auth{Svc: authSvc}
 
 	// Helper shortcut pembatasan peran (harus dipanggil setelah RequireLogin)
-	adminOnly    := authMw.RequireRole("ADMIN")
-	adminKasir   := authMw.RequireRole("ADMIN", "KASIR")
-	memberOnly   := authMw.RequireRole("ADMIN", "MEMBER")
+	adminOnly := authMw.RequireRole("ADMIN")
+	adminKasir := authMw.RequireRole("ADMIN", "KASIR")
+	memberOnly := authMw.RequireRole("ADMIN", "MEMBER")
 
 	// privat: semua route yang wajib login
 	privat := http.NewServeMux()
@@ -59,15 +59,15 @@ func main() {
 	// Dashboard — terbuka untuk semua peran (isi berbeda per peran)
 	privat.HandleFunc("GET /{$}", halaman.Home)
 
-	// ── Lingkup 1: Master Data ── hanya ADMIN
-	privat.Handle("GET /produk",          adminOnly(http.HandlerFunc(admin.Produk)))
-	privat.Handle("POST /produk",         adminOnly(http.HandlerFunc(admin.Produk)))
+	// ── Lingkup 1: Master Data ── hanya ADMIN (nabila)
+	privat.Handle("GET /produk", adminOnly(http.HandlerFunc(admin.Produk)))
+	privat.Handle("POST /produk", adminOnly(http.HandlerFunc(admin.Produk)))
 	privat.Handle("POST /produk/{id}/hapus", adminOnly(http.HandlerFunc(admin.HapusProduk)))
-	privat.Handle("/cabang",              adminOnly(http.HandlerFunc(admin.Cabang)))
-	privat.Handle("/member",              adminOnly(http.HandlerFunc(admin.Member)))
+	privat.Handle("/cabang", adminOnly(http.HandlerFunc(admin.Cabang)))
+	privat.Handle("/member", adminOnly(http.HandlerFunc(admin.Member)))
 
-	// ── Lingkup 2: Promo & Voucher ── hanya ADMIN
-	privat.Handle("/promo",   adminOnly(http.HandlerFunc(admin.Promo)))
+	// ── Lingkup 2: Promo & Voucher ── hanya ADMIN (nabila)
+	privat.Handle("/promo", adminOnly(http.HandlerFunc(admin.Promo)))
 	privat.Handle("/voucher", adminOnly(http.HandlerFunc(admin.Voucher)))
 
 	// ── Lingkup 5: Poin & Tingkat Member (Dinda) ──
@@ -75,18 +75,18 @@ func main() {
 	privat.Handle("POST /member/tier/evaluasi", adminOnly(http.HandlerFunc(tier.Evaluasi)))
 
 	// ── Lingkup 6: Laporan Analitik (Luhur) ── hanya ADMIN
-	privat.Handle("GET /laporan",             adminOnly(http.HandlerFunc(laporan.Laporan)))
-	privat.Handle("GET /laporan/export.csv",  adminOnly(http.HandlerFunc(laporan.ExportCSV)))
+	privat.Handle("GET /laporan", adminOnly(http.HandlerFunc(laporan.Laporan)))
+	privat.Handle("GET /laporan/export.csv", adminOnly(http.HandlerFunc(laporan.ExportCSV)))
 
 	// ── Operasional Kasir (Terminal POS & Pembatalan) ── ADMIN dan KASIR
-	privat.Handle("GET /kasir/transaksi",        adminKasir(http.HandlerFunc(halaman.KasirTransaksi)))
-	privat.Handle("GET /kasir/riwayat",          adminKasir(http.HandlerFunc(halaman.KasirRiwayat)))
-	privat.Handle("POST /transaksi",             adminKasir(http.HandlerFunc(halaman.SimpanTransaksi)))
-	privat.Handle("POST /transaksi/{id}/batal",  adminKasir(http.HandlerFunc(halaman.BatalTransaksi)))
+	privat.Handle("GET /kasir/transaksi", adminKasir(http.HandlerFunc(halaman.KasirTransaksi)))
+	privat.Handle("GET /kasir/riwayat", adminKasir(http.HandlerFunc(halaman.KasirRiwayat)))
+	privat.Handle("POST /transaksi", adminKasir(http.HandlerFunc(halaman.SimpanTransaksi)))
+	privat.Handle("POST /transaksi/{id}/batal", adminKasir(http.HandlerFunc(halaman.BatalTransaksi)))
 
 	// ── Area Member Loyalitas ── ADMIN dan MEMBER
-	privat.Handle("GET /member/poin",            memberOnly(http.HandlerFunc(halaman.MemberPoin)))
-	privat.Handle("GET /member/riwayat",         memberOnly(http.HandlerFunc(halaman.MemberRiwayat)))
+	privat.Handle("GET /member/poin", memberOnly(http.HandlerFunc(halaman.MemberPoin)))
+	privat.Handle("GET /member/riwayat", memberOnly(http.HandlerFunc(halaman.MemberRiwayat)))
 
 	// Logout — semua peran
 	privat.HandleFunc("POST /logout", authH.Logout)
