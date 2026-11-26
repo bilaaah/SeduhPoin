@@ -321,7 +321,13 @@ func (h *AdminHandler) Voucher(w http.ResponseWriter, r *http.Request) {
 		gagal(w, e)
 		return
 	}
-	p, _ := h.Repo.Promo(r.Context())
+	semuaPromo, _ := h.Repo.Promo(r.Context())
+	var promoVoucher []model.Promo
+	for _, pItem := range semuaPromo {
+		if pItem.Jenis == "VOUCHER" && pItem.Aktif {
+			promoVoucher = append(promoVoucher, pItem)
+		}
+	}
 
 	editID := angka(r.URL.Query().Get("edit"))
 	var editVoucher model.Voucher
@@ -345,7 +351,15 @@ func (h *AdminHandler) Voucher(w http.ResponseWriter, r *http.Request) {
 		Promo   []model.Promo
 		Edit    model.Voucher
 		Mode    string
-	}{u, x, p, editVoucher, mode})
+	}{u, x, promoVoucher, editVoucher, mode})
+}
+
+func (h *AdminHandler) HapusVoucher(w http.ResponseWriter, r *http.Request) {
+	id := angka(r.PathValue("id"))
+	if id > 0 {
+		_ = h.Repo.HapusVoucher(r.Context(), id)
+	}
+	http.Redirect(w, r, "/voucher", http.StatusSeeOther)
 }
 
 func angka(s string) int { n, _ := strconv.Atoi(s); return n }

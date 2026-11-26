@@ -1,13 +1,13 @@
 {{define "content"}}
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
     <div>
-        <h2 style="margin: 0 0 6px;">🏷️ Pengaturan Promo Multi-Kondisi</h2>
+        <h2 style="margin: 0 0 6px;">Pengaturan Promo Multi-Kondisi</h2>
         <p style="margin: 0;">Atur promo diskon produk, potongan minimal belanja, Buy 2 Get 1, dan promo voucher.</p>
     </div>
     {{if eq .Mode "list"}}
     <div>
         <a href="/promo?action=tambah" class="btn" style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px; padding: 10px 18px; font-weight: 600;">
-            ➕ Buat Promo Baru
+            + Buat Promo Baru
         </a>
     </div>
     {{end}}
@@ -18,12 +18,12 @@
 <div class="card" style="box-shadow: 0 4px 16px rgba(0,0,0,0.06); border-radius: 14px; padding: 28px 32px; margin-bottom: 24px;">
     <div style="border-bottom: 1px solid var(--line); padding-bottom: 14px; margin-bottom: 20px;">
         <h3 style="margin: 0; font-size: 19px;">
-            {{if eq .Mode "edit"}}✏️ Ubah Data Promo{{else}}✨ Buat Promo Baru{{end}}
+            {{if eq .Mode "edit"}}Ubah Data Promo{{else}}Buat Promo Baru{{end}}
         </h3>
     </div>
 
     <div style="background: #fffbf2; border: 1px solid #fae6cb; border-radius: 8px; padding: 12px 16px; margin-bottom: 24px; font-size: 13px; color: #6b4c37;">
-        📌 <strong>Ketentuan Kombinasi:</strong> Promo produk (diskon % & beli 2 gratis 1) <strong>dapat digabung</strong> dengan promo lain. Namun, <strong>potongan minimal belanja TIDAK DAPAT digabung dengan voucher</strong>.
+        <strong>Ketentuan Kombinasi:</strong> Promo produk (diskon % & beli 2 gratis 1) <strong>dapat digabung</strong> dengan promo lain. Namun, <strong>potongan minimal belanja TIDAK DAPAT digabung dengan voucher</strong>.
     </div>
 
     <form method="post" action="/promo">
@@ -173,7 +173,7 @@
                     {{end}}
                 </td>
                 <td style="text-align: right; white-space: nowrap;">
-                    <a href="/promo?edit={{.ID}}" class="btn btn-sm btn-light">✏️ Ubah</a>
+                    <a href="/promo?edit={{.ID}}" class="btn btn-sm btn-light">Ubah</a>
                     <form method="post" action="/promo/{{.ID}}/toggle" style="display: inline-block; margin: 0 0 0 4px;">
                         {{if .Aktif}}
                         <button type="submit" class="btn btn-sm btn-light" style="color:var(--red);" onclick="return confirm('Nonaktifkan promo ini? Pelanggan tidak akan bisa memakainya.')">Nonaktifkan</button>

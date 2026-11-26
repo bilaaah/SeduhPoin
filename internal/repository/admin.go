@@ -256,6 +256,11 @@ func (r *AdminRepo) UbahVoucher(ctx context.Context, id, kuota int) error {
 	return e
 }
 
+func (r *AdminRepo) HapusVoucher(ctx context.Context, id int) error {
+	_, e := r.DB.ExecContext(ctx, "DELETE FROM voucher WHERE id = ?", id)
+	return e
+}
+
 func (r *AdminRepo) Ringkasan(ctx context.Context) (model.RingkasanData, error) {
 	var out model.RingkasanData
 	_ = r.DB.QueryRowContext(ctx, "SELECT COUNT(*) FROM produk WHERE deleted_at IS NULL").Scan(&out.TotalProduk)

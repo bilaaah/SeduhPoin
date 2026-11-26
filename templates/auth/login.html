@@ -2,14 +2,13 @@
 <div class="auth-container">
     <div class="auth-card">
         <div class="auth-header">
-            <div class="auth-icon">☕</div>
             <h2>Masuk ke SeduhPoin</h2>
             <p>Sistem Poin Member dan Promo Kedai Kopi Seduh</p>
         </div>
 
         {{if .Error}}
             <div class="alert-error">
-                <span>⚠️</span> {{.Error}}
+                {{.Error}}
             </div>
         {{end}}
 
@@ -26,9 +25,6 @@
 
             <div class="form-actions">
                 <button type="submit" class="btn btn-primary btn-block">Masuk ke Sistem</button>
-                <div class="auth-alt">
-                    Belum memiliki akun? <a href="/register">Registrasi di sini</a>
-                </div>
             </div>
         </form>
     </div>

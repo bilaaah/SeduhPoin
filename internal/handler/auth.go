@@ -30,7 +30,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	f := AuthForm{
 		Nama:  r.PostFormValue("nama"),
 		Email: r.PostFormValue("email"),
-		Role:  r.PostFormValue("role"),
+		Role:  "MEMBER",
 	}
 
 	err := h.Svc.Register(
@@ -38,7 +38,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		f.Nama,
 		f.Email,
 		r.PostFormValue("password"),
-		f.Role,
+		"MEMBER",
 	)
 
 	var ve *service.ValidasiError

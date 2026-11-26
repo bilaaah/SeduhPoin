@@ -2,14 +2,13 @@
 <div class="auth-container">
     <div class="auth-card">
         <div class="auth-header">
-            <div class="auth-icon">📝</div>
-            <h2>Daftar Akun Baru</h2>
-            <p>Registrasi pengguna baru untuk sistem Kedai Kopi Seduh</p>
+            <h2>Daftar Akun Member</h2>
+            <p>Daftarkan akun pelanggan untuk menikmati program loyalitas & reward SeduhPoin</p>
         </div>
 
         {{if .Error}}
             <div class="alert-error">
-                <span>⚠️</span> {{.Error}}
+                {{.Error}}
             </div>
         {{end}}
 
@@ -21,16 +20,7 @@
 
             <div class="form-group">
                 <label for="email">Alamat Email</label>
-                <input type="email" id="email" name="email" value="{{.Email}}" class="form-control" placeholder="contoh: user@seduhkopi.com" required>
-            </div>
-
-            <div class="form-group">
-                <label for="role">Peran Pengguna (Role)</label>
-                <select id="role" name="role" class="form-control" required>
-                    <option value="ADMIN" {{if eq .Role "ADMIN"}}selected{{end}}>👑 Admin / Pemilik (Kelola master data, promo, laporan)</option>
-                    <option value="KASIR" {{if eq .Role "KASIR"}}selected{{end}}>☕ Kasir (Transaksi penjualan, diskon, batal)</option>
-                    <option value="MEMBER" {{if eq .Role "MEMBER"}}selected{{end}}>👤 Member / Pelanggan (Cek poin, riwayat belanja)</option>
-                </select>
+                <input type="email" id="email" name="email" value="{{.Email}}" class="form-control" placeholder="contoh: nama@email.com" required>
             </div>
 
             <div class="form-group">
@@ -39,7 +29,7 @@
             </div>
 
             <div class="form-actions">
-                <button type="submit" class="btn btn-primary btn-block">Daftar Akun</button>
+                <button type="submit" class="btn btn-primary btn-block">Daftar Akun Member</button>
                 <div class="auth-alt">
                     Sudah punya akun? <a href="/login">Masuk di sini</a>
                 </div>
@@ -48,4 +38,3 @@
     </div>
 </div>
 {{end}}
-

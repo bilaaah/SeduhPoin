@@ -1,13 +1,13 @@
 {{define "content"}}
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
     <div>
-        <h2 style="margin: 0 0 6px;">🏢 Cabang Kedai Kopi Seduh</h2>
+        <h2 style="margin: 0 0 6px;">Cabang Kedai Kopi Seduh</h2>
         <p style="margin: 0;">Pengelolaan lokasi cabang resmi: Pusat, Timur, dan Barat.</p>
     </div>
     {{if eq .Mode "list"}}
     <div>
         <a href="/cabang?action=tambah" class="btn" style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px; padding: 10px 18px; font-weight: 600;">
-            ➕ Tambah Cabang
+            + Tambah Cabang
         </a>
     </div>
     {{end}}
@@ -18,7 +18,7 @@
 <div class="card" style="box-shadow: 0 4px 16px rgba(0,0,0,0.06); border-radius: 14px; padding: 28px 32px; margin-bottom: 24px;">
     <div style="border-bottom: 1px solid var(--line); padding-bottom: 14px; margin-bottom: 24px;">
         <h3 style="margin: 0; font-size: 19px;">
-            {{if eq .Mode "edit"}}✏️ Ubah Data Cabang{{else}}✨ Tambah Lokasi Cabang{{end}}
+            {{if eq .Mode "edit"}}Ubah Data Cabang{{else}}Tambah Lokasi Cabang{{end}}
         </h3>
     </div>
     <form method="post" action="/cabang">
@@ -54,7 +54,7 @@
         {{end}}
         <div style="display: flex; gap: 12px; margin-top: 24px;">
             <button type="submit" class="btn" style="padding: 11px 28px;">
-                {{if eq .Mode "edit"}}💾 Simpan Perubahan{{else}}Simpan Cabang{{end}}
+                {{if eq .Mode "edit"}}Simpan Perubahan{{else}}Simpan Cabang{{end}}
             </button>
             <a href="/cabang" class="btn btn-light" style="text-decoration: none; text-align: center; padding: 11px 24px;">Batal</a>
         </div>
@@ -91,7 +91,7 @@
                     {{end}}
                 </td>
                 <td style="text-align:right; white-space:nowrap;">
-                    <a href="/cabang?edit={{.ID}}" class="btn btn-sm btn-light">✏️ Ubah</a>
+                    <a href="/cabang?edit={{.ID}}" class="btn btn-sm btn-light">Ubah</a>
                     <form method="post" action="/cabang/{{.ID}}/toggle" style="display:inline; margin: 0 0 0 4px;" onsubmit="return confirm('Ubah status operasional cabang {{.Nama}}?');">
                         {{if .Aktif}}
                         <button type="submit" class="btn btn-sm btn-light" style="color:var(--red);" title="Nonaktifkan cabang">Nonaktifkan</button>

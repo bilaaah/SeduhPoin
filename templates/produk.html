@@ -1,13 +1,13 @@
 {{define "content"}}
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
     <div>
-        <h2 style="margin: 0 0 6px;">☕ Katalog & Stok Produk</h2>
+        <h2 style="margin: 0 0 6px;">Katalog & Stok Produk</h2>
         <p style="margin: 0;">Kelola daftar menu kopi, non-kopi, dan camilan untuk seluruh cabang kedai.</p>
     </div>
     {{if eq .Mode "list"}}
     <div>
         <a href="/produk?action=tambah" class="btn" style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px; padding: 10px 18px; font-weight: 600;">
-            ➕ Tambah Produk
+            + Tambah Produk
         </a>
     </div>
     {{end}}
@@ -18,7 +18,7 @@
 <div class="card" style="box-shadow: 0 4px 16px rgba(0,0,0,0.06); border-radius: 14px; padding: 28px 32px; margin-bottom: 24px;">
     <div style="border-bottom: 1px solid var(--line); padding-bottom: 14px; margin-bottom: 24px;">
         <h3 style="margin: 0; font-size: 19px;">
-            {{if eq .Mode "edit"}}✏️ Ubah Data Produk{{else}}✨ Tambah Produk Baru{{end}}
+            {{if eq .Mode "edit"}}Ubah Data Produk{{else}}Tambah Produk Baru{{end}}
         </h3>
     </div>
     <form method="post" action="/produk">

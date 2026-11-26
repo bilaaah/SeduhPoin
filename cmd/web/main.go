@@ -74,6 +74,7 @@ func main() {
 	privat.Handle("/promo", adminOnly(http.HandlerFunc(admin.Promo)))
 	privat.Handle("POST /promo/{id}/toggle", adminOnly(http.HandlerFunc(admin.TogglePromo)))
 	privat.Handle("/voucher", adminOnly(http.HandlerFunc(admin.Voucher)))
+	privat.Handle("POST /voucher/{id}/hapus", adminOnly(http.HandlerFunc(admin.HapusVoucher)))
 
 	// ── Lingkup 5: Poin & Tingkat Member (Dinda) ──
 	privat.HandleFunc("GET /member/tier", tier.Halaman)
@@ -100,8 +101,10 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /login", authH.FormLogin)
 	mux.HandleFunc("POST /login", authH.Login)
-	mux.HandleFunc("GET /register", authH.FormRegister)
-	mux.HandleFunc("POST /register", authH.Register)
+	// Registrasi dinonaktifkan: akun dikelola terpusat oleh Admin/Kedai
+	mux.HandleFunc("/register", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+	})
 
 	mux.Handle("/", authMw.RequireLogin(privat))
 
